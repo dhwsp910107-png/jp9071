@@ -15307,6 +15307,186 @@ class QuizPlayModal extends Modal {
             hintModal.open();
         };
 
+        // 노트 편집 버튼 (힌트 편집 옆)
+        const noteEditBtn = controlBar.createEl('button', {
+            text: '📝',
+            cls: 'control-button note-edit-button'
+        });
+        noteEditBtn.title = '노트 편집';
+        noteEditBtn.style.cssText = 'font-size: 18px;';
+        noteEditBtn.onclick = () => {
+            this.stopTimer();
+            this.isPaused = true;
+            
+            const noteModal = new Modal(this.app);
+            noteModal.titleEl.setText('📝 노트 편집');
+            
+            const { contentEl: modalContent } = noteModal;
+            modalContent.style.padding = '20px';
+            modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+            modalContent.style.maxWidth = '600px';
+            
+            // 노트 텍스트 섹션
+            modalContent.createEl('h4', { 
+                text: '학습 노트',
+                cls: 'note-edit-label'
+            }).style.cssText = 'margin-bottom: 8px; color: var(--text-normal);';
+            
+            const noteTextArea = modalContent.createEl('textarea', {
+                placeholder: '학습 노트를 입력하세요...\n예: 암기법, 관련 단어, 주의사항 등',
+                cls: 'note-text-input'
+            });
+            noteTextArea.value = question.note || '';
+            noteTextArea.style.cssText = `
+                width: 100%;
+                min-height: 150px;
+                padding: 12px;
+                margin-bottom: 16px;
+                border-radius: 6px;
+                border: 1px solid var(--background-modifier-border);
+                background: var(--background-primary);
+                color: var(--text-normal);
+                font-size: 14px;
+                resize: vertical;
+                font-family: var(--font-text);
+                line-height: 1.6;
+            `;
+            
+            // 도움말 텍스트
+            const helpText = modalContent.createEl('p', {
+                text: '💡 팁: 암기법, 유사 한자, 혼동 주의 등을 기록하면 학습에 도움이 됩니다.'
+            });
+            helpText.style.cssText = `
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-bottom: 16px;
+                padding: 8px;
+                background: var(--background-secondary);
+                border-radius: 4px;
+            `;
+            
+            // 버튼 그룹
+            const btnContainer = modalContent.createDiv({
+                cls: 'note-edit-buttons'
+            });
+            btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+            
+            // 삭제 버튼 (노트가 있을 때만 표시)
+            if (question.note && question.note.trim()) {
+                const deleteNoteBtn = btnContainer.createEl('button', {
+                    text: '🗑️ 삭제'
+                });
+                deleteNoteBtn.style.cssText = `
+                    padding: 10px 20px;
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    min-height: 44px;
+                `;
+                deleteNoteBtn.onmouseenter = () => deleteNoteBtn.style.background = '#c82333';
+                deleteNoteBtn.onmouseleave = () => deleteNoteBtn.style.background = '#dc3545';
+                deleteNoteBtn.onclick = async () => {
+                    if (confirm('노트를 삭제하시겠습니까?')) {
+                        try {
+                            const file = this.app.vault.getAbstractFileByPath(question.filePath);
+                            if (file && file instanceof this.app.vault.constructor.prototype.constructor) {
+                                const content = await this.app.vault.read(file);
+                                const lines = content.split('\n');
+                                
+                                let noteIndex = lines.findIndex(line => line.trim() === '## 노트');
+                                if (noteIndex !== -1) {
+                                    let nextSectionIndex = noteIndex + 1;
+                                    while (nextSectionIndex < lines.length && !lines[nextSectionIndex].startsWith('##')) {
+                                        nextSectionIndex++;
+                                    }
+                                    lines.splice(noteIndex + 1, nextSectionIndex - noteIndex - 1, '');
+                                }
+                                
+                                await this.app.vault.modify(file, lines.join('\n'));
+                                question.note = '';
+                                new Notice('✅ 노트가 삭제되었습니다');
+                                
+                                noteModal.close();
+                                this.isPaused = false;
+                                this.showQuestion();
+                            }
+                        } catch (error) {
+                            new Notice('❌ 삭제 실패: ' + error.message);
+                            console.error('노트 삭제 오류:', error);
+                        }
+                    }
+                };
+            }
+            
+            // 저장 버튼
+            const saveBtn = btnContainer.createEl('button', {
+                text: '💾 저장'
+            });
+            saveBtn.style.cssText = `
+                padding: 10px 20px;
+                background: var(--interactive-accent);
+                color: var(--text-on-accent);
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: 600;
+                min-height: 44px;
+            `;
+            saveBtn.onclick = async () => {
+                try {
+                    const newNote = noteTextArea.value.trim();
+                    
+                    const file = this.app.vault.getAbstractFileByPath(question.filePath);
+                    if (file && file instanceof this.app.vault.constructor.prototype.constructor) {
+                        const content = await this.app.vault.read(file);
+                        const lines = content.split('\n');
+                        
+                        let noteIndex = lines.findIndex(line => line.trim() === '## 노트');
+                        
+                        if (noteIndex !== -1) {
+                            let nextSectionIndex = noteIndex + 1;
+                            while (nextSectionIndex < lines.length && !lines[nextSectionIndex].startsWith('##')) {
+                                nextSectionIndex++;
+                            }
+                            lines.splice(noteIndex + 1, nextSectionIndex - noteIndex - 1, newNote);
+                        }
+                        
+                        await this.app.vault.modify(file, lines.join('\n'));
+                        question.note = newNote;
+                        new Notice('✅ 노트가 저장되었습니다');
+                        
+                        noteModal.close();
+                        this.isPaused = false;
+                        this.showQuestion();
+                    }
+                } catch (error) {
+                    new Notice('❌ 저장 실패: ' + error.message);
+                    console.error('노트 저장 오류:', error);
+                }
+            };
+            
+            // 취소 버튼
+            const cancelBtn = btnContainer.createEl('button', {
+                text: '❌ 취소'
+            });
+            cancelBtn.style.cssText = 'padding: 10px 20px; min-height: 44px;';
+            cancelBtn.onclick = () => {
+                noteModal.close();
+                this.isPaused = false;
+            };
+            
+            noteModal.onClose = () => {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                }
+            };
+            
+            noteModal.open();
+        };
+
         // 왼쪽 컨트롤 그룹은 나중에 북마크 아래에 생성됨 (아래 코드 참조)
 
         // 폴더 관리 버튼
@@ -16450,6 +16630,444 @@ class QuizPlayModal extends Modal {
                     hintEl.style.display = 'none';
                 }
             });
+        }
+
+        // 노트 컨테이너 (힌트와 독립적으로 표시)
+        let noteEl = null;
+        if ((question.note && question.note.trim()) || (question.noteImage && question.noteImage.trim())) {
+            noteEl = questionText.createDiv({ cls: 'note-container' });
+            noteEl.style.cssText = `
+                position: relative;
+                z-index: 999;
+                background: linear-gradient(135deg, rgba(100, 149, 237, 0.15), rgba(138, 43, 226, 0.15));
+                padding: 16px;
+                margin: 15px 0;
+                border-radius: 10px;
+                border: 2px solid rgba(138, 43, 226, 0.4);
+                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
+                max-width: 100%;
+            `;
+
+            // 노트 헤더 (제목 + 토글 버튼)
+            const noteHeader = noteEl.createDiv();
+            noteHeader.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+                cursor: pointer;
+                user-select: none;
+            `;
+
+            const noteTitle = noteHeader.createEl('span', { text: '📝 학습 노트' });
+            noteTitle.style.cssText = `
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--text-accent);
+                background: linear-gradient(135deg, #6495ED, #8A2BE2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            `;
+
+            const noteToggleBtn = noteHeader.createEl('button', { text: '▼' });
+            noteToggleBtn.type = 'button';
+            noteToggleBtn.style.cssText = `
+                padding: 6px 12px;
+                background: rgba(138, 43, 226, 0.3);
+                color: var(--text-normal);
+                border: 1px solid rgba(138, 43, 226, 0.5);
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            `;
+
+            // 노트 내용 컨테이너
+            const noteContent = noteEl.createDiv({ cls: 'note-content-wrapper' });
+            noteContent.style.cssText = `
+                display: block;
+                overflow: hidden;
+                transition: max-height 0.3s ease, opacity 0.3s ease;
+                max-height: 1000px;
+                opacity: 1;
+            `;
+
+            // 노트 텍스트
+            if (question.note && question.note.trim()) {
+                const noteTextContainer = noteContent.createDiv({ cls: 'note-text-container' });
+                noteTextContainer.style.cssText = `
+                    padding: 12px;
+                    background: rgba(255, 255, 255, 0.08);
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    border-left: 4px solid rgba(138, 43, 226, 0.6);
+                `;
+
+                const noteLines = question.note.split('\n');
+                
+                // 이미지 URL 수집
+                const allNoteTextImages = [];
+                for (const line of noteLines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
+                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
+                        if (wikiMatch && wikiMatch[1]) {
+                            let imagePath = wikiMatch[1];
+                            const folderName = question.folder || 'default';
+                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
+                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
+                            
+                            if (imagePath.startsWith(folderName + '/')) {
+                                imagePath = `${quizFolder}/${imagePath}`;
+                            } else if (!imagePath.startsWith(quizFolder)) {
+                                if (!imagePath.includes('/')) {
+                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
+                                }
+                            }
+                            
+                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
+                            if (imageFile) {
+                                allNoteTextImages.push(this.app.vault.adapter.getResourcePath(imagePath));
+                            }
+                        }
+                    }
+                }
+
+                // 노트 텍스트 및 이미지 렌더링
+                let noteTextImageIndex = 0;
+                for (const line of noteLines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) continue;
+                    
+                    // 이미지 체크
+                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
+                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
+                        if (wikiMatch && wikiMatch[1]) {
+                            let imagePath = wikiMatch[1];
+                            const folderName = question.folder || 'default';
+                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
+                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
+                            
+                            if (imagePath.startsWith(folderName + '/')) {
+                                imagePath = `${quizFolder}/${imagePath}`;
+                            } else if (!imagePath.startsWith(quizFolder)) {
+                                if (!imagePath.includes('/')) {
+                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
+                                }
+                            }
+                            
+                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
+                            
+                            if (imageFile) {
+                                const imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
+                                const currentIndex = noteTextImageIndex;
+                                const img = noteTextContainer.createEl('img', {
+                                    attr: {
+                                        src: imageUrl,
+                                        style: 'max-width: 400px; width: 100%; height: auto; border-radius: 6px; cursor: zoom-in; margin: 10px 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);'
+                                    }
+                                });
+                                img.addEventListener('click', () => {
+                                    this.showImageZoom(imageUrl, '노트 이미지', allNoteTextImages, currentIndex);
+                                });
+                                noteTextImageIndex++;
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    // 일반 텍스트
+                    const noteLine = noteTextContainer.createEl('p', { 
+                        text: trimmedLine,
+                        cls: 'note-text-line'
+                    });
+                    noteLine.style.cssText = `
+                        font-size: 14.5px;
+                        line-height: 1.7;
+                        color: var(--text-normal);
+                        margin: 6px 0;
+                        white-space: pre-line;
+                    `;
+                }
+            }
+
+            // 노트 이미지 (다중 이미지 + 페이지 넘김)
+            if (question.noteImage && question.noteImage.trim()) {
+                const noteImgContainer = noteContent.createDiv({ cls: 'note-image-container' });
+                noteImgContainer.style.cssText = 'margin-top: 12px; display: flex; flex-direction: column; gap: 10px;';
+                
+                const noteImageLines = question.noteImage.split('\n').filter(line => line.trim());
+                const totalImages = noteImageLines.length;
+                let currentImageIndex = 0;
+
+                const imageDisplayArea = noteImgContainer.createDiv();
+                imageDisplayArea.style.cssText = 'min-height: 150px; display: flex; align-items: center; justify-content: center;';
+
+                if (totalImages > 1) {
+                    const navControls = noteImgContainer.createDiv();
+                    navControls.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 10px;';
+
+                    const prevBtn = navControls.createEl('button', { text: '◀' });
+                    prevBtn.type = 'button';
+                    prevBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
+
+                    const pageInfo = navControls.createEl('span', { text: `${currentImageIndex + 1} / ${totalImages}` });
+                    pageInfo.style.cssText = 'min-width: 60px; text-align: center; font-weight: 700; font-size: 14px; color: var(--text-accent);';
+
+                    const nextBtn = navControls.createEl('button', { text: '▶' });
+                    nextBtn.type = 'button';
+                    nextBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
+
+                    const zoomBtn = navControls.createEl('button', { text: '🔍' });
+                    zoomBtn.type = 'button';
+                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
+
+                    [prevBtn, nextBtn, zoomBtn].forEach(btn => {
+                        btn.addEventListener('touchstart', () => { btn.style.opacity = '0.7'; });
+                        btn.addEventListener('touchend', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
+                        btn.addEventListener('touchcancel', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
+                    });
+
+                    const showImage = (index) => {
+                        if (index < 0 || index >= totalImages) return;
+                        
+                        currentImageIndex = index;
+                        imageDisplayArea.empty();
+
+                        const imageLine = noteImageLines[index].trim();
+                        let imageUrl = imageLine;
+
+                        if (imageUrl.includes('%')) {
+                            try {
+                                imageUrl = decodeURIComponent(imageUrl);
+                            } catch (e) {
+                                console.warn('URL 디코딩 실패:', imageUrl);
+                            }
+                        }
+
+                        let imageWidth = null;
+                        const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
+                        if (sizeMatch) {
+                            imageWidth = sizeMatch[1] + 'px';
+                        }
+
+                        if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
+                            const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
+                            if (wikiMatch && wikiMatch[1]) {
+                                let imagePath = wikiMatch[1];
+                                const folderName = question.folder || 'default';
+                                const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
+                                const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
+                                
+                                if (imagePath.startsWith(folderName + '/')) {
+                                    imagePath = `${quizFolder}/${imagePath}`;
+                                } else if (!imagePath.startsWith(quizFolder)) {
+                                    if (!imagePath.includes('/')) {
+                                        imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
+                                    }
+                                }
+                                
+                                const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
+                                if (imageFile) {
+                                    imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
+                                }
+                            }
+                        }
+
+                        const allImageUrls = noteImageLines.map(line => {
+                            let url = line.trim();
+                            if (url.includes('[[') && url.includes(']]')) {
+                                const wikiMatch = url.match(/\[\[(.+?)(\|\d+)?\]\]/);
+                                if (wikiMatch && wikiMatch[1]) {
+                                    let imagePath = wikiMatch[1];
+                                    const folderName = question.folder || 'default';
+                                    const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
+                                    const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
+                                    
+                                    if (imagePath.startsWith(folderName + '/')) {
+                                        imagePath = `${quizFolder}/${imagePath}`;
+                                    } else if (!imagePath.startsWith(quizFolder)) {
+                                        if (!imagePath.includes('/')) {
+                                            imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
+                                        }
+                                    }
+                                    
+                                    const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
+                                    if (imageFile) {
+                                        return this.app.vault.adapter.getResourcePath(imagePath);
+                                    }
+                                }
+                            }
+                            return url;
+                        });
+
+                        const img = imageDisplayArea.createEl('img', {
+                            attr: {
+                                src: imageUrl,
+                                style: `max-width: 100%; width: ${imageWidth || 'auto'}; max-height: 200px; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
+                            }
+                        });
+                        
+                        img.addEventListener('click', () => {
+                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
+                        });
+                        
+                        img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
+                        img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
+                        
+                        img.onerror = () => {
+                            imageDisplayArea.empty();
+                            imageDisplayArea.createEl('p', {
+                                text: '⚠️ 이미지 로드 실패',
+                                attr: { style: 'color: var(--text-muted); padding: 20px; text-align: center;' }
+                            });
+                        };
+
+                        zoomBtn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
+                        };
+
+                        pageInfo.textContent = `${currentImageIndex + 1} / ${totalImages}`;
+                        prevBtn.disabled = currentImageIndex === 0;
+                        nextBtn.disabled = currentImageIndex === totalImages - 1;
+                        
+                        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+                        prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+                        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+                        nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+                    };
+
+                    prevBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showImage(currentImageIndex - 1);
+                    };
+                    nextBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showImage(currentImageIndex + 1);
+                    };
+
+                    showImage(0);
+                } else {
+                    // 1개 이미지일 때
+                    const imageLine = noteImageLines[0].trim();
+                    let imageUrl = imageLine;
+
+                    if (imageUrl.includes('%')) {
+                        try {
+                            imageUrl = decodeURIComponent(imageUrl);
+                        } catch (e) {
+                            console.warn('URL 디코딩 실패:', imageUrl);
+                        }
+                    }
+
+                    let imageWidth = null;
+                    const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
+                    if (sizeMatch) {
+                        imageWidth = sizeMatch[1] + 'px';
+                    }
+
+                    if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
+                        const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
+                        if (wikiMatch && wikiMatch[1]) {
+                            let imagePath = wikiMatch[1];
+                            const folderName = question.folder || 'default';
+                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
+                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
+                            
+                            if (imagePath.startsWith(folderName + '/')) {
+                                imagePath = `${quizFolder}/${imagePath}`;
+                            } else if (!imagePath.startsWith(quizFolder)) {
+                                if (!imagePath.includes('/')) {
+                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
+                                }
+                            }
+                            
+                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
+                            if (imageFile) {
+                                imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
+                            }
+                        }
+                    }
+
+                    const allImageUrls = [imageUrl];
+                    const img = imageDisplayArea.createEl('img', {
+                        attr: {
+                            src: imageUrl,
+                            style: `max-width: 100%; width: ${imageWidth || '400px'}; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
+                        }
+                    });
+                    
+                    img.addEventListener('click', () => {
+                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
+                    });
+                    
+                    img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
+                    img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
+                    
+                    img.onerror = () => {
+                        imageDisplayArea.empty();
+                        imageDisplayArea.createEl('p', {
+                            text: '⚠️ 이미지 로드 실패',
+                            attr: { style: 'color: var(--text-muted); padding: 10px;' }
+                        });
+                    };
+
+                    const zoomBtnContainer = imageDisplayArea.createDiv();
+                    zoomBtnContainer.style.cssText = 'display: flex; justify-content: center; margin-top: 10px;';
+                    
+                    const zoomBtn = zoomBtnContainer.createEl('button', { text: '🔍 확대' });
+                    zoomBtn.type = 'button';
+                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
+                    
+                    zoomBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
+                    };
+
+                    zoomBtn.addEventListener('touchstart', () => { zoomBtn.style.opacity = '0.7'; });
+                    zoomBtn.addEventListener('touchend', () => { zoomBtn.style.opacity = '1'; });
+                    zoomBtn.addEventListener('touchcancel', () => { zoomBtn.style.opacity = '1'; });
+                }
+            }
+
+            // 토글 기능
+            let isNoteExpanded = true;
+            const toggleNote = () => {
+                isNoteExpanded = !isNoteExpanded;
+                
+                if (isNoteExpanded) {
+                    noteContent.style.maxHeight = '1000px';
+                    noteContent.style.opacity = '1';
+                    noteToggleBtn.setText('▼');
+                } else {
+                    noteContent.style.maxHeight = '0';
+                    noteContent.style.opacity = '0';
+                    noteToggleBtn.setText('▶');
+                }
+            };
+
+            noteHeader.addEventListener('click', toggleNote);
+            noteToggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleNote();
+            });
+
+            // 터치 피드백
+            noteToggleBtn.addEventListener('touchstart', () => { noteToggleBtn.style.opacity = '0.7'; });
+            noteToggleBtn.addEventListener('touchend', () => { noteToggleBtn.style.opacity = '1'; });
+            noteToggleBtn.addEventListener('touchcancel', () => { noteToggleBtn.style.opacity = '1'; });
         }
 
         // 선택지
