@@ -256,18 +256,18 @@
   ],
   "enableMobileOptimization": false,
   "stats": {
-    "totalAttempts": 18,
-    "totalCorrect": 8,
+    "totalAttempts": 19,
+    "totalCorrect": 9,
     "totalWrong": 10,
     "totalQuestions": 0,
     "bookmarkedCount": 1,
-    "lastStudyDate": "2026-01-20T06:18:46.981Z",
+    "lastStudyDate": "2026-01-20T06:44:12.838Z",
     "studyHistory": [
       {
         "date": "2026. 1. 20.",
-        "correct": 1,
+        "correct": 2,
         "wrong": 7,
-        "timestamp": 1768889926981
+        "timestamp": 1768891452838
       }
     ]
   },
