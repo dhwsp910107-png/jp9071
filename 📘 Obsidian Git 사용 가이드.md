@@ -359,23 +359,208 @@ Obsidian 하단 우측에 표시:
 
 ### 🌟 추천 방법 (난이도 순)
 
-#### 1️⃣ 방법 1: Obsidian Sync (가장 쉬움, 유료)
+#### 1️⃣ 방법 1: MGit (가장 추천! 무료, 쉬움) ⭐
+
+**MGit은 안드로이드용 Git 클라이언트로 GUI가 있어서 Termux보다 훨씬 쉽습니다!**
+
 **장점:**
-- ✅ 완전 자동 동기화
-- ✅ 설정 1분 완료
-- ✅ Git 없이 작동
-- ✅ 모든 기기 동기화
+- ✅ **완전 무료**
+- ✅ GUI 버튼으로 간단 조작
+- ✅ Git 버전 관리 유지
+- ✅ PC와 동일한 백업 시스템
+- ✅ 설정 10분 완료
 
 **단점:**
-- ❌ 월 $10 / 연 $96 유료
+- ❌ 완전 자동은 아님 (버튼 클릭 필요, 5초면 끝)
 
-**설정 방법:**
-1. Obsidian 설정 → **Sync** → **Set up**
-2. Obsidian 계정 생성/로그인
-3. 구독 결제
-4. 자동으로 동기화 시작 ✨
+---
 
-#### 2️⃣ 방법 2: Termux + Git (무료, 중급)
+##### 📲 MGit 설치 및 설정 (단계별)
+
+**1단계: MGit 설치**
+
+두 가지 방법 중 선택:
+
+**방법 A: Google Play Store (쉬움)**
+1. Play Store 열기
+2. **"MGit"** 검색
+3. **"MGit - Git client for Android"** 설치
+4. 앱 실행
+
+**방법 B: F-Droid (권장)**
+1. 브라우저에서 https://f-droid.org 접속
+2. F-Droid 앱 설치
+3. F-Droid에서 **MGit** 검색하여 설치
+
+---
+
+**2단계: 저장소 클론 (처음 한 번만)**
+
+MGit 앱 실행 후:
+
+1. **오른쪽 하단 ➕ (더하기) 버튼** 클릭
+
+2. **Clone Repository** 선택
+
+3. 저장소 정보 입력:
+
+   | 항목 | 입력 값 |
+   |------|---------|
+   | **Remote URL** | `https://github.com/dhwsp910107-png/jp9071.git` |
+   | **Username** | `dhwsp910107-png` |
+   | **Password** | (Personal Access Token 입력) |
+   | **Local Path** | `/storage/emulated/0/ObsidianVault` |
+   | **Repository name** | `강의체크인` |
+
+   ⚠️ **Password에는 GitHub 비밀번호가 아닌 Personal Access Token을 입력하세요!**
+   - 토큰이 없다면: https://github.com/settings/tokens 에서 생성
+   - 권한: **repo** 체크
+   - 토큰은 `ghp_`로 시작
+
+4. **Clone** 버튼 클릭
+
+5. 진행 상황 표시됨 (18,935개 파일, 약 5-10분 소요)
+
+6. 완료되면 저장소 목록에 **강의체크인** 표시됨
+
+---
+
+**3단계: Obsidian에서 열기**
+
+1. **Obsidian 앱** 실행 (없으면 Play Store에서 설치)
+
+2. **Open folder as vault** 클릭
+
+3. 왼쪽 메뉴 (☰) → **내부 저장소** 선택
+
+4. **ObsidianVault** 폴더 선택
+
+5. **Use this folder** 클릭
+
+6. **Trust author and enable plugins** 선택
+   - quiz-sp2 플러그인이 자동으로 활성화됨
+
+7. 완료! 🎉 이제 PC와 동일한 Vault가 모바일에서 열립니다.
+
+---
+
+**4단계: 동기화 방법 (매일 사용)**
+
+MGit은 **Pull**(다운로드)과 **Push**(업로드)를 수동으로 해야 합니다.
+
+##### 📥 작업 전: Pull (최신 버전 가져오기)
+
+PC나 다른 기기에서 작업했다면 먼저 Pull 해야 합니다!
+
+1. **MGit 앱** 실행
+2. **강의체크인** 저장소 탭 또는 클릭
+3. 우측 상단 **세로 점 3개** (⋮) 메뉴 클릭
+4. **Pull** 선택
+5. **Remote:** `origin` 선택
+6. **Branch:** `main` 선택
+7. **OK** 클릭
+8. 진행 표시줄 확인
+9. "Pull successful" 메시지 확인 ✅
+
+##### ✏️ 작업: Obsidian에서 노트 작성
+
+평소처럼 Obsidian에서 노트 작성, 문제 풀기 등
+
+##### 📤 작업 후: Commit & Push (백업)
+
+1. **MGit 앱** 실행
+2. **강의체크인** 저장소 선택
+3. **Status** 탭 확인 (변경된 파일 목록 표시)
+
+4. **Commit 하기:**
+   - 우측 상단 **✓ (체크)** 버튼 클릭
+   - 또는 메뉴 (⋮) → **Commit**
+   - 커밋 메시지 입력 (예: `📱 모바일 백업`)
+   - **Stage all** 클릭 (모든 변경사항 선택)
+   - **Commit** 버튼 클릭
+
+5. **Push 하기:**
+   - 우측 상단 **↑ (화살표)** 버튼 클릭
+   - 또는 메뉴 (⋮) → **Push**
+   - **Remote:** `origin` 선택
+   - **Branch:** `main` 선택
+   - **OK** 클릭
+   - Personal Access Token 입력 (처음에만)
+   - "Push successful" 확인 ✅
+
+**완료!** 이제 PC에서도 모바일 작업 내용을 확인할 수 있습니다.
+
+---
+
+##### 🔄 일상 워크플로우 (MGit)
+
+**아침 (작업 시작 전):**
+```
+1. MGit 열기
+2. Pull (↓) → 최신 버전 가져오기
+3. Obsidian에서 작업
+```
+
+**저녁 (작업 종료 후):**
+```
+1. MGit 열기
+2. Commit (✓) → 메시지 입력 → Stage all → Commit
+3. Push (↑) → GitHub에 백업
+```
+
+**소요 시간:** 각 5초씩, 총 10초!
+
+---
+
+##### 🎯 MGit 팁 & 트릭
+
+**1. 빠른 Commit & Push:**
+- 메뉴 (⋮) → **Commit and push** 선택
+- 커밋과 푸시를 한 번에!
+
+**2. 변경 사항 확인:**
+- **Status** 탭에서 어떤 파일이 변경되었는지 확인
+- 파일 클릭하면 변경 내용(Diff) 확인 가능
+
+**3. 히스토리 확인:**
+- **Commits** 탭에서 과거 커밋 기록 확인
+- 언제, 무엇을 백업했는지 확인 가능
+
+**4. 충돌 해결:**
+- Pull 시 충돌 발생하면 MGit이 알려줌
+- **Merge** 또는 **Rebase** 선택
+- 충돌 파일 수동 편집 후 다시 커밋
+
+**5. 알림 설정:**
+- MGit 설정 → **Notifications** 켜기
+- Pull/Push 성공/실패 알림 받기
+
+---
+
+##### 📱 MGit 인터페이스 설명
+
+**메인 화면:**
+- **Repositories**: 저장소 목록
+- **강의체크인**: 현재 저장소
+- **Status**: 변경된 파일 (빨강 = 수정됨, 초록 = 새 파일)
+- **Commits**: 커밋 기록
+- **Files**: 파일 브라우저
+
+**상단 버튼:**
+- **↓** = Pull (다운로드)
+- **↑** = Push (업로드)
+- **✓** = Commit (저장)
+- **⋮** = 메뉴 (더 많은 옵션)
+
+**하단 탭:**
+- **Status**: 변경사항 확인
+- **Commits**: 히스토리
+- **Files**: 파일 탐색
+- **Settings**: 저장소 설정
+
+---
+
+#### 2️⃣ 방법 2: Termux + Git (무료, 고급)
 **장점:**
 - ✅ 완전 무료
 - ✅ GitHub와 동일한 백업
@@ -465,14 +650,30 @@ chmod +x ~/.shortcuts/obsidian-backup.sh
 ```
 4. 홈 화면에 위젯 추가 → Termux → 백업 버튼 클릭으로 간편 백업!
 
-#### 3️⃣ 방법 3: Working Copy (iOS, 무료/유료)
+#### 3️⃣ 방법 3: Obsidian Sync (자동, 유료)
+**장점:**
+- ✅ 완전 자동 동기화
+- ✅ 설정 1분 완료
+- ✅ Git 없이 작동
+- ✅ 모든 기기 동기화
+
+**단점:**
+- ❌ 월 $10 / 연 $96 유료
+
+**설정 방법:**
+1. Obsidian 설정 → **Sync** → **Set up**
+2. Obsidian 계정 생성/로그인
+3. 구독 결제
+4. 자동으로 동기화 시작 ✨
+
+#### 4️⃣ 방법 4: Working Copy (iOS 전용, 무료/유료)
 **iOS 사용자 전용:**
 1. App Store에서 **Working Copy** 다운로드
 2. 저장소 클론
 3. Files 앱과 연동
 4. Obsidian에서 열기
 
-#### 4️⃣ 방법 4: 클라우드 동기화 (Google Drive 등)
+#### 5️⃣ 방법 5: 클라우드 동기화 (Google Drive 등, 간단)
 **장점:**
 - ✅ 간단
 - ✅ 자동 동기화
