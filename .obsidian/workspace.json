@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "93c7fa5f95f7460d",
+            "id": "5e079436619d0407",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -179,23 +179,13 @@
               "icon": "layout-dashboard",
               "title": "📊 한자 퀴즈 대시보드"
             }
-          },
-          {
-            "id": "42f7679ef7040faa",
-            "type": "leaf",
-            "state": {
-              "type": "git-view",
-              "state": {},
-              "icon": "git-pull-request",
-              "title": "Source Control"
-            }
           }
         ],
         "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 802.5
+    "width": 588.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -213,7 +203,6 @@
   },
   "active": "a99f2da069fdd6f6",
   "lastOpenFiles": [
-    "📚 Quiz 플러그인 사용 가이드.md",
     "HanziQuiz/⭐ 북마크/400번대/문제목록.md",
     "HanziQuiz/⭐ 북마크/400번대",
     "📘 Obsidian Git 사용 가이드.md",
@@ -259,6 +248,7 @@
     "HanziQuiz/Questions/001번대-b/2_001번대.md",
     "HanziQuiz/Questions/001번대-b/3_001번대.md",
     "HanziQuiz/Questions/001번대-b/4_001번대.md",
+    "HanziQuiz/Questions/001번대-b/5_001번대.md",
     "무제 1.canvas",
     "무제.canvas"
   ]

@@ -4122,24 +4122,6 @@ class QuizDashboardView extends ItemView {
         refreshBtn.style.cssText = 'padding: 6px 12px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         refreshBtn.addEventListener('click', () => this.onOpen());
 
-        // Git 설정 버튼
-        const gitBtn = headerButtons.createEl('button', { 
-            text: '🔧 Git',
-            cls: 'quiz-dashboard-btn'
-        });
-        gitBtn.style.cssText = 'padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);';
-        gitBtn.addEventListener('click', () => {
-            new GitSettingsModal(this.app, this.plugin).open();
-        });
-        gitBtn.addEventListener('mouseenter', () => {
-            gitBtn.style.transform = 'translateY(-2px)';
-            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
-        });
-        gitBtn.addEventListener('mouseleave', () => {
-            gitBtn.style.transform = 'translateY(0)';
-            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
-        });
-
         // 목표 요약 섹션 (모든 탭에서 표시)
         await this.renderGoalsSummary(container);
 
@@ -6648,102 +6630,6 @@ class FolderReorderModal extends Modal {
             const btnGroup = item.createDiv();
             btnGroup.style.cssText = 'display: flex; gap: 4px;';
 
-            // ✏️ 이름 변경 버튼
-            const renameBtn = btnGroup.createEl('button', { text: '✏️' });
-            renameBtn.style.cssText = `
-                padding: 6px 12px;
-                background: var(--background-secondary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.2s;
-                min-height: 32px;
-                min-width: 32px;
-            `;
-            renameBtn.title = '폴더 이름 변경';
-            renameBtn.onmouseenter = () => {
-                renameBtn.style.background = 'var(--interactive-accent)';
-                renameBtn.style.transform = 'scale(1.1)';
-            };
-            renameBtn.onmouseleave = () => {
-                renameBtn.style.background = 'var(--background-secondary)';
-                renameBtn.style.transform = 'scale(1)';
-            };
-            renameBtn.onclick = async () => {
-                const newName = await this.promptForNewName(folderName);
-                if (newName && newName !== folderName) {
-                    // 중복 체크
-                    if (this.folderOrder.includes(newName)) {
-                        new Notice('❌ 이미 존재하는 폴더 이름입니다!');
-                        return;
-                    }
-                    
-                    // 폴더 이름 변경
-                    const oldPath = `${this.plugin.settings.questionsFolder}/${folderName}`;
-                    const newPath = `${this.plugin.settings.questionsFolder}/${newName}`;
-                    
-                    try {
-                        // 폴더 이름 변경
-                        await this.app.vault.adapter.rename(oldPath, newPath);
-                        
-                        // folderOrder 업데이트
-                        this.folderOrder[index] = newName;
-                        
-                        new Notice(`✅ 폴더 이름이 "${folderName}" → "${newName}"으로 변경되었습니다!`);
-                        this.renderFolderList(container);
-                    } catch (error) {
-                        console.error('폴더 이름 변경 실패:', error);
-                        new Notice('❌ 폴더 이름 변경에 실패했습니다!');
-                    }
-                }
-            };
-
-            // 🗑️ 삭제 버튼
-            const deleteBtn = btnGroup.createEl('button', { text: '🗑️' });
-            deleteBtn.style.cssText = `
-                padding: 6px 12px;
-                background: var(--background-secondary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.2s;
-                min-height: 32px;
-                min-width: 32px;
-            `;
-            deleteBtn.title = '폴더 삭제 (문제도 함께 삭제됨)';
-            deleteBtn.onmouseenter = () => {
-                deleteBtn.style.background = '#dc3545';
-                deleteBtn.style.borderColor = '#dc3545';
-                deleteBtn.style.transform = 'scale(1.1)';
-            };
-            deleteBtn.onmouseleave = () => {
-                deleteBtn.style.background = 'var(--background-secondary)';
-                deleteBtn.style.borderColor = 'var(--background-modifier-border)';
-                deleteBtn.style.transform = 'scale(1)';
-            };
-            deleteBtn.onclick = async () => {
-                const confirmDelete = await this.confirmDeleteFolder(folderName);
-                if (confirmDelete) {
-                    const folderPath = `${this.plugin.settings.questionsFolder}/${folderName}`;
-                    
-                    try {
-                        // 폴더와 내용 삭제
-                        await this.app.vault.adapter.rmdir(folderPath, true);
-                        
-                        // folderOrder에서 제거
-                        this.folderOrder.splice(index, 1);
-                        
-                        new Notice(`✅ "${folderName}" 폴더가 삭제되었습니다!`);
-                        this.renderFolderList(container);
-                    } catch (error) {
-                        console.error('폴더 삭제 실패:', error);
-                        new Notice('❌ 폴더 삭제에 실패했습니다!');
-                    }
-                }
-            };
-
             if (index > 0) {
                 const upBtn = btnGroup.createEl('button', { text: '▲' });
                 upBtn.style.cssText = `
@@ -6791,94 +6677,6 @@ class FolderReorderModal extends Modal {
                     this.renderFolderList(container);
                 };
             }
-        });
-    }
-
-    async promptForNewName(oldName) {
-        return new Promise((resolve) => {
-            const modal = new Modal(this.app);
-            modal.titleEl.setText('📝 폴더 이름 변경');
-            
-            const content = modal.contentEl;
-            content.style.cssText = 'padding: 20px;';
-            
-            content.createEl('p', { 
-                text: `현재 폴더 이름: ${oldName}` 
-            }).style.cssText = 'margin-bottom: 12px; color: var(--text-muted);';
-            
-            const input = content.createEl('input', {
-                type: 'text',
-                value: oldName
-            });
-            input.style.cssText = `
-                width: 100%;
-                padding: 10px;
-                font-size: 14px;
-                border: 2px solid var(--background-modifier-border);
-                border-radius: 4px;
-                margin-bottom: 16px;
-                background: var(--background-primary);
-                color: var(--text-normal);
-            `;
-            input.focus();
-            input.select();
-            
-            const btnGroup = content.createDiv();
-            btnGroup.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
-            
-            const cancelBtn = btnGroup.createEl('button', { text: '❌ 취소' });
-            cancelBtn.style.cssText = `
-                padding: 8px 16px;
-                background: var(--background-secondary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                cursor: pointer;
-            `;
-            cancelBtn.onclick = () => {
-                modal.close();
-                resolve(null);
-            };
-            
-            const okBtn = btnGroup.createEl('button', { text: '✅ 변경' });
-            okBtn.style.cssText = `
-                padding: 8px 16px;
-                background: var(--interactive-accent);
-                color: var(--text-on-accent);
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: 600;
-            `;
-            okBtn.onclick = () => {
-                const newName = input.value.trim();
-                modal.close();
-                resolve(newName);
-            };
-            
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const newName = input.value.trim();
-                    modal.close();
-                    resolve(newName);
-                } else if (e.key === 'Escape') {
-                    modal.close();
-                    resolve(null);
-                }
-            });
-            
-            modal.open();
-        });
-    }
-
-    async confirmDeleteFolder(folderName) {
-        return new Promise((resolve) => {
-            new ConfirmModal(
-                this.app,
-                `정말로 "${folderName}" 폴더를 삭제하시겠습니까?\n\n⚠️ 이 폴더의 모든 문제가 영구적으로 삭제됩니다!\n⚠️ 복구할 수 없습니다!`,
-                (confirmed) => {
-                    resolve(confirmed);
-                }
-            ).open();
         });
     }
 
@@ -7326,28 +7124,7 @@ class DashboardModal extends Modal {
         
         header.createEl('h1', { text: '🏆 한자 퀴즈 대시보드' });
         
-        const headerButtons = header.createDiv({ cls: 'header-buttons' });
-        headerButtons.style.cssText = 'display: flex; gap: 10px; align-items: center;';
-        
-        const gitBtn = headerButtons.createEl('button', { text: '🔧 Git' });
-        gitBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);`;
-        gitBtn.onclick = () => {
-            new GitSettingsModal(this.app, this.plugin).open();
-        };
-        gitBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            new GitSettingsModal(this.app, this.plugin).open();
-        });
-        gitBtn.addEventListener('mouseenter', () => {
-            gitBtn.style.transform = 'translateY(-2px)';
-            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
-        });
-        gitBtn.addEventListener('mouseleave', () => {
-            gitBtn.style.transform = 'translateY(0)';
-            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
-        });
-        
-        const settingsBtn = headerButtons.createEl('button', { text: '⚙️ 설정' });
+        const settingsBtn = header.createEl('button', { text: '⚙️ 설정' });
         settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
         settingsBtn.onclick = () => {
             this.app.setting.open();
@@ -9466,278 +9243,6 @@ class QuestionDashboardModal extends Modal {
             }
         `;
         document.head.appendChild(style);
-    }
-
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-    }
-}
-
-// 🔧 Git 설정 모달
-class GitSettingsModal extends Modal {
-    constructor(app, plugin) {
-        super(app);
-        this.plugin = plugin;
-    }
-
-    async onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass('git-settings-modal');
-        
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
-
-        // 모달 스타일
-        contentEl.style.cssText = `
-            padding: ${isMobile ? '16px' : '24px'};
-            max-width: ${isMobile ? '100%' : '600px'};
-            margin: 0 auto;
-        `;
-
-        // 헤더
-        const header = contentEl.createDiv({ cls: 'git-settings-header' });
-        header.style.cssText = 'margin-bottom: 24px;';
-        
-        const title = header.createEl('h2', { text: '🔧 Git 설정' });
-        title.style.cssText = 'margin: 0 0 8px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px; font-weight: 700;';
-        
-        const subtitle = header.createEl('p', { text: 'Git 저장소 자동 커밋 및 동기화 설정' });
-        subtitle.style.cssText = 'margin: 0; color: var(--text-muted); font-size: 14px;';
-
-        // 현재 설정 상태 표시
-        const statusSection = contentEl.createDiv({ cls: 'git-status-section' });
-        statusSection.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--background-modifier-border);';
-        
-        const statusTitle = statusSection.createEl('h3', { text: '📊 현재 상태' });
-        statusTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
-        
-        const autoCommit = this.plugin.settings.autoGitCommit !== false;
-        const statusText = statusSection.createEl('div');
-        statusText.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span style="font-size: 20px;">${autoCommit ? '✅' : '⭕'}</span>
-                <span style="font-weight: 500;">자동 커밋: ${autoCommit ? '활성화' : '비활성화'}</span>
-            </div>
-            <div style="color: var(--text-muted); font-size: 13px; margin-left: 28px;">
-                ${autoCommit ? '문제 생성/수정 시 자동으로 Git에 커밋됩니다' : '수동으로 Git 커밋을 실행해야 합니다'}
-            </div>
-        `;
-
-        // 빠른 액션 섹션
-        const actionsSection = contentEl.createDiv({ cls: 'git-actions-section' });
-        actionsSection.style.cssText = 'margin-bottom: 24px;';
-        
-        const actionsTitle = actionsSection.createEl('h3', { text: '⚡ 빠른 액션' });
-        actionsTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
-        
-        const actionsGrid = actionsSection.createDiv();
-        actionsGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;';
-
-        // 액션 버튼들
-        const actions = [
-            {
-                icon: '🚀',
-                label: '바로 커밋',
-                desc: '즉시 Git 커밋 & 푸시',
-                color: '#48bb78',
-                action: async () => {
-                    try {
-                        new Notice('🚀 Git 커밋 시작...');
-                        await this.plugin.autoGitCommitAndPush('✨ 수동 커밋 (대시보드)');
-                        new Notice('✅ Git 커밋 완료!');
-                    } catch (error) {
-                        console.error('Git 커밋 오류:', error);
-                        new Notice(`❌ Git 커밋 실패: ${error.message}`);
-                    }
-                }
-            },
-            {
-                icon: '📊',
-                label: 'Git 상태',
-                desc: '변경된 파일 확인',
-                color: '#4299e1',
-                action: async () => {
-                    try {
-                        const { exec } = require('child_process');
-                        const { promisify } = require('util');
-                        const execAsync = promisify(exec);
-                        
-                        const { stdout, stderr } = await execAsync('git status --short', {
-                            cwd: this.app.vault.adapter.basePath
-                        });
-                        
-                        if (stderr) {
-                            new Notice(`❌ 오류: ${stderr}`);
-                            return;
-                        }
-                        
-                        if (!stdout || stdout.trim() === '') {
-                            new Notice('✨ 변경된 파일이 없습니다');
-                        } else {
-                            const lines = stdout.trim().split('\n');
-                            const statusModal = new Modal(this.app);
-                            statusModal.titleEl.setText('📊 Git 상태');
-                            
-                            const content = statusModal.contentEl.createDiv();
-                            content.style.cssText = 'padding: 16px; font-family: monospace; white-space: pre-wrap;';
-                            
-                            const count = content.createEl('p', { 
-                                text: `변경된 파일: ${lines.length}개`
-                            });
-                            count.style.cssText = 'margin-bottom: 12px; font-weight: 600;';
-                            
-                            const fileList = content.createEl('pre', { text: stdout });
-                            fileList.style.cssText = 'background: var(--background-secondary); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;';
-                            
-                            statusModal.open();
-                        }
-                    } catch (error) {
-                        console.error('Git 상태 확인 오류:', error);
-                        new Notice(`❌ Git 상태 확인 실패: ${error.message}`);
-                    }
-                }
-            },
-            {
-                icon: autoCommit ? '⏸️' : '▶️',
-                label: autoCommit ? '자동 OFF' : '자동 ON',
-                desc: autoCommit ? '자동 커밋 끄기' : '자동 커밋 켜기',
-                color: autoCommit ? '#f56565' : '#667eea',
-                action: async () => {
-                    this.plugin.settings.autoGitCommit = !autoCommit;
-                    await this.plugin.saveSettings();
-                    new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
-                    this.onOpen(); // 모달 새로고침
-                }
-            }
-        ];
-
-        for (const action of actions) {
-            const btn = actionsGrid.createEl('button');
-            btn.style.cssText = `
-                background: linear-gradient(135deg, ${action.color}20 0%, ${action.color}40 100%);
-                border: 2px solid ${action.color}60;
-                border-radius: 10px;
-                padding: ${isMobile ? '14px' : '16px'};
-                cursor: pointer;
-                transition: all 0.3s;
-                text-align: center;
-                min-height: ${isMobile ? '100px' : '110px'};
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: transparent;
-            `;
-            
-            const icon = btn.createEl('div', { text: action.icon });
-            icon.style.cssText = 'font-size: 28px;';
-            
-            const label = btn.createEl('div', { text: action.label });
-            label.style.cssText = `font-weight: 700; color: ${action.color}; font-size: 14px;`;
-            
-            const desc = btn.createEl('div', { text: action.desc });
-            desc.style.cssText = 'color: var(--text-muted); font-size: 11px;';
-            
-            btn.onclick = action.action;
-            btn.addEventListener('mouseenter', () => {
-                btn.style.transform = 'translateY(-4px)';
-                btn.style.boxShadow = `0 6px 16px ${action.color}40`;
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = 'translateY(0)';
-                btn.style.boxShadow = 'none';
-            });
-            btn.addEventListener('touchstart', () => {
-                btn.style.opacity = '0.8';
-            });
-            btn.addEventListener('touchend', () => {
-                btn.style.opacity = '1';
-            });
-        }
-
-        // 고급 설정 섹션
-        const advancedSection = contentEl.createDiv({ cls: 'git-advanced-section' });
-        advancedSection.style.cssText = 'margin-bottom: 24px;';
-        
-        const advancedTitle = advancedSection.createEl('h3', { text: '🔧 고급 설정' });
-        advancedTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
-        
-        const settingsList = advancedSection.createDiv();
-        settingsList.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; display: flex; flex-direction: column; gap: 14px;';
-        
-        // 자동 커밋 토글
-        const autoCommitSetting = settingsList.createDiv();
-        autoCommitSetting.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
-        
-        const autoCommitLabel = autoCommitSetting.createDiv();
-        autoCommitLabel.innerHTML = `
-            <div style="font-weight: 600; margin-bottom: 4px;">✅ 자동 Git 커밋</div>
-            <div style="font-size: 12px; color: var(--text-muted);">문제 생성/수정 시 자동으로 Git에 커밋</div>
-        `;
-        
-        const autoCommitToggle = autoCommitSetting.createEl('button', { 
-            text: autoCommit ? 'ON' : 'OFF'
-        });
-        autoCommitToggle.style.cssText = `
-            padding: 8px 20px;
-            background: ${autoCommit ? '#48bb78' : '#718096'};
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            min-width: 70px;
-            transition: all 0.3s;
-        `;
-        autoCommitToggle.onclick = async () => {
-            this.plugin.settings.autoGitCommit = !autoCommit;
-            await this.plugin.saveSettings();
-            new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
-            this.onOpen();
-        };
-
-        // 도움말 섹션
-        const helpSection = contentEl.createDiv({ cls: 'git-help-section' });
-        helpSection.style.cssText = 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 16px; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.3);';
-        
-        const helpTitle = helpSection.createEl('h3', { text: '💡 도움말' });
-        helpTitle.style.cssText = 'margin: 0 0 10px 0; font-size: 15px; font-weight: 600;';
-        
-        const helpContent = helpSection.createEl('div');
-        helpContent.innerHTML = `
-            <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 13px; line-height: 1.8;">
-                <li><strong>자동 커밋 ON</strong>: 문제를 만들거나 수정하면 자동으로 Git에 저장됩니다</li>
-                <li><strong>자동 커밋 OFF</strong>: 수동으로 "바로 커밋" 버튼을 눌러야 합니다</li>
-                <li><strong>바로 커밋</strong>: 현재 변경사항을 즉시 Git에 저장하고 푸시합니다</li>
-                <li><strong>Git 상태</strong>: 어떤 파일이 변경되었는지 확인할 수 있습니다</li>
-            </ul>
-        `;
-
-        // 닫기 버튼
-        const closeBtn = contentEl.createEl('button', { text: '✕ 닫기' });
-        closeBtn.style.cssText = `
-            width: 100%;
-            padding: ${isMobile ? '14px' : '12px'};
-            background: var(--interactive-normal);
-            color: var(--text-normal);
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            margin-top: 20px;
-            transition: all 0.3s;
-        `;
-        closeBtn.onclick = () => this.close();
-        closeBtn.addEventListener('mouseenter', () => {
-            closeBtn.style.background = 'var(--interactive-hover)';
-        });
-        closeBtn.addEventListener('mouseleave', () => {
-            closeBtn.style.background = 'var(--interactive-normal)';
-        });
     }
 
     onClose() {
@@ -12421,7 +11926,7 @@ class BookmarkFolderSelectionModal extends Modal {
         
         newFolderBtn.addEventListener('click', () => {
             this.close();
-            const inputModal = new TextInputModal(this.app, '새 폴더 이름', '폴더 이름 입력', '', async (folderName) => {
+            const inputModal = new TextInputModal(this.app, '새 폴더 이름', '', async (folderName) => {
                 if (folderName && folderName.trim()) {
                     const trimmedName = folderName.trim();
                     
@@ -14847,7 +14352,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button ribbon-button'
         });
         ribbonBtn.title = '메뉴';
-        ribbonBtn.style.fontSize = isMobile ? '14px' : '20px';
+        ribbonBtn.style.fontSize = '20px';
         ribbonBtn.onclick = (e) => {
             const menu = new Menu();
             
@@ -15618,186 +15123,6 @@ class QuizPlayModal extends Modal {
             hintModal.open();
         };
 
-        // 노트 편집 버튼 (힌트 편집 옆)
-        const noteEditBtn = controlBar.createEl('button', {
-            text: '📝',
-            cls: 'control-button note-edit-button'
-        });
-        noteEditBtn.title = '노트 편집';
-        noteEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '18px'};`;
-        noteEditBtn.onclick = () => {
-            this.stopTimer();
-            this.isPaused = true;
-            
-            const noteModal = new Modal(this.app);
-            noteModal.titleEl.setText('📝 노트 편집');
-            
-            const { contentEl: modalContent } = noteModal;
-            modalContent.style.padding = '20px';
-            modalContent.style.minWidth = isMobile ? '90vw' : '500px';
-            modalContent.style.maxWidth = '600px';
-            
-            // 노트 텍스트 섹션
-            modalContent.createEl('h4', { 
-                text: '학습 노트',
-                cls: 'note-edit-label'
-            }).style.cssText = 'margin-bottom: 8px; color: var(--text-normal);';
-            
-            const noteTextArea = modalContent.createEl('textarea', {
-                placeholder: '학습 노트를 입력하세요...\n예: 암기법, 관련 단어, 주의사항 등',
-                cls: 'note-text-input'
-            });
-            noteTextArea.value = question.note || '';
-            noteTextArea.style.cssText = `
-                width: 100%;
-                min-height: 150px;
-                padding: 12px;
-                margin-bottom: 16px;
-                border-radius: 6px;
-                border: 1px solid var(--background-modifier-border);
-                background: var(--background-primary);
-                color: var(--text-normal);
-                font-size: 14px;
-                resize: vertical;
-                font-family: var(--font-text);
-                line-height: 1.6;
-            `;
-            
-            // 도움말 텍스트
-            const helpText = modalContent.createEl('p', {
-                text: '💡 팁: 암기법, 유사 한자, 혼동 주의 등을 기록하면 학습에 도움이 됩니다.'
-            });
-            helpText.style.cssText = `
-                font-size: 12px;
-                color: var(--text-muted);
-                margin-bottom: 16px;
-                padding: 8px;
-                background: var(--background-secondary);
-                border-radius: 4px;
-            `;
-            
-            // 버튼 그룹
-            const btnContainer = modalContent.createDiv({
-                cls: 'note-edit-buttons'
-            });
-            btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
-            
-            // 삭제 버튼 (노트가 있을 때만 표시)
-            if (question.note && question.note.trim()) {
-                const deleteNoteBtn = btnContainer.createEl('button', {
-                    text: '🗑️ 삭제'
-                });
-                deleteNoteBtn.style.cssText = `
-                    padding: 10px 20px;
-                    background: #dc3545;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-weight: 600;
-                    min-height: 44px;
-                `;
-                deleteNoteBtn.onmouseenter = () => deleteNoteBtn.style.background = '#c82333';
-                deleteNoteBtn.onmouseleave = () => deleteNoteBtn.style.background = '#dc3545';
-                deleteNoteBtn.onclick = async () => {
-                    if (confirm('노트를 삭제하시겠습니까?')) {
-                        try {
-                            const file = this.app.vault.getAbstractFileByPath(question.filePath);
-                            if (file && file instanceof this.app.vault.constructor.prototype.constructor) {
-                                const content = await this.app.vault.read(file);
-                                const lines = content.split('\n');
-                                
-                                let noteIndex = lines.findIndex(line => line.trim() === '## 노트');
-                                if (noteIndex !== -1) {
-                                    let nextSectionIndex = noteIndex + 1;
-                                    while (nextSectionIndex < lines.length && !lines[nextSectionIndex].startsWith('##')) {
-                                        nextSectionIndex++;
-                                    }
-                                    lines.splice(noteIndex + 1, nextSectionIndex - noteIndex - 1, '');
-                                }
-                                
-                                await this.app.vault.modify(file, lines.join('\n'));
-                                question.note = '';
-                                new Notice('✅ 노트가 삭제되었습니다');
-                                
-                                noteModal.close();
-                                this.isPaused = false;
-                                this.showQuestion();
-                            }
-                        } catch (error) {
-                            new Notice('❌ 삭제 실패: ' + error.message);
-                            console.error('노트 삭제 오류:', error);
-                        }
-                    }
-                };
-            }
-            
-            // 저장 버튼
-            const saveBtn = btnContainer.createEl('button', {
-                text: '💾 저장'
-            });
-            saveBtn.style.cssText = `
-                padding: 10px 20px;
-                background: var(--interactive-accent);
-                color: var(--text-on-accent);
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: 600;
-                min-height: 44px;
-            `;
-            saveBtn.onclick = async () => {
-                try {
-                    const newNote = noteTextArea.value.trim();
-                    
-                    const file = this.app.vault.getAbstractFileByPath(question.filePath);
-                    if (file && file instanceof this.app.vault.constructor.prototype.constructor) {
-                        const content = await this.app.vault.read(file);
-                        const lines = content.split('\n');
-                        
-                        let noteIndex = lines.findIndex(line => line.trim() === '## 노트');
-                        
-                        if (noteIndex !== -1) {
-                            let nextSectionIndex = noteIndex + 1;
-                            while (nextSectionIndex < lines.length && !lines[nextSectionIndex].startsWith('##')) {
-                                nextSectionIndex++;
-                            }
-                            lines.splice(noteIndex + 1, nextSectionIndex - noteIndex - 1, newNote);
-                        }
-                        
-                        await this.app.vault.modify(file, lines.join('\n'));
-                        question.note = newNote;
-                        new Notice('✅ 노트가 저장되었습니다');
-                        
-                        noteModal.close();
-                        this.isPaused = false;
-                        this.showQuestion();
-                    }
-                } catch (error) {
-                    new Notice('❌ 저장 실패: ' + error.message);
-                    console.error('노트 저장 오류:', error);
-                }
-            };
-            
-            // 취소 버튼
-            const cancelBtn = btnContainer.createEl('button', {
-                text: '❌ 취소'
-            });
-            cancelBtn.style.cssText = 'padding: 10px 20px; min-height: 44px;';
-            cancelBtn.onclick = () => {
-                noteModal.close();
-                this.isPaused = false;
-            };
-            
-            noteModal.onClose = () => {
-                if (this.isPaused) {
-                    this.isPaused = false;
-                }
-            };
-            
-            noteModal.open();
-        };
-
         // 왼쪽 컨트롤 그룹은 나중에 북마크 아래에 생성됨 (아래 코드 참조)
 
         // 폴더 관리 버튼
@@ -15958,11 +15283,11 @@ class QuizPlayModal extends Modal {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: ${isMobile ? '4px 8px' : '8px 12px'};
+            padding: 8px 12px;
             background: var(--background-secondary);
             border-radius: 6px;
-            margin: ${isMobile ? '4px 0' : '8px 0'};
-            font-size: ${isMobile ? '12px' : '14px'};
+            margin: 8px 0;
+            font-size: 14px;
         `;
         
         const progressLabel = progress.createDiv({ cls: 'progress-label' });
@@ -16479,10 +15804,10 @@ class QuizPlayModal extends Modal {
         const questionText = scrollableContent.createDiv({ cls: 'question-text' });
         questionText.style.cssText = `
             text-align: center;
-            padding: ${isMobile ? '20px 12px' : '40px 20px'};
+            padding: 40px 20px;
             background: var(--background-primary);
             border-radius: 12px;
-            margin-bottom: ${isMobile ? '16px' : '24px'};
+            margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         `;
         
@@ -16492,8 +15817,8 @@ class QuizPlayModal extends Modal {
                 text: question.hanzi,
                 cls: 'hanzi-display'
             });
-            const hanziFontSize = isMobile ? '48px' : '72px';
-            const hanziMargin = isMobile ? '10px' : '20px';
+            const hanziFontSize = isMobile ? '64px' : '72px';
+            const hanziMargin = isMobile ? '16px' : '20px';
             hanziEl.style.cssText = `
                 font-size: ${hanziFontSize};
                 font-weight: 700;
@@ -16505,11 +15830,11 @@ class QuizPlayModal extends Modal {
         }
         
         const questionHeading = questionText.createEl('h3', { text: question.question });
-        const questionFontSize = isMobile ? '16px' : '20px';
+        const questionFontSize = isMobile ? '18px' : '20px';
         questionHeading.style.cssText = `
             font-size: ${questionFontSize};
             font-weight: 500;
-            line-height: 1.5;
+            line-height: 1.6;
             margin: 0;
             color: var(--text-muted);
         `;
@@ -16523,8 +15848,8 @@ class QuizPlayModal extends Modal {
                 position: relative;
                 z-index: 1000;
                 background: var(--background-secondary);
-                padding: ${isMobile ? '10px' : '15px'};
-                margin: ${isMobile ? '8px 0' : '10px 0'};
+                padding: 15px;
+                margin: 10px 0;
                 border-radius: 8px;
                 border: 2px solid var(--interactive-accent);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -16943,452 +16268,14 @@ class QuizPlayModal extends Modal {
             });
         }
 
-        // 노트 컨테이너 (선택지 바로 위에 배치)
-        let noteEl = null;
-        if ((question.note && question.note.trim()) || (question.noteImage && question.noteImage.trim())) {
-            noteEl = scrollableContent.createDiv({ cls: 'note-container' });
-            noteEl.style.cssText = `
-                position: relative;
-                z-index: 999;
-                background: linear-gradient(135deg, rgba(100, 149, 237, 0.15), rgba(138, 43, 226, 0.15));
-                padding: ${isMobile ? '10px' : '16px'};
-                margin: ${isMobile ? '10px 0' : '15px 0'};
-                border-radius: 10px;
-                border: 2px solid rgba(138, 43, 226, 0.4);
-                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
-                max-width: 100%;
-            `;
-
-            // 노트 헤더 (제목 + 토글 버튼)
-            const noteHeader = noteEl.createDiv();
-            noteHeader.style.cssText = `
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-                cursor: pointer;
-                user-select: none;
-            `;
-
-            const noteTitle = noteHeader.createEl('span', { text: '📝 학습 노트' });
-            noteTitle.style.cssText = `
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--text-accent);
-                background: linear-gradient(135deg, #6495ED, #8A2BE2);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-            `;
-
-            const noteToggleBtn = noteHeader.createEl('button', { text: '▼' });
-            noteToggleBtn.type = 'button';
-            noteToggleBtn.style.cssText = `
-                padding: 6px 12px;
-                background: rgba(138, 43, 226, 0.3);
-                color: var(--text-normal);
-                border: 1px solid rgba(138, 43, 226, 0.5);
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                touch-action: manipulation;
-                user-select: none;
-                -webkit-tap-highlight-color: transparent;
-            `;
-
-            // 노트 내용 컨테이너
-            const noteContent = noteEl.createDiv({ cls: 'note-content-wrapper' });
-            noteContent.style.cssText = `
-                display: block;
-                overflow: hidden;
-                transition: max-height 0.3s ease, opacity 0.3s ease;
-                max-height: 1000px;
-                opacity: 1;
-            `;
-
-            // 노트 텍스트
-            if (question.note && question.note.trim()) {
-                const noteTextContainer = noteContent.createDiv({ cls: 'note-text-container' });
-                noteTextContainer.style.cssText = `
-                    padding: 12px;
-                    background: rgba(255, 255, 255, 0.08);
-                    border-radius: 8px;
-                    margin-bottom: 10px;
-                    border-left: 4px solid rgba(138, 43, 226, 0.6);
-                `;
-
-                const noteLines = question.note.split('\n');
-                
-                // 이미지 URL 수집
-                const allNoteTextImages = [];
-                for (const line of noteLines) {
-                    const trimmedLine = line.trim();
-                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
-                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            if (imageFile) {
-                                allNoteTextImages.push(this.app.vault.adapter.getResourcePath(imagePath));
-                            }
-                        }
-                    }
-                }
-
-                // 노트 텍스트 및 이미지 렌더링
-                let noteTextImageIndex = 0;
-                for (const line of noteLines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine) continue;
-                    
-                    // 이미지 체크
-                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
-                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            
-                            if (imageFile) {
-                                const imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                                const currentIndex = noteTextImageIndex;
-                                const img = noteTextContainer.createEl('img', {
-                                    attr: {
-                                        src: imageUrl,
-                                        style: 'max-width: 400px; width: 100%; height: auto; border-radius: 6px; cursor: zoom-in; margin: 10px 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);'
-                                    }
-                                });
-                                img.addEventListener('click', () => {
-                                    this.showImageZoom(imageUrl, '노트 이미지', allNoteTextImages, currentIndex);
-                                });
-                                noteTextImageIndex++;
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    // 일반 텍스트
-                    const noteLine = noteTextContainer.createEl('p', { 
-                        text: trimmedLine,
-                        cls: 'note-text-line'
-                    });
-                    noteLine.style.cssText = `
-                        font-size: 14.5px;
-                        line-height: 1.7;
-                        color: var(--text-normal);
-                        margin: 6px 0;
-                        white-space: pre-line;
-                    `;
-                }
-            }
-
-            // 노트 이미지 (다중 이미지 + 페이지 넘김)
-            if (question.noteImage && question.noteImage.trim()) {
-                const noteImgContainer = noteContent.createDiv({ cls: 'note-image-container' });
-                noteImgContainer.style.cssText = 'margin-top: 12px; display: flex; flex-direction: column; gap: 10px;';
-                
-                const noteImageLines = question.noteImage.split('\n').filter(line => line.trim());
-                const totalImages = noteImageLines.length;
-                let currentImageIndex = 0;
-
-                const imageDisplayArea = noteImgContainer.createDiv();
-                imageDisplayArea.style.cssText = 'min-height: 150px; display: flex; align-items: center; justify-content: center;';
-
-                if (totalImages > 1) {
-                    const navControls = noteImgContainer.createDiv();
-                    navControls.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 10px;';
-
-                    const prevBtn = navControls.createEl('button', { text: '◀' });
-                    prevBtn.type = 'button';
-                    prevBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    const pageInfo = navControls.createEl('span', { text: `${currentImageIndex + 1} / ${totalImages}` });
-                    pageInfo.style.cssText = 'min-width: 60px; text-align: center; font-weight: 700; font-size: 14px; color: var(--text-accent);';
-
-                    const nextBtn = navControls.createEl('button', { text: '▶' });
-                    nextBtn.type = 'button';
-                    nextBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    const zoomBtn = navControls.createEl('button', { text: '🔍' });
-                    zoomBtn.type = 'button';
-                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    [prevBtn, nextBtn, zoomBtn].forEach(btn => {
-                        btn.addEventListener('touchstart', () => { btn.style.opacity = '0.7'; });
-                        btn.addEventListener('touchend', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
-                        btn.addEventListener('touchcancel', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
-                    });
-
-                    const showImage = (index) => {
-                        if (index < 0 || index >= totalImages) return;
-                        
-                        currentImageIndex = index;
-                        imageDisplayArea.empty();
-
-                        const imageLine = noteImageLines[index].trim();
-                        let imageUrl = imageLine;
-
-                        if (imageUrl.includes('%')) {
-                            try {
-                                imageUrl = decodeURIComponent(imageUrl);
-                            } catch (e) {
-                                console.warn('URL 디코딩 실패:', imageUrl);
-                            }
-                        }
-
-                        let imageWidth = null;
-                        const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
-                        if (sizeMatch) {
-                            imageWidth = sizeMatch[1] + 'px';
-                        }
-
-                        if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
-                            const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                            if (wikiMatch && wikiMatch[1]) {
-                                let imagePath = wikiMatch[1];
-                                const folderName = question.folder || 'default';
-                                const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                                const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                                
-                                if (imagePath.startsWith(folderName + '/')) {
-                                    imagePath = `${quizFolder}/${imagePath}`;
-                                } else if (!imagePath.startsWith(quizFolder)) {
-                                    if (!imagePath.includes('/')) {
-                                        imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                    }
-                                }
-                                
-                                const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                                if (imageFile) {
-                                    imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                                }
-                            }
-                        }
-
-                        const allImageUrls = noteImageLines.map(line => {
-                            let url = line.trim();
-                            if (url.includes('[[') && url.includes(']]')) {
-                                const wikiMatch = url.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                                if (wikiMatch && wikiMatch[1]) {
-                                    let imagePath = wikiMatch[1];
-                                    const folderName = question.folder || 'default';
-                                    const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                                    const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                                    
-                                    if (imagePath.startsWith(folderName + '/')) {
-                                        imagePath = `${quizFolder}/${imagePath}`;
-                                    } else if (!imagePath.startsWith(quizFolder)) {
-                                        if (!imagePath.includes('/')) {
-                                            imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                        }
-                                    }
-                                    
-                                    const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                                    if (imageFile) {
-                                        return this.app.vault.adapter.getResourcePath(imagePath);
-                                    }
-                                }
-                            }
-                            return url;
-                        });
-
-                        const img = imageDisplayArea.createEl('img', {
-                            attr: {
-                                src: imageUrl,
-                                style: `max-width: 100%; width: ${imageWidth || 'auto'}; max-height: 200px; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
-                            }
-                        });
-                        
-                        img.addEventListener('click', () => {
-                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
-                        });
-                        
-                        img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
-                        img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
-                        
-                        img.onerror = () => {
-                            imageDisplayArea.empty();
-                            imageDisplayArea.createEl('p', {
-                                text: '⚠️ 이미지 로드 실패',
-                                attr: { style: 'color: var(--text-muted); padding: 20px; text-align: center;' }
-                            });
-                        };
-
-                        zoomBtn.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
-                        };
-
-                        pageInfo.textContent = `${currentImageIndex + 1} / ${totalImages}`;
-                        prevBtn.disabled = currentImageIndex === 0;
-                        nextBtn.disabled = currentImageIndex === totalImages - 1;
-                        
-                        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
-                        prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
-                        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
-                        nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
-                    };
-
-                    prevBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showImage(currentImageIndex - 1);
-                    };
-                    nextBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showImage(currentImageIndex + 1);
-                    };
-
-                    showImage(0);
-                } else {
-                    // 1개 이미지일 때
-                    const imageLine = noteImageLines[0].trim();
-                    let imageUrl = imageLine;
-
-                    if (imageUrl.includes('%')) {
-                        try {
-                            imageUrl = decodeURIComponent(imageUrl);
-                        } catch (e) {
-                            console.warn('URL 디코딩 실패:', imageUrl);
-                        }
-                    }
-
-                    let imageWidth = null;
-                    const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
-                    if (sizeMatch) {
-                        imageWidth = sizeMatch[1] + 'px';
-                    }
-
-                    if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
-                        const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            if (imageFile) {
-                                imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                            }
-                        }
-                    }
-
-                    const allImageUrls = [imageUrl];
-                    const img = imageDisplayArea.createEl('img', {
-                        attr: {
-                            src: imageUrl,
-                            style: `max-width: 100%; width: ${imageWidth || '400px'}; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
-                        }
-                    });
-                    
-                    img.addEventListener('click', () => {
-                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
-                    });
-                    
-                    img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
-                    img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
-                    
-                    img.onerror = () => {
-                        imageDisplayArea.empty();
-                        imageDisplayArea.createEl('p', {
-                            text: '⚠️ 이미지 로드 실패',
-                            attr: { style: 'color: var(--text-muted); padding: 10px;' }
-                        });
-                    };
-
-                    const zoomBtnContainer = imageDisplayArea.createDiv();
-                    zoomBtnContainer.style.cssText = 'display: flex; justify-content: center; margin-top: 10px;';
-                    
-                    const zoomBtn = zoomBtnContainer.createEl('button', { text: '🔍 확대' });
-                    zoomBtn.type = 'button';
-                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-                    
-                    zoomBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
-                    };
-
-                    zoomBtn.addEventListener('touchstart', () => { zoomBtn.style.opacity = '0.7'; });
-                    zoomBtn.addEventListener('touchend', () => { zoomBtn.style.opacity = '1'; });
-                    zoomBtn.addEventListener('touchcancel', () => { zoomBtn.style.opacity = '1'; });
-                }
-            }
-
-            // 토글 기능
-            let isNoteExpanded = true;
-            const toggleNote = () => {
-                isNoteExpanded = !isNoteExpanded;
-                
-                if (isNoteExpanded) {
-                    noteContent.style.maxHeight = '1000px';
-                    noteContent.style.opacity = '1';
-                    noteToggleBtn.setText('▼');
-                } else {
-                    noteContent.style.maxHeight = '0';
-                    noteContent.style.opacity = '0';
-                    noteToggleBtn.setText('▶');
-                }
-            };
-
-            noteHeader.addEventListener('click', toggleNote);
-            noteToggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleNote();
-            });
-
-            // 터치 피드백
-            noteToggleBtn.addEventListener('touchstart', () => { noteToggleBtn.style.opacity = '0.7'; });
-            noteToggleBtn.addEventListener('touchend', () => { noteToggleBtn.style.opacity = '1'; });
-            noteToggleBtn.addEventListener('touchcancel', () => { noteToggleBtn.style.opacity = '1'; });
-        }
-
         // 선택지
         const optionsContainer = scrollableContent.createDiv({ cls: 'options-container' });
         optionsContainer.style.cssText = `
             display: flex;
             flex-direction: column;
-            gap: ${isMobile ? '8px' : '12px'};
-            margin-bottom: ${isMobile ? '12px' : '20px'};
-            padding: 0 ${isMobile ? '12px' : '20px'};
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 0 20px;
         `;
         
         let options = [...question.options];
@@ -17409,8 +16296,8 @@ class QuizPlayModal extends Modal {
             
             // 인라인 스타일로 크기 강제 적용 - Anki 스타일
             optionBtn.style.cssText = `
-                padding: ${isMobile ? '12px 16px 12px 42px' : '18px 20px 18px 50px'};
-                font-size: ${isMobile ? '15px' : '17px'};
+                padding: 18px 20px 18px 50px;
+                font-size: 17px;
                 font-weight: 400;
                 text-align: left;
                 border-radius: 8px;
@@ -17418,13 +16305,13 @@ class QuizPlayModal extends Modal {
                 transition: all 0.15s ease;
                 background: var(--background-secondary);
                 border: 2px solid var(--background-modifier-border);
-                min-height: ${isMobile ? '44px' : '56px'};
+                min-height: 56px;
                 width: 100%;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-                line-height: 1.4;
+                line-height: 1.5;
                 position: relative;
                 color: var(--text-normal);
             `;

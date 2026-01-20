@@ -8,12 +8,12 @@
     "Study Dashboard Plugin",
     "custom-admonitions.08b5eb",
     "mobile-optimized - 복사본",
-    "lecture-tracker-unified"
+    "anki-dark-theme"
   ],
   "cssTheme": "AnuPpuccin",
   "accentColor": "",
   "interfaceFontFamily": "",
-  "baseFontSize": 21,
+  "baseFontSize": 14,
   "baseFontSizeAction": true,
   "theme": "obsidian",
   "nativeMenus": true,
