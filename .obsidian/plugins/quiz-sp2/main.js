@@ -14847,7 +14847,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button ribbon-button'
         });
         ribbonBtn.title = '메뉴';
-        ribbonBtn.style.fontSize = '20px';
+        ribbonBtn.style.fontSize = isMobile ? '14px' : '20px';
         ribbonBtn.onclick = (e) => {
             const menu = new Menu();
             
@@ -15624,7 +15624,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button note-edit-button'
         });
         noteEditBtn.title = '노트 편집';
-        noteEditBtn.style.cssText = 'font-size: 18px;';
+        noteEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '18px'};`;
         noteEditBtn.onclick = () => {
             this.stopTimer();
             this.isPaused = true;
@@ -15958,11 +15958,11 @@ class QuizPlayModal extends Modal {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
+            padding: ${isMobile ? '4px 8px' : '8px 12px'};
             background: var(--background-secondary);
             border-radius: 6px;
-            margin: 8px 0;
-            font-size: 14px;
+            margin: ${isMobile ? '4px 0' : '8px 0'};
+            font-size: ${isMobile ? '12px' : '14px'};
         `;
         
         const progressLabel = progress.createDiv({ cls: 'progress-label' });
@@ -16479,10 +16479,10 @@ class QuizPlayModal extends Modal {
         const questionText = scrollableContent.createDiv({ cls: 'question-text' });
         questionText.style.cssText = `
             text-align: center;
-            padding: 40px 20px;
+            padding: ${isMobile ? '20px 12px' : '40px 20px'};
             background: var(--background-primary);
             border-radius: 12px;
-            margin-bottom: 24px;
+            margin-bottom: ${isMobile ? '16px' : '24px'};
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         `;
         
@@ -16492,8 +16492,8 @@ class QuizPlayModal extends Modal {
                 text: question.hanzi,
                 cls: 'hanzi-display'
             });
-            const hanziFontSize = isMobile ? '64px' : '72px';
-            const hanziMargin = isMobile ? '16px' : '20px';
+            const hanziFontSize = isMobile ? '48px' : '72px';
+            const hanziMargin = isMobile ? '10px' : '20px';
             hanziEl.style.cssText = `
                 font-size: ${hanziFontSize};
                 font-weight: 700;
@@ -16505,11 +16505,11 @@ class QuizPlayModal extends Modal {
         }
         
         const questionHeading = questionText.createEl('h3', { text: question.question });
-        const questionFontSize = isMobile ? '18px' : '20px';
+        const questionFontSize = isMobile ? '16px' : '20px';
         questionHeading.style.cssText = `
             font-size: ${questionFontSize};
             font-weight: 500;
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0;
             color: var(--text-muted);
         `;
@@ -16523,8 +16523,8 @@ class QuizPlayModal extends Modal {
                 position: relative;
                 z-index: 1000;
                 background: var(--background-secondary);
-                padding: 15px;
-                margin: 10px 0;
+                padding: ${isMobile ? '10px' : '15px'};
+                margin: ${isMobile ? '8px 0' : '10px 0'};
                 border-radius: 8px;
                 border: 2px solid var(--interactive-accent);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -16951,8 +16951,8 @@ class QuizPlayModal extends Modal {
                 position: relative;
                 z-index: 999;
                 background: linear-gradient(135deg, rgba(100, 149, 237, 0.15), rgba(138, 43, 226, 0.15));
-                padding: 16px;
-                margin: 15px 0;
+                padding: ${isMobile ? '10px' : '16px'};
+                margin: ${isMobile ? '10px 0' : '15px 0'};
                 border-radius: 10px;
                 border: 2px solid rgba(138, 43, 226, 0.4);
                 box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
@@ -17386,9 +17386,9 @@ class QuizPlayModal extends Modal {
         optionsContainer.style.cssText = `
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 0 20px;
+            gap: ${isMobile ? '8px' : '12px'};
+            margin-bottom: ${isMobile ? '12px' : '20px'};
+            padding: 0 ${isMobile ? '12px' : '20px'};
         `;
         
         let options = [...question.options];
@@ -17409,8 +17409,8 @@ class QuizPlayModal extends Modal {
             
             // 인라인 스타일로 크기 강제 적용 - Anki 스타일
             optionBtn.style.cssText = `
-                padding: 18px 20px 18px 50px;
-                font-size: 17px;
+                padding: ${isMobile ? '12px 16px 12px 42px' : '18px 20px 18px 50px'};
+                font-size: ${isMobile ? '15px' : '17px'};
                 font-weight: 400;
                 text-align: left;
                 border-radius: 8px;
@@ -17418,13 +17418,13 @@ class QuizPlayModal extends Modal {
                 transition: all 0.15s ease;
                 background: var(--background-secondary);
                 border: 2px solid var(--background-modifier-border);
-                min-height: 56px;
+                min-height: ${isMobile ? '44px' : '56px'};
                 width: 100%;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-                line-height: 1.5;
+                line-height: 1.4;
                 position: relative;
                 color: var(--text-normal);
             `;
