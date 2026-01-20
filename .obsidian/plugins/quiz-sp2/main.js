@@ -6630,6 +6630,102 @@ class FolderReorderModal extends Modal {
             const btnGroup = item.createDiv();
             btnGroup.style.cssText = 'display: flex; gap: 4px;';
 
+            // ✏️ 이름 변경 버튼
+            const renameBtn = btnGroup.createEl('button', { text: '✏️' });
+            renameBtn.style.cssText = `
+                padding: 6px 12px;
+                background: var(--background-secondary);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s;
+                min-height: 32px;
+                min-width: 32px;
+            `;
+            renameBtn.title = '폴더 이름 변경';
+            renameBtn.onmouseenter = () => {
+                renameBtn.style.background = 'var(--interactive-accent)';
+                renameBtn.style.transform = 'scale(1.1)';
+            };
+            renameBtn.onmouseleave = () => {
+                renameBtn.style.background = 'var(--background-secondary)';
+                renameBtn.style.transform = 'scale(1)';
+            };
+            renameBtn.onclick = async () => {
+                const newName = await this.promptForNewName(folderName);
+                if (newName && newName !== folderName) {
+                    // 중복 체크
+                    if (this.folderOrder.includes(newName)) {
+                        new Notice('❌ 이미 존재하는 폴더 이름입니다!');
+                        return;
+                    }
+                    
+                    // 폴더 이름 변경
+                    const oldPath = `${this.plugin.settings.questionsFolder}/${folderName}`;
+                    const newPath = `${this.plugin.settings.questionsFolder}/${newName}`;
+                    
+                    try {
+                        // 폴더 이름 변경
+                        await this.app.vault.adapter.rename(oldPath, newPath);
+                        
+                        // folderOrder 업데이트
+                        this.folderOrder[index] = newName;
+                        
+                        new Notice(`✅ 폴더 이름이 "${folderName}" → "${newName}"으로 변경되었습니다!`);
+                        this.renderFolderList(container);
+                    } catch (error) {
+                        console.error('폴더 이름 변경 실패:', error);
+                        new Notice('❌ 폴더 이름 변경에 실패했습니다!');
+                    }
+                }
+            };
+
+            // 🗑️ 삭제 버튼
+            const deleteBtn = btnGroup.createEl('button', { text: '🗑️' });
+            deleteBtn.style.cssText = `
+                padding: 6px 12px;
+                background: var(--background-secondary);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s;
+                min-height: 32px;
+                min-width: 32px;
+            `;
+            deleteBtn.title = '폴더 삭제 (문제도 함께 삭제됨)';
+            deleteBtn.onmouseenter = () => {
+                deleteBtn.style.background = '#dc3545';
+                deleteBtn.style.borderColor = '#dc3545';
+                deleteBtn.style.transform = 'scale(1.1)';
+            };
+            deleteBtn.onmouseleave = () => {
+                deleteBtn.style.background = 'var(--background-secondary)';
+                deleteBtn.style.borderColor = 'var(--background-modifier-border)';
+                deleteBtn.style.transform = 'scale(1)';
+            };
+            deleteBtn.onclick = async () => {
+                const confirmDelete = await this.confirmDeleteFolder(folderName);
+                if (confirmDelete) {
+                    const folderPath = `${this.plugin.settings.questionsFolder}/${folderName}`;
+                    
+                    try {
+                        // 폴더와 내용 삭제
+                        await this.app.vault.adapter.rmdir(folderPath, true);
+                        
+                        // folderOrder에서 제거
+                        this.folderOrder.splice(index, 1);
+                        
+                        new Notice(`✅ "${folderName}" 폴더가 삭제되었습니다!`);
+                        this.renderFolderList(container);
+                    } catch (error) {
+                        console.error('폴더 삭제 실패:', error);
+                        new Notice('❌ 폴더 삭제에 실패했습니다!');
+                    }
+                }
+            };
+
             if (index > 0) {
                 const upBtn = btnGroup.createEl('button', { text: '▲' });
                 upBtn.style.cssText = `
@@ -6677,6 +6773,94 @@ class FolderReorderModal extends Modal {
                     this.renderFolderList(container);
                 };
             }
+        });
+    }
+
+    async promptForNewName(oldName) {
+        return new Promise((resolve) => {
+            const modal = new Modal(this.app);
+            modal.titleEl.setText('📝 폴더 이름 변경');
+            
+            const content = modal.contentEl;
+            content.style.cssText = 'padding: 20px;';
+            
+            content.createEl('p', { 
+                text: `현재 폴더 이름: ${oldName}` 
+            }).style.cssText = 'margin-bottom: 12px; color: var(--text-muted);';
+            
+            const input = content.createEl('input', {
+                type: 'text',
+                value: oldName
+            });
+            input.style.cssText = `
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                border: 2px solid var(--background-modifier-border);
+                border-radius: 4px;
+                margin-bottom: 16px;
+                background: var(--background-primary);
+                color: var(--text-normal);
+            `;
+            input.focus();
+            input.select();
+            
+            const btnGroup = content.createDiv();
+            btnGroup.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+            
+            const cancelBtn = btnGroup.createEl('button', { text: '❌ 취소' });
+            cancelBtn.style.cssText = `
+                padding: 8px 16px;
+                background: var(--background-secondary);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                cursor: pointer;
+            `;
+            cancelBtn.onclick = () => {
+                modal.close();
+                resolve(null);
+            };
+            
+            const okBtn = btnGroup.createEl('button', { text: '✅ 변경' });
+            okBtn.style.cssText = `
+                padding: 8px 16px;
+                background: var(--interactive-accent);
+                color: var(--text-on-accent);
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: 600;
+            `;
+            okBtn.onclick = () => {
+                const newName = input.value.trim();
+                modal.close();
+                resolve(newName);
+            };
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const newName = input.value.trim();
+                    modal.close();
+                    resolve(newName);
+                } else if (e.key === 'Escape') {
+                    modal.close();
+                    resolve(null);
+                }
+            });
+            
+            modal.open();
+        });
+    }
+
+    async confirmDeleteFolder(folderName) {
+        return new Promise((resolve) => {
+            new ConfirmModal(
+                this.app,
+                `정말로 "${folderName}" 폴더를 삭제하시겠습니까?\n\n⚠️ 이 폴더의 모든 문제가 영구적으로 삭제됩니다!\n⚠️ 복구할 수 없습니다!`,
+                (confirmed) => {
+                    resolve(confirmed);
+                }
+            ).open();
         });
     }
 
