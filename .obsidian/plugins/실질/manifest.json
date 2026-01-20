@@ -1,0 +1,10 @@
+{
+     "id": "smart-lecture-tracker",
+     "name": "Smart Lecture Tracker",
+     "version": "3.0.0",
+     "minAppVersion": "0.15.0",
+     "description": "깔끔하고 실용적인 강의 관리 시스템",
+     "author": "Your Name",
+     "authorUrl": "",
+     "isDesktopOnly": false
+   }

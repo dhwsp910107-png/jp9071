@@ -1,0 +1,19 @@
+# Intellij
+*.iml
+.idea
+settings.json
+
+# npm
+node_modules
+
+# build
+build
+main.js
+*.js.map
+
+# obsidian
+data.json
+
+# mac
+.DS_store
+

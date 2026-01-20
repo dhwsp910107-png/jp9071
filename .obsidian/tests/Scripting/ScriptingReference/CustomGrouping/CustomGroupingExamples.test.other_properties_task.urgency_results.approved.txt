@@ -1,0 +1,30 @@
+Results of custom groupers
+
+
+
+group by function task.urgency.toFixed(3)
+Show the urgency to 3 decimal places, unlike the built-in "group by urgency" which uses 2.
+=>
+-1.800
+0.000
+1.950
+3.900
+6.000
+9.000
+====================================================================================
+
+
+group by function task.urgency
+Show non-integer urgency values to 5 decimal places, and integer ones to 0 decimal places.
+Sorting of groups by name has been found to be unreliable with varying numbers of decimal places.
+So to ensure consistent sorting, Tasks will round non-integer numbers to a fixed 5 decimal places, returning the value as a string.
+This still sorts consistently even when some of the group's values are integers.
+=>
+-1.80000
+0
+1.95000
+3.90000
+6
+9
+====================================================================================
+

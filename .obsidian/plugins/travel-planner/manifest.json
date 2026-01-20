@@ -1,0 +1,10 @@
+{
+    "id": "travel-planner",
+    "name": "Travel Planner",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "여행 계획과 기록을 관리하는 플러그인 - 일정, 경비, 체크리스트, 여행 기록 등을 한곳에서 관리하세요",
+    "author": "Your Name",
+    "authorUrl": "https://github.com/yourusername",
+    "isDesktopOnly": false
+}

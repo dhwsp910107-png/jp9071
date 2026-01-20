@@ -1,0 +1,10 @@
+{
+  "id": "routine-planner",
+  "name": "Routine Planner",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "일상 루틴과 일정을 관리하는 플래너입니다.",
+  "author": "Your Name",
+  "authorUrl": "https://yourwebsite.com",
+  "isDesktopOnly": false
+}

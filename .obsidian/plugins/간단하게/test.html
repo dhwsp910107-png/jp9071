@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Dashboard - JavaScript 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        
+        .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f4f8;
+            border-radius: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-secondary { background: #6b7280; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .result {
+            background: #e6fffa;
+            border: 1px solid #38b2ac;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            border: 1px solid #e53e3e;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .log {
+            background: #f7fafc;
+            border: 1px solid #cbd5e0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Study Dashboard - JavaScript 테스트</h1>
+            <p>main.js 파일의 핵심 기능들을 테스트합니다</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 기본 함수 테스트</h2>
+            <button class="btn btn-primary" onclick="testFormatTime()">formatTime 함수 테스트</button>
+            <button class="btn btn-primary" onclick="testDefaultSettings()">기본 설정 테스트</button>
+            <div id="basic-test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⏱️ 타이머 시뮬레이션</h2>
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <div style="text-align: center;">
+                <button class="btn btn-success" onclick="startTimerTest()">▶️ 시작</button>
+                <button class="btn btn-danger" onclick="stopTimerTest()">⏹️ 정지</button>
+                <button class="btn btn-secondary" onclick="resetTimerTest()">🔄 초기화</button>
+            </div>
+            <div id="timer-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 클래스 구조 테스트</h2>
+            <button class="btn btn-primary" onclick="testClassStructure()">클래스 구조 확인</button>
+            <div id="class-test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 설정값 검증</h2>
+            <button class="btn btn-primary" onclick="testSettingsValidation()">설정값 유효성 검사</button>
+            <div id="settings-test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🐛 디버깅 로그</h2>
+            <div class="log" id="debug-log">테스트를 실행하면 로그가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <script>
+        // 로그 함수
+        function log(message) {
+            const logElement = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // main.js에서 가져온 기본 설정
+        const DEFAULT_SETTINGS = {
+            problemsFolder: '학습관리/문제은행',
+            maxProblems: 500,
+            dailyGoal: 5,
+            targetDate: '2025-12-31',
+            defaultSubject: '수학',
+            subjects: ['수학', '물리', '화학', '생물', '영어', '국어', '한국사'],
+            timerEnabled: true,
+            masteredColor: '#10b981',
+            reviewingColor: '#f59e0b',
+            learningColor: '#ef4444'
+        };
+
+        // main.js에서 가져온 formatTime 함수
+        const formatTime = (seconds) => {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        };
+
+        // 타이머 상태 시뮬레이션
+        let timerState = {
+            isRunning: false,
+            seconds: 0,
+            interval: null
+        };
+
+        // 테스트 함수들
+        function testFormatTime() {
+            log('formatTime 함수 테스트 시작...');
+            const testCases = [
+                { input: 0, expected: '00:00:00' },
+                { input: 65, expected: '00:01:05' },
+                { input: 3661, expected: '01:01:01' },
+                { input: 7200, expected: '02:00:00' }
+            ];
+
+            let results = [];
+            testCases.forEach(test => {
+                const result = formatTime(test.input);
+                const passed = result === test.expected;
+                results.push(`${test.input}초 → ${result} (${passed ? '✅' : '❌ 예상: ' + test.expected})`);
+                log(`formatTime(${test.input}) = ${result} ${passed ? '✅' : '❌'}`);
+            });
+
+            document.getElementById('basic-test-result').innerHTML = 
+                '<div class="result"><strong>formatTime 테스트 결과:</strong><br>' + 
+                results.join('<br>') + '</div>';
+        }
+
+        function testDefaultSettings() {
+            log('기본 설정 테스트 시작...');
+            try {
+                const requiredFields = ['problemsFolder', 'subjects', 'timerEnabled'];
+                let results = [];
+                
+                requiredFields.forEach(field => {
+                    const exists = DEFAULT_SETTINGS.hasOwnProperty(field);
+                    results.push(`${field}: ${exists ? '✅ 존재' : '❌ 없음'}`);
+                    log(`설정 필드 ${field}: ${exists ? '존재' : '없음'}`);
+                });
+
+                document.getElementById('basic-test-result').innerHTML += 
+                    '<div class="result"><strong>기본 설정 테스트:</strong><br>' + 
+                    results.join('<br>') + '</div>';
+            } catch (error) {
+                log(`설정 테스트 오류: ${error.message}`);
+                document.getElementById('basic-test-result').innerHTML += 
+                    '<div class="error">설정 테스트 실패: ' + error.message + '</div>';
+            }
+        }
+
+        function startTimerTest() {
+            if (timerState.isRunning) return;
+            
+            log('타이머 시작');
+            timerState.isRunning = true;
+            timerState.seconds = 0;
+            timerState.interval = setInterval(() => {
+                timerState.seconds++;
+                document.getElementById('timer-display').textContent = formatTime(timerState.seconds);
+            }, 1000);
+
+            document.getElementById('timer-result').innerHTML = 
+                '<div class="result">⏱️ 타이머가 시작되었습니다!</div>';
+        }
+
+        function stopTimerTest() {
+            if (!timerState.isRunning) return;
+            
+            timerState.isRunning = false;
+            if (timerState.interval) {
+                clearInterval(timerState.interval);
+                timerState.interval = null;
+            }
+            
+            const timeSpent = timerState.seconds;
+            log(`타이머 정지 - 총 시간: ${formatTime(timeSpent)}`);
+            
+            document.getElementById('timer-result').innerHTML = 
+                `<div class="result">⏹️ 타이머 정지! 총 시간: ${formatTime(timeSpent)}</div>`;
+        }
+
+        function resetTimerTest() {
+            log('타이머 초기화');
+            stopTimerTest();
+            timerState.seconds = 0;
+            document.getElementById('timer-display').textContent = formatTime(0);
+            document.getElementById('timer-result').innerHTML = 
+                '<div class="result">🔄 타이머가 초기화되었습니다!</div>';
+        }
+
+        function testClassStructure() {
+            log('클래스 구조 테스트 시작...');
+            try {
+                // 기본적인 JavaScript 클래스 문법 테스트
+                class TestPlugin {
+                    constructor() {
+                        this.settings = DEFAULT_SETTINGS;
+                        this.timerState = { isRunning: false, seconds: 0 };
+                    }
+                    
+                    async loadSettings() {
+                        return Object.assign({}, DEFAULT_SETTINGS);
+                    }
+                    
+                    formatTime(seconds) {
+                        return formatTime(seconds);
+                    }
+                }
+
+                const testInstance = new TestPlugin();
+                const results = [
+                    `Plugin 클래스: ✅ 생성 가능`,
+                    `설정 로드: ✅ ${typeof testInstance.loadSettings === 'function' ? '함수 존재' : '함수 없음'}`,
+                    `타이머 상태: ✅ ${testInstance.timerState ? '초기화됨' : '초기화 안됨'}`,
+                    `formatTime 메서드: ✅ ${testInstance.formatTime(65) === '00:01:05' ? '정상 작동' : '오류'}`
+                ];
+
+                log('클래스 구조 테스트 완료');
+                document.getElementById('class-test-result').innerHTML = 
+                    '<div class="result"><strong>클래스 구조 테스트:</strong><br>' + 
+                    results.join('<br>') + '</div>';
+
+            } catch (error) {
+                log(`클래스 테스트 오류: ${error.message}`);
+                document.getElementById('class-test-result').innerHTML = 
+                    '<div class="error">클래스 테스트 실패: ' + error.message + '</div>';
+            }
+        }
+
+        function testSettingsValidation() {
+            log('설정값 유효성 검사 시작...');
+            try {
+                const validations = [
+                    {
+                        name: 'subjects 배열',
+                        test: () => Array.isArray(DEFAULT_SETTINGS.subjects) && DEFAULT_SETTINGS.subjects.length > 0,
+                        expected: '배열이고 요소가 있어야 함'
+                    },
+                    {
+                        name: 'maxProblems 숫자',
+                        test: () => typeof DEFAULT_SETTINGS.maxProblems === 'number' && DEFAULT_SETTINGS.maxProblems > 0,
+                        expected: '양수여야 함'
+                    },
+                    {
+                        name: 'timerEnabled 불린',
+                        test: () => typeof DEFAULT_SETTINGS.timerEnabled === 'boolean',
+                        expected: 'true/false 값이어야 함'
+                    },
+                    {
+                        name: 'defaultSubject 문자열',
+                        test: () => typeof DEFAULT_SETTINGS.defaultSubject === 'string' && DEFAULT_SETTINGS.defaultSubject.length > 0,
+                        expected: '비어있지 않은 문자열이어야 함'
+                    }
+                ];
+
+                let results = [];
+                validations.forEach(validation => {
+                    const passed = validation.test();
+                    results.push(`${validation.name}: ${passed ? '✅ 통과' : '❌ 실패'} (${validation.expected})`);
+                    log(`검증 ${validation.name}: ${passed ? '통과' : '실패'}`);
+                });
+
+                document.getElementById('settings-test-result').innerHTML = 
+                    '<div class="result"><strong>설정값 유효성 검사:</strong><br>' + 
+                    results.join('<br>') + '</div>';
+
+            } catch (error) {
+                log(`설정 검증 오류: ${error.message}`);
+                document.getElementById('settings-test-result').innerHTML = 
+                    '<div class="error">설정 검증 실패: ' + error.message + '</div>';
+            }
+        }
+
+        // 페이지 로드 시 초기 로그
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Study Dashboard 테스트 페이지 로드 완료');
+            log('main.js에서 추출한 핵심 기능들을 테스트할 수 있습니다');
+        });
+    </script>
+</body>
+</html>

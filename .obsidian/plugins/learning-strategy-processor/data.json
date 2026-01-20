@@ -1,0 +1,32 @@
+{
+  "strategiesList": [
+    {
+      "id": "1",
+      "name": "📝 조직화",
+      "description": "정보 구조화 및 목차화",
+      "icon": "📑"
+    },
+    {
+      "id": "2",
+      "name": "🔗 맥락화",
+      "description": "전체 흐름과 연결 관계 파악",
+      "icon": "🔗"
+    },
+    {
+      "id": "3",
+      "name": "🎨 정교화",
+      "description": "기존 지식과 연결 및 이미지화",
+      "icon": "💡"
+    }
+  ],
+  "outputFolder": "Learning",
+  "folderStructure": "monthly",
+  "autoCreateFolder": true,
+  "themeColor": "#3b82f6",
+  "statistics": {
+    "totalCreated": 5,
+    "completionRate": {},
+    "timeTracking": {}
+  },
+  "bookmarks": []
+}

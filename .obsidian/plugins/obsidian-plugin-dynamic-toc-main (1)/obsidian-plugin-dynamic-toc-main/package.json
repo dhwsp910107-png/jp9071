@@ -1,0 +1,29 @@
+{
+  "name": "obsidian-plugin-dynamic-toc",
+  "version": "0.0.27",
+  "description": "An Obsidian plugin to generate Tables of Contents that stay up to date with your document outline.",
+  "main": "main.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "obsidian-plugin dev -S src/styles.css src/main.ts",
+    "prebuild": "yarn test",
+    "type-check": "tsc --noEmit",
+    "build": "obsidian-plugin build -S src/styles.css src/main.ts -o .",
+    "release:dry": "standard-version -t '' --dry-run",
+    "release": "standard-version -t '' -a",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "detect-indent": "^6.1.0",
+    "detect-newline": "^3.1.0",
+    "jest": "^27.4.5",
+    "obsidian": "obsidianmd/obsidian-api",
+    "obsidian-plugin-cli": "^0.8.0",
+    "standard-version": "^9.3.1",
+    "stringify-package": "^1.0.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4"
+  }
+}

@@ -1,0 +1,10 @@
+{
+	"id": "structured-table-learning",
+	"name": "구조화된 표 학습 플러그인",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "DataviewJS 기반 구조화된 학습표 관리 시스템. 54개 블록, 540개 셀로 체계적인 학습 진도를 추적합니다.",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}

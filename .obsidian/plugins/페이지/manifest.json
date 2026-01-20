@@ -1,0 +1,10 @@
+{
+  "id": "page-progress-manager",
+  "name": "페이지 진도 관리 시스템",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "전기기사 실기 학습 진도를 효율적으로 관리하는 시스템",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false
+}

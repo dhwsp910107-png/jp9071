@@ -1,0 +1,10 @@
+{
+  "id": "quiz-sp",
+  "name": "Hanzi Study Manager Multi",
+  	"version": "4.7.4",
+  "minAppVersion": "0.15.0",
+  "description": "한자 학습 관리 플러그인 - 키워드 드롭다운, 다중 이미지 업로드, 모바일 최적화(안드로이드/iOS), 폴더 관리, 대시보드, 타이머, 오답노트, 통계 분석",
+  "author": "지 티",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

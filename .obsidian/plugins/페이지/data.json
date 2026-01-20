@@ -1,0 +1,118 @@
+{
+  "folders": [
+    {
+      "name": "직류회로",
+      "blocks": 3,
+      "time": 4320,
+      "createdAt": "2025-01-10T09:00:00.000Z"
+    },
+    {
+      "name": "교류회로",
+      "blocks": 2,
+      "time": 2700,
+      "createdAt": "2025-01-12T10:30:00.000Z"
+    },
+    {
+      "name": "변압기",
+      "blocks": 2,
+      "time": 2220,
+      "createdAt": "2025-01-15T14:20:00.000Z"
+    },
+    {
+      "name": "전동기",
+      "blocks": 1,
+      "time": 0,
+      "createdAt": "2025-01-20T16:45:00.000Z"
+    }
+  ],
+  "blocks": [
+    {
+      "id": 1737350400000,
+      "folder": "직류회로",
+      "name": "Chapter 1",
+      "start": 1,
+      "end": 20,
+      "segments": [true, true, true, false, false, false],
+      "time": 2040,
+      "createdAt": "2025-01-10T09:00:00.000Z",
+      "lastStudied": "2025-01-20T14:30:00.000Z"
+    },
+    {
+      "id": 1737437400000,
+      "folder": "교류회로",
+      "name": "Chapter 2",
+      "start": 21,
+      "end": 40,
+      "segments": [true, true, false, false, false, false],
+      "time": 1380,
+      "createdAt": "2025-01-12T10:30:00.000Z",
+      "lastStudied": "2025-01-21T15:45:00.000Z"
+    },
+    {
+      "id": 1737641400000,
+      "folder": "변압기",
+      "name": "Chapter 3",
+      "start": 41,
+      "end": 60,
+      "segments": [false, false, false, false, false, false],
+      "time": 0,
+      "createdAt": "2025-01-15T14:20:00.000Z",
+      "lastStudied": null
+    }
+  ],
+  "studyHistory": [
+    {
+      "folder": "교류회로",
+      "block": "Chapter 2",
+      "blockId": 1737437400000,
+      "pages": "21-40p",
+      "segment": 2,
+      "time": 1380,
+      "timestamp": 1737470700000,
+      "date": "2025-01-21"
+    },
+    {
+      "folder": "직류회로",
+      "block": "Chapter 1",
+      "blockId": 1737350400000,
+      "pages": "1-20p",
+      "segment": 3,
+      "time": 2040,
+      "timestamp": 1737463500000,
+      "date": "2025-01-21"
+    },
+    {
+      "folder": "변압기",
+      "block": "Chapter 3",
+      "blockId": 1737641400000,
+      "pages": "41-60p",
+      "segment": 2,
+      "time": 1680,
+      "timestamp": 1737384300000,
+      "date": "2025-01-20"
+    }
+  ],
+  "currentStudy": null,
+  "settings": {
+    "dailyGoal": 3600,
+    "segmentCount": 6,
+    "theme": "gradient",
+    "notifications": true
+  },
+  "stats": {
+    "totalStudyTime": 9240,
+    "todayStudyTime": 2700,
+    "weeklyStudyTime": [
+      { "day": "월", "time": 0 },
+      { "day": "화", "time": 1200 },
+      { "day": "수", "time": 1800 },
+      { "day": "목", "time": 2400 },
+      { "day": "금", "time": 1680 },
+      { "day": "토", "time": 900 },
+      { "day": "일", "time": 1260 }
+    ],
+    "totalBlocks": 3,
+    "completedBlocks": 0,
+    "inProgressBlocks": 2
+  }
+}

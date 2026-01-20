@@ -1,0 +1,24 @@
+{
+  "enabledCssSnippets": [
+    "custom-rainbow-colors",
+    "countdown-size",
+    "longer",
+    "dark-optimization",
+    "4",
+    "Study Dashboard Plugin",
+    "custom-admonitions.08b5eb",
+    "mobile-optimized - 복사본",
+    "lecture-tracker-unified"
+  ],
+  "cssTheme": "AnuPpuccin",
+  "accentColor": "",
+  "interfaceFontFamily": "",
+  "baseFontSize": 21,
+  "baseFontSizeAction": true,
+  "theme": "obsidian",
+  "nativeMenus": true,
+  "textFontFamily": "",
+  "monospaceFontFamily": "JetBrains Mono",
+  "showRibbon": true,
+  "showViewHeader": true
+}

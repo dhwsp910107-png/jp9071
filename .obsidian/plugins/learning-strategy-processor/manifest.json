@@ -1,0 +1,10 @@
+{
+  "id": "learning-strategy-processor",
+  "name": "Learning Strategy Processor",
+  "version": "2.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "학습 전략 처리 시스템 - 조직화, 맥락화, 정교화를 통한 효과적인 학습 관리",
+  "author": "Learning Assistant",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false
+}

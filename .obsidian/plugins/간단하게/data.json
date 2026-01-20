@@ -1,0 +1,51 @@
+{
+  "problemsFolder": "학습관리/문제은행",
+  "maxProblemsPerChapter": 200,
+  "dailyGoal": 11,
+  "targetDate": "2025-12-31",
+  "defaultSubject": "한자암기구조화",
+  "subjects": [
+    {
+      "name": "회로이론",
+      "chapters": 13
+    },
+    {
+      "name": "수학(경우의수~통계)",
+      "chapters": 14
+    },
+    {
+      "name": "단원별 4.수학 함수의극한",
+      "chapters": 5
+    },
+    {
+      "name": "일본어n1청해",
+      "chapters": 5
+    }
+  ],
+  "timerEnabled": true,
+  "autoRecordTime": true,
+  "autoRecordOnCheck": true,
+  "masteredColor": "#10b981",
+  "reviewingColor": "#f59e0b",
+  "learningColor": "#ef4444",
+  "cellSize": "large",
+  "maxProblems": 100,
+  "templatesFolder": "학습관리/템플릿",
+  "autoBackup": true,
+  "defaultTimerMinutes": 12,
+  "currentSubject": "수학",
+  "viewMode": "all",
+  "customSubjects": [],
+  "autoStart": true,
+  "defaultTimeLimit": 5,
+  "showProgressBar": true,
+  "enableKeyboardShortcuts": true,
+  "studyDashboard": {
+    "enabled": true,
+    "saveRecords": true
+  },
+  "timerDebug": true,
+  "autoStartTimer": true,
+  "timerWarningTime": 30,
+  "timerDangerTime": 10
+}

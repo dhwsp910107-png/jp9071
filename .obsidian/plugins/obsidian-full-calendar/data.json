@@ -1,0 +1,10 @@
+{
+  "calendarSources": [],
+  "defaultCalendar": 0,
+  "firstDay": 0,
+  "initialView": {
+    "desktop": "timeGridDay",
+    "mobile": "listWeek"
+  },
+  "timeFormat24h": true
+}

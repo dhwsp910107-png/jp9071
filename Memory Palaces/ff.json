@@ -1,0 +1,93 @@
+{
+  "name": "ff",
+  "layout": "house",
+  "created": 1763393051747,
+  "locations": [
+    {
+      "id": "entrance",
+      "name": "현관",
+      "x": 300,
+      "y": 520,
+      "items": []
+    },
+    {
+      "id": "hallway",
+      "name": "복도",
+      "x": 300,
+      "y": 400,
+      "items": []
+    },
+    {
+      "id": "living",
+      "name": "거실",
+      "x": 150,
+      "y": 250,
+      "items": []
+    },
+    {
+      "id": "bedroom1",
+      "name": "안방",
+      "x": 450,
+      "y": 250,
+      "items": []
+    },
+    {
+      "id": "bedroom2",
+      "name": "작은방",
+      "x": 450,
+      "y": 100,
+      "items": []
+    },
+    {
+      "id": "kitchen",
+      "name": "부엌",
+      "x": 150,
+      "y": 100,
+      "items": []
+    },
+    {
+      "id": "bathroom",
+      "name": "화장실",
+      "x": 300,
+      "y": 100,
+      "items": []
+    },
+    {
+      "id": "balcony",
+      "name": "베란다",
+      "x": 150,
+      "y": 400,
+      "items": []
+    }
+  ],
+  "connections": [
+    [
+      "entrance",
+      "hallway"
+    ],
+    [
+      "hallway",
+      "living"
+    ],
+    [
+      "hallway",
+      "bedroom1"
+    ],
+    [
+      "hallway",
+      "kitchen"
+    ],
+    [
+      "hallway",
+      "bathroom"
+    ],
+    [
+      "kitchen",
+      "bedroom2"
+    ],
+    [
+      "living",
+      "balcony"
+    ]
+  ]
+}

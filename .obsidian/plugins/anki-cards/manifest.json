@@ -1,0 +1,11 @@
+{
+	"id": "anki-cards",
+	"name": "Anki Cards",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Support for Anki card formats in Obsidian - Basic, Cloze, and Reverse cards",
+	"author": "Your Name",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

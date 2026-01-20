@@ -1,0 +1,147 @@
+/* 대시보드 재구성 CSS - main.js의 addDashboardStyles() 메서드에 추가 */
+
+/* 섹션 타이틀 */
+.section-title {
+    font-size: 1.2em;
+    margin: 15px 0 10px 0;
+    color: var(--text-normal);
+    font-weight: 600;
+}
+
+/* 퀴즈 시작 섹션 */
+.quiz-start-section {
+    margin-bottom: 25px;
+}
+
+.quiz-start-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.quiz-start-button {
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.quiz-start-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+/* 난이도별 퀴즈 섹션 */
+.difficulty-section {
+    margin-bottom: 25px;
+}
+
+.difficulty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.difficulty-button {
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: 3px solid;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.difficulty-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 문제 관리 섹션 */
+.management-section {
+    margin-bottom: 25px;
+}
+
+.management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.management-button {
+    padding: 12px 18px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 2px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.management-button:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+    transform: translateY(-2px);
+}
+
+/* 통계 & 설정 섹션 */
+.stats-section {
+    margin-bottom: 25px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.stats-button {
+    padding: 12px 18px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 2px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stats-button:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+    transform: translateY(-2px);
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .quiz-start-grid,
+    .difficulty-grid,
+    .management-grid,
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .quiz-start-grid,
+    .management-grid,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .difficulty-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

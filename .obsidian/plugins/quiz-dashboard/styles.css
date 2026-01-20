@@ -1,0 +1,77 @@
+/* Quiz Dashboard Pro v2.0.0 - 간결하고 깔끔한 디자인 */
+
+/* 기본 모달 */
+.qdb-modal,
+.qdb-folder-modal,
+.qdb-detail-modal,
+.qdb-stats-modal {
+    padding: 0 !important;
+}
+
+.qdb-modal .modal,
+.qdb-folder-modal .modal,
+.qdb-detail-modal .modal,
+.qdb-stats-modal .modal {
+    max-height: 85vh !important;
+}
+
+/* 로딩 */
+.qdb-loader {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.qdb-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--background-modifier-border);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .qdb-modal .modal,
+    .qdb-folder-modal .modal,
+    .qdb-detail-modal .modal,
+    .qdb-stats-modal .modal {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    .qdb-header h2 {
+        font-size: 1.3rem !important;
+    }
+
+    .qdb-btn-group {
+        flex-direction: column !important;
+    }
+
+    .qdb-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .qdb-quick-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .qdb-folders-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* 다크모드 */
+.theme-dark .qdb-folder-card:hover,
+.theme-dark .qdb-question-item:hover {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}

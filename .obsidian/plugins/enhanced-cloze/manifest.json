@@ -1,0 +1,10 @@
+{
+	"id": "enhanced-cloze",
+	"name": "Enhanced Cloze",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Enhanced cloze deletion system for Obsidian with Anki-style features. Supports multiple cloze cards, hints, and keyboard shortcuts.",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}

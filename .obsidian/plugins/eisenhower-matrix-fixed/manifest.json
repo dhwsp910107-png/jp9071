@@ -1,0 +1,11 @@
+{
+	"id": "eisenhower-matrix-fixed",
+	"name": "Matrix Support - Eisenhower & Time Manager",
+	"version": "2.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Eisenhower Matrix와 Time-Based Manager를 통합 관리하고 동기화하는 플러그인",
+	"author": "JSP",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

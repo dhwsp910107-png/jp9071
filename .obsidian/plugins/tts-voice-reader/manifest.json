@@ -1,0 +1,10 @@
+{
+	"id": "tts-voice-reader",
+	"name": "TTS Voice Reader",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "텍스트를 음성으로 읽어주는 플러그인. 기본 TTS와 음성 클로닝 지원.",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}

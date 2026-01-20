@@ -1,0 +1,19 @@
+/* ===================================================================
+   Quiz-SP2 Plugin - Mobile Touch Scroll Enhancement
+   모바일에서 부드러운 터치 스크롤 지원
+   ================================================================== */
+
+@media (max-width: 768px) {
+  /* 상세결과 터치 스크롤 */
+  .details-content {
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* 입력 필드 키보드 회피 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    scroll-margin-top: 150px;
+    scroll-margin-bottom: 150px;
+  }
+}

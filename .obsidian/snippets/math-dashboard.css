@@ -1,0 +1,400 @@
+/* ==========================================
+   수학 대시보드 CSS (math-dashboard.css)
+   옵시디언 CSS 스니펫 폴더에 저장
+   ========================================== */
+
+/* 대시보드 컨테이너 */
+.math-dashboard .dashboard {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.math-dashboard {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+}
+
+/* 액션 그리드 */
+.math-dashboard .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.math-dashboard .action-card {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-decoration: none !important;
+}
+
+.math-dashboard .action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    text-decoration: none !important;
+}
+
+.math-dashboard .action-card strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.math-dashboard .action-card small {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* 통계 카드 스타일 */
+.math-dashboard .stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.math-dashboard .stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.math-dashboard .stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.math-dashboard .stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.math-dashboard .stat-number.know { color: #28a745; }
+.math-dashboard .stat-number.confused { color: #ffc107; }
+.math-dashboard .stat-number.unknown { color: #dc3545; }
+.math-dashboard .stat-number.total { color: #6f42c1; }
+
+.math-dashboard .stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* 진행률 바 */
+.math-dashboard .progress-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.math-dashboard .progress-bar-wrapper {
+    width: 100%;
+    height: 25px;
+    background: #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 10px 0;
+    position: relative;
+}
+
+.math-dashboard .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 12px;
+    transition: width 0.8s ease;
+    position: relative;
+}
+
+.math-dashboard .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    z-index: 2;
+}
+
+/* 문제 번호 그리드 */
+.math-dashboard .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    margin: 15px 0;
+    max-width: 600px;
+}
+
+.math-dashboard .problem-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.math-dashboard .problem-number:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10;
+    text-decoration: none;
+}
+
+.math-dashboard .problem-number.know {
+    background: #28a745;
+    color: white;
+}
+
+.math-dashboard .problem-number.confused {
+    background: #ffc107;
+    color: #333;
+}
+
+.math-dashboard .problem-number.unknown {
+    background: #dc3545;
+    color: white;
+}
+
+.math-dashboard .problem-number.selected {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+}
+
+/* 섹션 헤더 */
+.math-dashboard .section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 20px 0 10px 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* 학습 정보 카드 */
+.math-dashboard .study-info {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.math-dashboard .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.math-dashboard .info-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.math-dashboard .info-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.math-dashboard .info-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2d3748;
+}
+
+/* 복습 현황 */
+.math-dashboard .review-status {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.math-dashboard .review-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.math-dashboard .review-item:last-child {
+    border-bottom: none;
+}
+
+.math-dashboard .review-problem {
+    font-weight: 600;
+}
+
+.math-dashboard .review-count {
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.math-dashboard .review-date {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* 테이블 스타일 개선 */
+.math-dashboard table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 15px 0;
+}
+
+.math-dashboard table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.math-dashboard table th,
+.math-dashboard table td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.math-dashboard table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.math-dashboard table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.math-dashboard table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .math-dashboard .action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .math-dashboard .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .math-dashboard .problem-grid {
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 300px;
+    }
+    
+    .math-dashboard .problem-number {
+        width: 40px;
+        height: 40px;
+        font-size: 0.8rem;
+    }
+    
+    .math-dashboard .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 다크모드 대응 */
+.theme-dark .math-dashboard .dashboard {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: #e2e8f0;
+}
+
+.theme-dark .math-dashboard .action-card,
+.theme-dark .math-dashboard .stat-card,
+.theme-dark .math-dashboard .progress-container,
+.theme-dark .math-dashboard .recent-activity,
+.theme-dark .math-dashboard .study-info,
+.theme-dark .math-dashboard .review-status {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.theme-dark .math-dashboard table {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.theme-dark .math-dashboard table tbody tr:hover {
+    background: #4a5568;
+}
+
+.theme-dark .math-dashboard .info-item {
+    background: #4a5568;
+    color: #e2e8f0;
+}
+
+/* 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.math-dashboard .dataview {
+    animation: fadeInUp 0.6s ease;
+}
+
+/* 커스텀 스크롤바 */
+.math-dashboard::-webkit-scrollbar {
+    width: 8px;
+}
+
+.math-dashboard::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.math-dashboard::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+}
+
+.math-dashboard::-webkit-scrollbar-thumb:hover {
+    background: #5a67d8;
+}

@@ -1,0 +1,11 @@
+{
+	"id": "understanding-input",
+	"name": "Understanding Input",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "간단하고 확실한 이해도 입력 플러그인",
+	"author": "Claude",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

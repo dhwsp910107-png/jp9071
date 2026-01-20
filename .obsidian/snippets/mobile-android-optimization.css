@@ -1,0 +1,532 @@
+/* ================================================
+   📱 안드로이드 모바일 최적화 CSS 스니펫
+   Quiz Plugin (quiz-sp) 전용
+   ================================================ */
+
+/* ================================================
+   1. 키보드 대응 - 입력 필드 가시성 보장
+   ================================================ */
+
+/* 모든 입력 필드: 키보드가 나타나도 보이도록 스크롤 여유 공간 */
+@media (max-width: 768px) {
+    .modal input[type="text"],
+    .modal textarea,
+    .modal input[type="number"] {
+        scroll-margin-top: 200px;
+        scroll-margin-bottom: 200px;
+    }
+
+    /* 모달: 키보드 공간 확보를 위해 최대 높이 조정 */
+    .modal {
+        max-height: 75vh !important;
+        margin-bottom: 0 !important;
+    }
+
+    .modal-container {
+        display: flex;
+        flex-direction: column;
+        max-height: 75vh;
+    }
+
+    /* 스크롤 컨테이너: 키보드가 올라와도 스크롤 가능 */
+    .modal .scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 100px; /* 키보드 여유 공간 */
+    }
+}
+
+/* ================================================
+   2. 터치 타겟 최적화 - 최소 44px 크기
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 모든 버튼 */
+    .modal button,
+    .dashboard-button,
+    .quiz-option-button,
+    .nav-button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 12px 16px !important;
+        font-size: 15px !important;
+    }
+
+    /* 작은 아이콘 버튼 */
+    button[class*="close"],
+    button[class*="icon"] {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 10px !important;
+    }
+
+    /* 터치 피드백 최적화 */
+    button,
+    a,
+    .clickable {
+        -webkit-tap-highlight-color: rgba(0, 123, 255, 0.2);
+        touch-action: manipulation;
+    }
+
+    /* 입력 필드: 줌 방지 + 터치 최적화 */
+    input[type="text"],
+    textarea,
+    select {
+        font-size: 16px !important; /* iOS 자동 줌 방지 */
+        min-height: 44px !important;
+        padding: 12px !important;
+    }
+}
+
+/* ================================================
+   3. 대시보드 레이아웃 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 대시보드 컨테이너 */
+    .dashboard-container {
+        padding: 12px !important;
+        gap: 16px !important;
+    }
+
+    /* 섹션 제목 */
+    .dashboard-section h3 {
+        font-size: 18px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 버튼 그리드: 2열 레이아웃 */
+    .dashboard-buttons-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    /* 버튼 텍스트: 줄바꿈 허용 */
+    .dashboard-button {
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        word-break: keep-all !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 작은 화면: 1열 레이아웃 */
+    .dashboard-buttons-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-button {
+        font-size: 14px !important;
+        padding: 14px 10px !important;
+    }
+}
+
+/* ================================================
+   4. 퀴즈 모달 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 퀴즈 질문 */
+    .quiz-question {
+        font-size: 18px !important;
+        line-height: 1.5 !important;
+        padding: 16px !important;
+    }
+
+    /* 선택지 버튼 */
+    .quiz-option-button {
+        font-size: 15px !important;
+        padding: 14px 12px !important;
+        margin-bottom: 10px !important;
+        min-height: 50px !important;
+        text-align: left !important;
+        white-space: normal !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 퀴즈 진행 정보 */
+    .quiz-progress {
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+
+    /* 힌트/노트 영역 */
+    .hint-section,
+    .note-section {
+        font-size: 14px !important;
+        padding: 12px !important;
+        margin: 10px 0 !important;
+    }
+
+    /* 정답/오답 피드백 */
+    .feedback-message {
+        font-size: 16px !important;
+        padding: 14px !important;
+    }
+}
+
+/* ================================================
+   5. 폴더 관리 모달 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 폴더 목록 */
+    .folder-list {
+        gap: 8px !important;
+    }
+
+    .folder-item {
+        padding: 12px !important;
+        font-size: 15px !important;
+        min-height: 50px !important;
+    }
+
+    /* 폴더 추가 섹션 */
+    .add-folder-section {
+        margin-top: 16px !important;
+        padding: 14px !important;
+    }
+
+    .add-folder-section h3 {
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 입력 컨테이너 */
+    .add-folder-section > div {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .add-folder-section input {
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .add-folder-section button {
+        width: 100% !important;
+    }
+}
+
+/* ================================================
+   6. 설정 페이지 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 설정 컨테이너 */
+    .setting-item {
+        padding: 14px 12px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .setting-item-info {
+        width: 100% !important;
+    }
+
+    .setting-item-control {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* 설정 제목 */
+    .setting-item-name {
+        font-size: 15px !important;
+    }
+
+    .setting-item-description {
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 토글/입력 필드 */
+    .setting-item input[type="text"],
+    .setting-item input[type="number"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .setting-item button {
+        width: 100% !important;
+    }
+}
+
+/* ================================================
+   7. DataviewJS 문제목록 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 통계 그리드: 2열 레이아웃 */
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .stat-box {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+
+    .stat-value {
+        font-size: 20px !important;
+    }
+
+    .stat-label {
+        font-size: 11px !important;
+    }
+
+    /* 문제 테이블: 가로 스크롤 */
+    .questions-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .questions-table {
+        min-width: 600px !important; /* 최소 너비 보장 */
+    }
+
+    .questions-table th,
+    .questions-table td {
+        font-size: 13px !important;
+        padding: 8px 6px !important;
+    }
+
+    /* 필터 버튼 */
+    .filter-buttons {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .filter-btn {
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+        min-height: 36px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 초소형 화면: 통계 1열 */
+    .stats-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ================================================
+   8. 네비게이션 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 네비게이션 버튼 컨테이너 */
+    .nav-buttons-container {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+    }
+
+    .nav-button {
+        flex: 1 1 calc(50% - 4px) !important;
+        min-width: 120px !important;
+    }
+
+    /* 뒤로 가기 버튼 */
+    .back-button,
+    .close-button {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background: var(--background-primary) !important;
+        margin-bottom: 10px !important;
+    }
+}
+
+/* ================================================
+   9. 스크롤바 최적화 (안드로이드 웹뷰)
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 스크롤바 숨기기 (네이티브 스크롤만 사용) */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    * {
+        -ms-overflow-style: none; /* IE, Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+}
+
+/* ================================================
+   10. 안전 영역 대응 (노치, 홈 바)
+   ================================================ */
+
+@media (max-width: 768px) {
+    .modal,
+    .dashboard-container {
+        padding-left: max(12px, env(safe-area-inset-left)) !important;
+        padding-right: max(12px, env(safe-area-inset-right)) !important;
+        padding-top: max(12px, env(safe-area-inset-top)) !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* ================================================
+   11. 로딩 상태 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    .loading-spinner,
+    .notice {
+        font-size: 14px !important;
+        padding: 12px !important;
+        max-width: 90vw !important;
+    }
+}
+
+/* ================================================
+   12. 접근성 개선
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 포커스 표시 강화 */
+    button:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: 2px solid var(--interactive-accent) !important;
+        outline-offset: 2px !important;
+    }
+
+    /* 활성 상태 피드백 */
+    button:active {
+        transform: scale(0.97);
+        transition: transform 0.1s;
+    }
+}
+
+/* ================================================
+   13. 가로 모드 최적화
+   ================================================ */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .modal {
+        max-height: 85vh !important;
+    }
+
+    .dashboard-buttons-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .quiz-option-button {
+        padding: 10px 12px !important;
+        min-height: 44px !important;
+    }
+}
+
+/* ================================================
+   14. 다크 모드 대응
+   ================================================ */
+
+@media (max-width: 768px) {
+    .theme-dark button,
+    .theme-dark input,
+    .theme-dark .stat-box {
+        border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .theme-dark button:active {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+}
+
+/* ================================================
+   15. 성능 최적화
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 애니메이션 간소화 (성능 향상) */
+    * {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+    }
+
+    /* GPU 가속 활성화 */
+    .modal,
+    .dashboard-container,
+    button {
+        will-change: transform;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+    }
+
+    /* 터치 스크롤 최적화 */
+    * {
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* ================================================
+   16. Dashboard Folder Cards Optimization
+   ================================================ */
+
+@media (max-width: 768px) {
+  /* 폴더 그리드 최적화 */
+  .folders-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 8px !important;
+  }
+  
+  /* 폴더 카드 크기 조정 */
+  .folder-quiz-card {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* 미니 버튼 터치 영역 보장 */
+  .folder-quiz-card button {
+    min-height: 36px !important;
+    min-width: 36px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 작은 화면에서 2열 고정 */
+  .folders-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+  
+  .folder-quiz-card {
+    padding: 10px !important;
+  }
+  
+  /* 섹션 제목 크기 조정 */
+  .folders-section h2 {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* 초소형 화면 최적화 */
+  .folders-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5px !important;
+  }
+  
+  .folder-quiz-card {
+    padding: 8px !important;
+  }
+  
+  .folder-quiz-card button {
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+  }
+}

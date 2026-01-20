@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Dashboard - 완전 시뮬레이션</title>
+    <style>
+        /* main.js에서 추출한 실제 CSS 스타일 */
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #2e3440;
+        }
+
+        .study-dashboard-container {
+            padding: 20px;
+            background: #ffffff;
+            color: #2e3440;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .dashboard-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin: 10px 0 0 0;
+        }
+        
+        .timer-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            margin: 20px 0;
+        }
+        
+        .timer-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .timer-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .timer-btn.start {
+            background: #10b981;
+        }
+        
+        .timer-btn.stop {
+            background: #ef4444;
+        }
+        
+        .timer-btn.reset {
+            background: #6b7280;
+        }
+        
+        .timer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .subject-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .subject-tab {
+            padding: 10px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            background: #f8f9fa;
+            color: #2e3440;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .subject-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .subject-tab:hover {
+            background: #5a67d8;
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #6b7280;
+        }
+        
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 8px;
+            margin: 20px 0;
+        }
+        
+        .problem-cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: white;
+        }
+        
+        .problem-cell:hover {
+            transform: scale(1.1);
+        }
+        
+        .problem-cell.empty {
+            background: #e9ecef;
+            color: #6b7280;
+        }
+        
+        .problem-cell.learning {
+            background: #ef4444;
+        }
+        
+        .problem-cell.reviewing {
+            background: #f59e0b;
+        }
+        
+        .problem-cell.mastered {
+            background: #10b981;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.5s ease;
+        }
+
+        /* 추가 스타일 */
+        .demo-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.active {
+            background: #10b981;
+        }
+
+        .status-indicator.inactive {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="study-dashboard-container">
+        <!-- 데모 정보 -->
+        <div class="demo-info">
+            <h3>📚 Study Dashboard - main.js 완전 시뮬레이션</h3>
+            <p><span class="status-indicator active"></span>실제 main.js에서 추출한 CSS와 JavaScript로 구현</p>
+            <p>Obsidian 플러그인과 동일한 모습과 기능을 확인할 수 있습니다</p>
+        </div>
+
+        <!-- 헤더 -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">📚 Study Dashboard</h1>
+            <p class="dashboard-subtitle">수학 과목 - 500문제 시스템</p>
+        </div>
+
+        <!-- 타이머 섹션 -->
+        <div class="timer-section">
+            <h2>⏱️ 공부 타이머</h2>
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn start" onclick="startTimer()">▶️ 시작</button>
+                <button class="timer-btn stop" onclick="stopTimer()">⏹️ 정지</button>
+                <button class="timer-btn reset" onclick="resetTimer()">🔄 초기화</button>
+            </div>
+        </div>
+
+        <!-- 과목 탭 -->
+        <div class="subject-tabs" id="subject-tabs">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="stats-grid" id="stats-grid">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+
+        <!-- 문제 현황 -->
+        <div>
+            <h3>📝 <span id="current-subject">수학</span> 문제 현황</h3>
+            <div>
+                <p>진행률: <span id="progress-text">87/125 문제 (69.6%)</span></p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 69.6%"></div>
+                </div>
+            </div>
+            <div class="problems-grid" id="problems-grid">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="action-buttons">
+            <button class="action-btn" onclick="showModal('새 문제 생성')">➕ 새 문제 생성</button>
+            <button class="action-btn" onclick="showModal('일괄 생성')">📝 일괄 생성</button>
+            <button class="action-btn" onclick="refreshDashboard()">🔄 새로고침</button>
+        </div>
+    </div>
+
+    <script>
+        // main.js에서 추출한 실제 코드
+        const DEFAULT_SETTINGS = {
+            problemsFolder: '학습관리/문제은행',
+            maxProblems: 500,
+            dailyGoal: 5,
+            targetDate: '2025-12-31',
+            defaultSubject: '수학',
+            subjects: ['수학', '물리', '화학', '생물', '영어', '국어', '한국사'],
+            timerEnabled: true,
+            masteredColor: '#10b981',
+            reviewingColor: '#f59e0b',
+            learningColor: '#ef4444'
+        };
+
+        const formatTime = (seconds) => {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        };
+
+        // 타이머 상태 (main.js에서 추출)
+        let timerState = {
+            isRunning: false,
+            startTime: null,
+            seconds: 0,
+            interval: null,
+            currentSubject: DEFAULT_SETTINGS.defaultSubject
+        };
+
+        let currentSubject = DEFAULT_SETTINGS.defaultSubject;
+
+        // 타이머 함수들 (main.js에서 추출)
+        function startTimer() {
+            if (timerState.isRunning) return;
+            timerState.isRunning = true;
+            timerState.startTime = Date.now();
+            timerState.seconds = 0;
+            timerState.interval = setInterval(() => {
+                timerState.seconds++;
+                updateTimerDisplay();
+            }, 1000);
+            showNotice('⏱️ 타이머 시작!');
+        }
+
+        function stopTimer() {
+            if (!timerState.isRunning) return;
+            timerState.isRunning = false;
+            if (timerState.interval) {
+                clearInterval(timerState.interval);
+                timerState.interval = null;
+            }
+            const timeSpent = timerState.seconds;
+            showNotice(`⏹️ 타이머 정지! 소요시간: ${formatTime(timeSpent)}`);
+            return timeSpent;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timerState.seconds = 0;
+            updateTimerDisplay();
+            showNotice('🔄 타이머 초기화');
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-display').textContent = formatTime(timerState.seconds);
+        }
+
+        // 과목 탭 렌더링
+        function renderSubjectTabs() {
+            const tabsContainer = document.getElementById('subject-tabs');
+            tabsContainer.innerHTML = '';
+            
+            DEFAULT_SETTINGS.subjects.forEach(subject => {
+                const tab = document.createElement('button');
+                tab.className = 'subject-tab' + (subject === currentSubject ? ' active' : '');
+                tab.textContent = subject;
+                tab.onclick = () => switchSubject(subject);
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        // 통계 렌더링
+        function renderStats() {
+            const statsContainer = document.getElementById('stats-grid');
+            const stats = [
+                { label: '총 문제', value: '125', color: '#3b82f6' },
+                { label: '완료', value: '87', color: '#10b981' },
+                { label: '복습중', value: '23', color: '#f59e0b' },
+                { label: '학습중', value: '15', color: '#ef4444' },
+                { label: '진행률', value: '69%', color: '#8b5cf6' },
+                { label: '오늘 목표', value: '5/5', color: '#06b6d4' }
+            ];
+
+            statsContainer.innerHTML = '';
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-value" style="color: ${stat.color}">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                `;
+                statsContainer.appendChild(card);
+            });
+        }
+
+        // 문제 그리드 렌더링
+        function renderProblemsGrid() {
+            const gridContainer = document.getElementById('problems-grid');
+            gridContainer.innerHTML = '';
+            
+            // 1-125번 문제
+            for (let i = 1; i <= 125; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'problem-cell';
+                cell.textContent = i;
+                
+                if (i <= 87) {
+                    cell.classList.add('mastered');
+                } else if (i <= 110) {
+                    cell.classList.add('reviewing');
+                } else if (i <= 125) {
+                    cell.classList.add('learning');
+                } else {
+                    cell.classList.add('empty');
+                }
+                
+                cell.onclick = () => showNotice(`문제 ${i}번 클릭됨!`);
+                gridContainer.appendChild(cell);
+            }
+            
+            // 126-500번 빈 문제들
+            for (let i = 126; i <= DEFAULT_SETTINGS.maxProblems; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'problem-cell empty';
+                cell.textContent = i;
+                cell.onclick = () => showModal(`문제 ${i}번 생성`);
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // 과목 전환
+        function switchSubject(subject) {
+            currentSubject = subject;
+            document.getElementById('current-subject').textContent = subject;
+            renderSubjectTabs();
+            showNotice(`📚 ${subject} 과목으로 전환되었습니다`);
+        }
+
+        // 대시보드 새로고침
+        function refreshDashboard() {
+            renderSubjectTabs();
+            renderStats();
+            renderProblemsGrid();
+            showNotice('🔄 대시보드가 새로고침되었습니다');
+        }
+
+        // 알림 표시 (Obsidian Notice 시뮬레이션)
+        function showNotice(message) {
+            // 간단한 토스트 알림 구현
+            const notice = document.createElement('div');
+            notice.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #333;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                z-index: 1000;
+                animation: fadeInOut 3s ease-in-out;
+            `;
+            notice.textContent = message;
+            document.body.appendChild(notice);
+
+            setTimeout(() => {
+                document.body.removeChild(notice);
+            }, 3000);
+        }
+
+        // 모달 시뮬레이션
+        function showModal(action) {
+            showNotice(`${action} 모달이 열렸습니다`);
+        }
+
+        // CSS 애니메이션 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-20px); }
+                20% { opacity: 1; transform: translateY(0); }
+                80% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSubjectTabs();
+            renderStats();
+            renderProblemsGrid();
+            showNotice('📚 Study Dashboard 로드 완료!');
+        });
+    </script>
+</body>
+</html>

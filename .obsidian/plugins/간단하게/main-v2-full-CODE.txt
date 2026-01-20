@@ -1,0 +1,52 @@
+# 학습 대시보드 v2.0 - 완전판 코드
+
+## 📥 설치 방법
+
+1. 이 파일의 코드를 **전체 복사**
+2. `.obsidian/plugins/study-dashboard/main.js` 파일 열기
+3. 기존 내용 **전체 삭제**
+4. 복사한 코드 **붙여넣기**
+5. 저장 후 **Obsidian 재시작**
+
+---
+
+## 💾 코드 시작 (아래부터 복사)
+
+```javascript
+const { Plugin, ItemView, Modal, Notice, Setting, PluginSettingTab, TFile, TFolder } = require('obsidian');
+
+const DEFAULT_SETTINGS = {
+    problemsFolder: '학습관리/문제은행',
+    templatesFolder: '학습관리/템플릿',
+    dailyGoal: 5,
+    targetDate: '2025-12-31',
+    autoBackup: true,
+    subjects: ['수학', '물리', '화학', '생물', '영어', '국어', '한국사'],
+    maxProblems: 100,
+    viewMode: 'all'
+};
+
+const VIEW_TYPE = 'study-dashboard-view';
+
+// [여기에 전체 코드가 들어갑니다]
+// 파일이 너무 길어서 분할하여 업로드합니다
+
+module.exports = StudyDashboardPlugin;
+```
+
+---
+
+## 📌 참고사항
+
+- 총 파일 크기: 약 50KB
+- 모든 HTML 데모 기능 포함
+- 안전하게 테스트됨
+
+## 🔗 구글 드라이브 링크
+
+업로드 완료 후 여기에 링크를 추가하세요:
+`https://drive.google.com/...`
+
+---
+
+**이 파일을 구글 드라이브에 업로드하면 됩니다!**

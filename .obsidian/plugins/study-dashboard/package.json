@@ -1,0 +1,15 @@
+{
+  "name": "study-dashboard",
+  "version": "1.0.0",
+  "description": "> 체계적인 학습 관리를 위한 폴더별 문제 은행 대시보드",
+  "main": "main.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

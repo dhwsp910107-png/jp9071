@@ -1,0 +1,93 @@
+{
+  "name": "hhhh",
+  "layout": "path",
+  "created": 1761734519874,
+  "locations": [
+    {
+      "id": "gate",
+      "name": "대문",
+      "x": 300,
+      "y": 520,
+      "items": []
+    },
+    {
+      "id": "garden",
+      "name": "정원",
+      "x": 300,
+      "y": 450,
+      "items": []
+    },
+    {
+      "id": "fountain",
+      "name": "분수대",
+      "x": 300,
+      "y": 380,
+      "items": []
+    },
+    {
+      "id": "bench1",
+      "name": "첫번째 벤치",
+      "x": 200,
+      "y": 310,
+      "items": []
+    },
+    {
+      "id": "tree",
+      "name": "큰 나무",
+      "x": 300,
+      "y": 250,
+      "items": []
+    },
+    {
+      "id": "bench2",
+      "name": "두번째 벤치",
+      "x": 400,
+      "y": 190,
+      "items": []
+    },
+    {
+      "id": "statue",
+      "name": "조각상",
+      "x": 300,
+      "y": 130,
+      "items": []
+    },
+    {
+      "id": "door",
+      "name": "건물 입구",
+      "x": 300,
+      "y": 70,
+      "items": []
+    }
+  ],
+  "connections": [
+    [
+      "gate",
+      "garden"
+    ],
+    [
+      "garden",
+      "fountain"
+    ],
+    [
+      "fountain",
+      "bench1"
+    ],
+    [
+      "bench1",
+      "tree"
+    ],
+    [
+      "tree",
+      "bench2"
+    ],
+    [
+      "bench2",
+      "statue"
+    ],
+    [
+      "statue",
+      "door"
+    ]
+  ]
+}

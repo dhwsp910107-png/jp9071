@@ -1,0 +1,44 @@
+{
+  "quizFolder": "HanziQuiz",
+  "questionsFolder": "HanziQuiz/Questions",
+  "resultsFolder": "HanziQuiz/Results",
+  "wrongAnswersFolder": "HanziQuiz/WrongAnswers",
+  "questionFolders": [
+    "기본",
+    "한자",
+    "어휘",
+    "문법",
+    "100번대 독음",
+    "N3"
+  ],
+  "timerPerQuestion": 30,
+  "enableTimer": true,
+  "shuffleQuestions": true,
+  "shuffleOptions": true,
+  "showHintAfterWrong": true,
+  "stats": {
+    "totalAttempts": 7,
+    "totalCorrect": 5,
+    "totalWrong": 2,
+    "totalQuestions": 0,
+    "bookmarkedCount": 0,
+    "lastStudyDate": "2025-11-29T11:48:19.348Z",
+    "studyHistory": [
+      {
+        "date": "2025. 11. 13.",
+        "correct": 2,
+        "wrong": 0
+      },
+      {
+        "date": "2025. 11. 28.",
+        "correct": 2,
+        "wrong": 2
+      },
+      {
+        "date": "2025. 11. 29.",
+        "correct": 1,
+        "wrong": 0
+      }
+    ]
+  }
+}

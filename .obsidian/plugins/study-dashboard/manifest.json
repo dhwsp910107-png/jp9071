@@ -1,0 +1,11 @@
+{
+	"id": "study-dashboard",
+	"name": "study-dashboard",
+	"version": "3.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Anki 타이머와 문제 관리를 통합한 학습 대시보드 플러그인",
+	"author": "JSP",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

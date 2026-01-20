@@ -1,0 +1,130 @@
+/* Learning Strategy Planner - 폴더별 퀴즈 버튼 스타일 */
+
+.learning-strategy-planner .folder-item {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 18px 20px !important;
+    background: var(--background-primary-alt) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 10px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+.learning-strategy-planner .folder-item:hover {
+    background: var(--background-secondary) !important;
+    transform: translateX(6px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.learning-strategy-planner .folder-info {
+    flex: 1 !important;
+}
+
+.learning-strategy-planner .folder-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 6px !important;
+    font-weight: 600 !important;
+    font-size: 1.1em !important;
+}
+
+.learning-strategy-planner .folder-meta {
+    font-size: 0.9em !important;
+    color: var(--text-muted) !important;
+}
+
+.learning-strategy-planner .folder-actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.learning-strategy-planner .btn-start {
+    padding: 10px 16px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 0.95em !important;
+    font-weight: 600 !important;
+    transition: all 0.3s !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+.learning-strategy-planner .btn-start:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+}
+
+.learning-strategy-planner .btn-create {
+    padding: 10px 16px !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    transition: all 0.3s !important;
+}
+
+.learning-strategy-planner .btn-create:hover {
+    transform: translateY(-2px) !important;
+}
+
+.learning-strategy-planner .btn-list,
+.learning-strategy-planner .btn-record,
+.learning-strategy-planner .btn-edit {
+    padding: 10px 16px !important;
+    background: var(--background-modifier-border) !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+}
+
+.learning-strategy-planner .btn-list:hover,
+.learning-strategy-planner .btn-record:hover,
+.learning-strategy-planner .btn-edit:hover {
+    background: var(--interactive-hover) !important;
+}
+
+/* 북마크 아이템 스타일 */
+.learning-strategy-planner .bookmark-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 14px 16px !important;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 165, 0, 0.08) 100%) !important;
+    border: 2px solid rgba(255, 165, 0, 0.3) !important;
+    border-radius: 10px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+.learning-strategy-planner .bookmark-item:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 165, 0, 0.12) 100%) !important;
+    transform: translateX(6px) !important;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.2) !important;
+}
+
+.learning-strategy-planner .btn-bookmark {
+    padding: 8px 14px !important;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+    color: #000 !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 0.95em !important;
+    font-weight: 600 !important;
+    transition: all 0.3s !important;
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3) !important;
+}
+
+.learning-strategy-planner .btn-bookmark:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4) !important;
+}

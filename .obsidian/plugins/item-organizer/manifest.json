@@ -1,0 +1,10 @@
+{
+  "id": "item-organizer",
+  "name": "Item Organizer",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "물품을 체계적으로 관리하고 DataviewJS와 연동되는 테이블 기반 정리 플러그인",
+  "author": "Your Name",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

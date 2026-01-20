@@ -1,0 +1,27 @@
+Results of custom groupers
+
+
+
+group by function task.status.name
+Identical to "group by status.name".
+=>
+Cancelled
+Done
+EMPTY
+In Progress
+Non-Task
+Todo
+====================================================================================
+
+
+group by function task.status.name.toUpperCase()
+Convert the status names to capitals.
+=>
+CANCELLED
+DONE
+EMPTY
+IN PROGRESS
+NON-TASK
+TODO
+====================================================================================
+

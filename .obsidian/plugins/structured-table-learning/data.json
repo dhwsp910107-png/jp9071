@@ -1,0 +1,9 @@
+{
+  "studyFolder": "Study",
+  "dashboardFolder": "Dashboard",
+  "enableNotifications": false,
+  "blocksPerPage": 5,
+  "showDashboardOnStartup": false,
+  "enableTouchPreview": false,
+  "enableStatusColors": false
+}

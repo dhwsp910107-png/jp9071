@@ -1,0 +1,309 @@
+{
+  "quizFolder": "HanziQuiz",
+  "questionsFolder": "HanziQuiz/Questions",
+  "resultsFolder": "HanziQuiz/Results",
+  "wrongAnswersFolder": "HanziQuiz/WrongAnswers",
+  "archiveFolder": "HanziQuiz/Archive",
+  "bookmarkFolder": "⭐ 북마크",
+  "attachmentFolderName": "첨부파일",
+  "questionFolders": [
+    "기본",
+    "300번대",
+    "200번대",
+    "100번대",
+    "컴활필기",
+    "001번대",
+    "001번대-b",
+    "400번대"
+  ],
+  "timerPerQuestion": 5,
+  "enableTimer": true,
+  "shuffleQuestions": false,
+  "shuffleOptions": false,
+  "showHintAfterWrong": true,
+  "reducedAnimations": false,
+  "dashboardQuickMemo": "나는 10억 벌었다",
+  "dailyChecklists": {
+    "2025-12-03": {
+      "items": [
+        {
+          "text": "iiiii",
+          "completed": false,
+          "timestamp": 1764746549470
+        }
+      ],
+      "notes": [
+        "sadasd"
+      ]
+    },
+    "2025-12-02": {
+      "items": [
+        {
+          "text": "jj",
+          "completed": false,
+          "timestamp": 1764742386645
+        }
+      ],
+      "notes": [],
+      "quickMemo": ""
+    },
+    "2025-12-04": {
+      "items": [
+        {
+          "text": "ㅇㅇ",
+          "completed": true,
+          "timestamp": 1764884831712
+        },
+        {
+          "text": "ㅇㅇ",
+          "completed": true,
+          "timestamp": 1764884847032
+        }
+      ],
+      "notes": [],
+      "quickMemo": ""
+    },
+    "2025-12-05": {
+      "items": [
+        {
+          "text": "ㅓㅓㅓ",
+          "completed": true,
+          "timestamp": 1764911188181
+        }
+      ],
+      "notes": [
+        "hh"
+      ]
+    },
+    "2025-12-06": {
+      "items": [
+        {
+          "text": "hhh",
+          "completed": false,
+          "timestamp": 1764884862241
+        }
+      ],
+      "notes": [
+        "hh"
+      ]
+    },
+    "2025-12-08": {
+      "items": [
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765194386930
+        },
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765194389667
+        },
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765194389667
+        }
+      ],
+      "notes": [
+        "474"
+      ],
+      "quickMemo": ""
+    }
+  },
+  "weeklyChecklists": {
+    "2025-W49": {
+      "items": [
+        {
+          "text": "ㅡㅓ",
+          "completed": false,
+          "timestamp": 1764907573108
+        }
+      ],
+      "notes": [
+        "- 나는 1000억 벌었다"
+      ]
+    },
+    "2025-W50": {
+      "items": [
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765194409714
+        }
+      ],
+      "notes": [],
+      "quickMemo": ""
+    },
+    "2025-W52": {
+      "items": [],
+      "notes": [],
+      "quickMemo": ""
+    },
+    "2025-W51": {
+      "items": [],
+      "notes": [],
+      "quickMemo": ""
+    }
+  },
+  "monthlyChecklists": {
+    "2025-12": {
+      "items": [
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765954188467
+        },
+        {
+          "text": "hh",
+          "completed": false,
+          "timestamp": 1765954188467
+        }
+      ],
+      "notes": [
+        "ㅇㄹ"
+      ]
+    },
+    "2026-01": {
+      "items": [],
+      "notes": [],
+      "quickMemo": ""
+    }
+  },
+  "weeklyTemplates": [
+    {
+      "id": "1764907569255",
+      "name": "ㅓㅓ",
+      "items": [
+        "ㅓ"
+      ]
+    }
+  ],
+  "monthlyTemplates": [
+    {
+      "id": "1764907512690",
+      "name": "ㅅㅎㅎㅅ",
+      "items": [
+        "ㅎㅎ"
+      ]
+    }
+  ],
+  "checklistTemplates": [
+    {
+      "name": "ㅓㅓ",
+      "items": [
+        "hh"
+      ]
+    },
+    {
+      "name": "ㅇ",
+      "items": [
+        "hh",
+        "hh"
+      ]
+    }
+  ],
+  "ribbonMenuItems": [
+    {
+      "id": "dashboard",
+      "title": "← 대시보드",
+      "icon": "home",
+      "action": "dashboard",
+      "enabled": true
+    },
+    {
+      "id": "difficulty",
+      "title": "🎯 난이도 설정",
+      "icon": "target",
+      "action": "difficulty",
+      "enabled": true
+    },
+    {
+      "id": "timer",
+      "title": "⚙️ 설정",
+      "icon": "settings",
+      "action": "timer",
+      "enabled": true
+    },
+    {
+      "id": "edit",
+      "title": "✏️ 편집",
+      "icon": "pencil",
+      "action": "edit",
+      "enabled": true
+    },
+    {
+      "id": "delete",
+      "title": "🗑️ 삭제",
+      "icon": "trash",
+      "action": "delete",
+      "enabled": true
+    },
+    {
+      "id": "custom-1763094893666",
+      "title": "기록",
+      "icon": "star",
+      "action": "clear-records",
+      "enabled": true
+    },
+    {
+      "id": "custom-1763095051159",
+      "title": "폴더별기록",
+      "icon": "star",
+      "action": "clear-folder-records",
+      "enabled": true
+    }
+  ],
+  "enableMobileOptimization": false,
+  "stats": {
+    "totalAttempts": 33,
+    "totalCorrect": 5,
+    "totalWrong": 28,
+    "totalQuestions": 0,
+    "bookmarkedCount": 6,
+    "lastStudyDate": "2026-01-14T16:35:11.537Z",
+    "studyHistory": [
+      {
+        "date": "2026. 1. 9.",
+        "correct": 4,
+        "wrong": 28,
+        "timestamp": 1767962948412
+      },
+      {
+        "date": "2026. 1. 15.",
+        "correct": 1,
+        "wrong": 0,
+        "timestamp": 1768408511538
+      }
+    ]
+  },
+  "folderOrder": [
+    "001번대",
+    "100번대",
+    "200번대",
+    "300번대",
+    "001번대-b",
+    "400번대",
+    "⭐ 북마크/001번대",
+    "문법",
+    "컴활필기",
+    "기본",
+    "⭐ 북마크/한자",
+    "⭐ 북마크/컴활필기",
+    "한자",
+    "전기기능"
+  ],
+  "dailyTemplates": [
+    {
+      "id": "1764740852493",
+      "name": "k",
+      "items": [
+        "k"
+      ]
+    }
+  ],
+  "folderBookmarkSettings": {
+    "컴활필기": "컴활필기",
+    "001번대": "001번대"
+  }
+}

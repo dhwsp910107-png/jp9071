@@ -1,0 +1,137 @@
+{
+  "name": "m",
+  "layout": "building",
+  "created": 1763393995834,
+  "locations": [
+    {
+      "id": "lobby",
+      "name": "로비",
+      "x": 300,
+      "y": 520,
+      "items": []
+    },
+    {
+      "id": "elevator",
+      "name": "엘리베이터",
+      "x": 300,
+      "y": 450,
+      "items": []
+    },
+    {
+      "id": "floor3",
+      "name": "3층 복도",
+      "x": 300,
+      "y": 380,
+      "items": []
+    },
+    {
+      "id": "office1",
+      "name": "301호",
+      "x": 150,
+      "y": 310,
+      "items": []
+    },
+    {
+      "id": "office2",
+      "name": "302호",
+      "x": 300,
+      "y": 310,
+      "items": []
+    },
+    {
+      "id": "office3",
+      "name": "303호",
+      "x": 450,
+      "y": 310,
+      "items": []
+    },
+    {
+      "id": "floor2",
+      "name": "2층 복도",
+      "x": 300,
+      "y": 240,
+      "items": []
+    },
+    {
+      "id": "room1",
+      "name": "201호",
+      "x": 150,
+      "y": 170,
+      "items": []
+    },
+    {
+      "id": "room2",
+      "name": "202호",
+      "x": 300,
+      "y": 170,
+      "items": []
+    },
+    {
+      "id": "room3",
+      "name": "203호",
+      "x": 450,
+      "y": 170,
+      "items": []
+    },
+    {
+      "id": "floor1",
+      "name": "1층 복도",
+      "x": 300,
+      "y": 100,
+      "items": []
+    },
+    {
+      "id": "exit",
+      "name": "출구",
+      "x": 300,
+      "y": 40,
+      "items": []
+    }
+  ],
+  "connections": [
+    [
+      "lobby",
+      "elevator"
+    ],
+    [
+      "elevator",
+      "floor3"
+    ],
+    [
+      "floor3",
+      "office1"
+    ],
+    [
+      "floor3",
+      "office2"
+    ],
+    [
+      "floor3",
+      "office3"
+    ],
+    [
+      "floor3",
+      "floor2"
+    ],
+    [
+      "floor2",
+      "room1"
+    ],
+    [
+      "floor2",
+      "room2"
+    ],
+    [
+      "floor2",
+      "room3"
+    ],
+    [
+      "floor2",
+      "floor1"
+    ],
+    [
+      "floor1",
+      "exit"
+    ]
+  ]
+}

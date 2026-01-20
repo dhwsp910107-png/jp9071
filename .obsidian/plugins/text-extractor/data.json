@@ -1,0 +1,9 @@
+{
+  "ocrLanguages": [
+    "kor",
+    "jpn",
+    "eng"
+  ],
+  "rightClickMenu": true,
+  "useSystemOCR": false
+}

@@ -1,0 +1,10 @@
+{
+  "id": "hanzi-study-manager",
+  "name": "Hanzi Study Manager",
+  "version": "4.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "한자 학습 관리 플러그인 - 폴더 관리, 대시보드, 타이머, 오답노트, 통계 분석",
+  "author": "지 티",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

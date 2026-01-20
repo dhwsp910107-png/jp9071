@@ -1,0 +1,256 @@
+{
+  "main": {
+    "id": "5324373015726ba8",
+    "type": "split",
+    "children": [
+      {
+        "id": "ef73a870128b82f4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5977fbe14e2f2ed2",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "새 탭"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "cd0d86747dd63785",
+    "type": "split",
+    "children": [
+      {
+        "id": "ae1ef446a9fa394f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "41e45820f0cc2de0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "afc69f31d6c6f224",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "path:\"강의시리즈/\" ",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "1dc5052335cdcd02",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          },
+          {
+            "id": "d06234e5f12b1d22",
+            "type": "leaf",
+            "state": {
+              "type": "mk-path-view",
+              "state": {},
+              "icon": "layout-grid",
+              "title": "Navigator"
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "horizontal",
+    "width": 318.5124969482422,
+    "collapsed": true
+  },
+  "right": {
+    "id": "2ba02a60ff07df06",
+    "type": "split",
+    "children": [
+      {
+        "id": "6eafa5132c3e0250",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5e910c534904cb3b",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "백링크"
+            }
+          },
+          {
+            "id": "0ac5809816e6a13a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Cloze Cards/시발준영이처럼살지말자/이미지테스트.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "이미지테스트 의 나가는 링크"
+            }
+          },
+          {
+            "id": "857ddae18e25fa77",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "786197807d9456ba",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "bc06b6da4b3a4f33",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Learning Plans/일별목표_2026-01-09.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "일별목표_2026-01-09 의 개요"
+            }
+          },
+          {
+            "id": "c798016f80b4abf4",
+            "type": "leaf",
+            "state": {
+              "type": "quiz-sp2-dashboard-view",
+              "state": {},
+              "icon": "layout-dashboard",
+              "title": "📊 한자 퀴즈 대시보드"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 867.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "quiz-sp:한자 퀴즈 대시보드": false,
+      "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false,
+      "switcher:빠른 전환기 열기": true,
+      "graph:그래프 뷰 열기": true,
+      "canvas:새 캔버스 만들기": true,
+      "daily-notes:오늘의 일일 노트 열기": true,
+      "templates:템플릿 삽입": true,
+      "command-palette:명령어 팔레트 열기": true,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "5977fbe14e2f2ed2",
+  "lastOpenFiles": [
+    "HanziQuiz/Questions/001번대-b/3_001b번대.md",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215456087.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215443088.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215358499.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215345970.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215335203.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215317963.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215301257.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215243869.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215232377.png",
+    "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215220881.png",
+    "HanziQuiz/Questions/001번대-b/2_001b번대.md",
+    "HanziQuiz/Questions/001번대-b/1_001b번대.md",
+    "HanziQuiz/Questions/400번대/4_400번대.md",
+    "HanziQuiz/Questions/400번대/3_400번대.md",
+    "HanziQuiz/Questions/400번대/2_400번대.md",
+    "HanziQuiz/400번대/첨부파일",
+    "HanziQuiz/400번대",
+    "HanziQuiz/Questions/400번대/문제목록.md",
+    "HanziQuiz/Questions/400번대/1_400번대.md",
+    "HanziQuiz/Questions/400번대",
+    "HanziQuiz/⭐ 북마크/100번대/문제목록.md",
+    "HanziQuiz/⭐ 북마크/100번대",
+    "HanziQuiz/001번대-b/첨부파일",
+    "HanziQuiz/001번대-b",
+    "HanziQuiz/Questions/001번대-b/문제목록.md",
+    "HanziQuiz/Questions/001번대-b/1_001번대b.md",
+    "HanziQuiz/001번대-b.md",
+    "HanziQuiz/Questions/001번대-b/10_001번대.md",
+    "HanziQuiz/Questions/001번대-b/2_001번대.md",
+    "HanziQuiz/Questions/001번대-b/3_001번대.md",
+    "HanziQuiz/Questions/001번대-b/4_001번대.md",
+    "HanziQuiz/Questions/001번대-b/5_001번대.md",
+    "HanziQuiz/Questions/001번대-b/6_001번대.md",
+    "HanziQuiz/Questions/001번대-b/7_001번대.md",
+    "HanziQuiz/Questions/001번대-b/8_001번대.md",
+    "HanziQuiz/Questions/001번대-b/9_001번대.md",
+    "HanziQuiz/Questions/001번대-b",
+    "HanziQuiz/001번대/첨부파일",
+    "HanziQuiz/001번대",
+    "HanziQuiz/Questions/a-001번대/문제목록.md",
+    "HanziQuiz/Questions/300번대/10_300번대.md",
+    "HanziQuiz/Questions/a001번대",
+    "HanziQuiz/Questions/a-001번대/10_001번대.md",
+    "HanziQuiz/Questions/a-001번대/9_001번대.md",
+    "HanziQuiz/Questions/a-001번대/8_001번대.md",
+    "무제 1.canvas",
+    "무제.canvas"
+  ]
+}

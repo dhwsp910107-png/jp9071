@@ -1,0 +1,21 @@
+{
+  "defaultRows": 12,
+  "defaultCols": 9,
+  "startNumber": 1,
+  "useLinks": true,
+  "priorityLabels": true,
+  "ribbonIcon": "sheet",
+  "showDashboardOnStartup": false,
+  "theme": "default",
+  "baseFolder": "Chapters",
+  "createFolders": true,
+  "noteTemplate": "# {{title}}\n\n## 내용\n\n",
+  "autoCreateNotes": true,
+  "stats": {
+    "tablesCreated": 13,
+    "chaptersCreated": 6,
+    "notesCreated": 260,
+    "lastUsed": "2025-12-04T15:02:17.572Z",
+    "favoriteType": "custom"
+  }
+}

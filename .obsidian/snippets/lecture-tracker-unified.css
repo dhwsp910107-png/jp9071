@@ -1,0 +1,783 @@
+/* ============================================
+   Smart Lecture Tracker - Unified Dark Theme
+   Routine Planner 스타일 통합 버전
+   ============================================ */
+
+/* 다크모드 색상 팔레트 - 개선된 가시성 */
+:root {
+  --dark-bg-primary: #151923;
+  --dark-bg-secondary: #1a1f2e;
+  --dark-bg-tertiary: #242936;
+  --dark-bg-card: #2d3548;
+  --dark-bg-hover: #353d52;
+  --dark-border: #3a4154;
+  
+  --accent-primary: #f59e0b;
+  --accent-secondary: #fbbf24;
+  --accent-tertiary: #d97706;
+  
+  --color-green: #10b981;
+  --color-blue: #3b82f6;
+  --color-red: #ef4444;
+  --color-purple: #8b5cf6;
+  
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+}
+
+/* ============================================
+   대시보드 전체 배경
+   ============================================ */
+.markdown-preview-view,
+.markdown-source-view {
+  background-color: var(--dark-bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* 대시보드 페이지 */
+body .markdown-preview-view[data-dashboard="true"],
+body .workspace-leaf-content[data-type="markdown"] .view-content {
+  background-color: var(--dark-bg-primary) !important;
+}
+
+/* ============================================
+   헤더 & 제목 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view h1,
+.markdown-preview-view h2,
+.markdown-preview-view h3,
+.markdown-preview-view h4 {
+  color: var(--accent-secondary) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.markdown-preview-view h1 {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--accent-primary) !important;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3)) !important;
+}
+
+/* ============================================
+   Dataview 테이블 스타일 - 개선된 가시성
+   ============================================ */
+.dataview.table-view-table {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid var(--dark-border) !important;
+}
+
+.dataview.table-view-table thead {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)) !important;
+}
+
+.dataview.table-view-table thead tr th {
+  color: #000 !important;
+  font-weight: 800 !important;
+  padding: 14px 18px !important;
+  border: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  font-size: 0.95rem !important;
+}
+
+.dataview.table-view-table tbody tr {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-bottom: 1px solid var(--dark-border) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dataview.table-view-table tbody tr:hover {
+  background-color: var(--dark-bg-card) !important;
+  transform: translateX(3px) !important;
+}
+
+.dataview.table-view-table tbody tr td {
+  color: var(--text-primary) !important;
+  padding: 12px 18px !important;
+  border: none !important;
+  font-size: 0.9rem !important;
+}
+
+/* ============================================
+   버튼 스타일 - 개선된 가시성
+   ============================================ */
+button,
+.clickable-icon,
+input[type="button"],
+input[type="submit"] {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)) !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+button:hover,
+.clickable-icon:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* ============================================
+   카드 & 섹션 스타일 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view .block-language-dataviewjs > div,
+.markdown-preview-view .block-language-dataview > div {
+  background-color: var(--dark-bg-secondary) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  margin: 15px 0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid var(--dark-border) !important;
+}
+
+/* ============================================
+   진행률 바 스타일
+   ============================================ */
+/* 진행률 바 컨테이너 */
+div[style*="background"][style*="border-radius"][style*="padding"] {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 진행률 바 내부 */
+div[style*="background"][style*="height: 10px"],
+div[style*="background"][style*="height: 12px"] {
+  background: var(--dark-bg-primary) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 진행률 채워진 부분 */
+div[style*="background: linear-gradient(90deg"],
+div[style*="background: white"][style*="height: 100%"] {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ============================================
+   액션 카드 (그리드 레이아웃) - 개선된 가시성
+   ============================================ */
+.action-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 15px !important;
+  margin: 20px 0 !important;
+}
+
+.action-card {
+  padding: 20px !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  color: #000 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid transparent !important;
+}
+
+.action-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.action-card-1 {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)) !important;
+}
+
+.action-card-2 {
+  background: linear-gradient(135deg, var(--color-green), #059669) !important;
+}
+
+.action-card-3 {
+  background: linear-gradient(135deg, var(--color-blue), #1d4ed8) !important;
+}
+
+.action-card-4 {
+  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)) !important;
+}
+
+/* ============================================
+   리스트 스타일 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view ul,
+.markdown-preview-view ol {
+  color: var(--text-primary) !important;
+}
+
+.markdown-preview-view li {
+  margin: 8px 0 !important;
+  padding-left: 8px !important;
+  line-height: 1.6 !important;
+}
+
+.markdown-preview-view li::marker {
+  color: var(--accent-primary) !important;
+  font-weight: 700 !important;
+}
+
+/* 체크박스 리스트 */
+.markdown-preview-view .task-list-item-checkbox {
+  border: 2px solid var(--accent-primary) !important;
+  border-radius: 4px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.markdown-preview-view .task-list-item-checkbox:checked {
+  background-color: var(--color-green) !important;
+  border-color: var(--color-green) !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* ============================================
+   링크 스타일 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view a,
+.internal-link {
+  color: var(--accent-secondary) !important;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.markdown-preview-view a:hover,
+.internal-link:hover {
+  color: var(--accent-primary) !important;
+  text-decoration: underline !important;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* ============================================
+   코드 블록 스타일 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view code {
+  background-color: var(--dark-bg-card) !important;
+  color: var(--accent-secondary) !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  font-family: 'Courier New', monospace !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--dark-border) !important;
+}
+
+.markdown-preview-view pre {
+  background-color: var(--dark-bg-card) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  border-left: 4px solid var(--accent-primary) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--dark-border) !important;
+}
+
+.markdown-preview-view pre code {
+  background-color: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* ============================================
+   구분선 스타일
+   ============================================ */
+.markdown-preview-view hr {
+  border: none !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent) !important;
+  margin: 30px 0 !important;
+}
+
+/* ============================================
+   인용문 스타일 - 개선된 가시성
+   ============================================ */
+.markdown-preview-view blockquote {
+  background-color: var(--dark-bg-card) !important;
+  border-left: 4px solid var(--accent-primary) !important;
+  padding: 16px 20px !important;
+  margin: 15px 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--dark-border) !important;
+  border-left: 4px solid var(--accent-primary) !important;
+  font-style: italic !important;
+}
+
+/* ============================================
+   통계 카드 (4분할 그리드) - 개선된 가시성
+   ============================================ */
+div[style*="display: grid"][style*="grid-template-columns: repeat(auto-fit"] > div {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+div[style*="display: grid"][style*="grid-template-columns: repeat(auto-fit"] > div:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ============================================
+   스크롤바 스타일
+   ============================================ */
+::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-bg-primary) !important;
+  border-radius: 6px !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)) !important;
+  border-radius: 6px !important;
+  border: 2px solid var(--dark-bg-primary) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)) !important;
+}
+
+/* ============================================
+   태그 스타일 - 개선된 가시성
+   ============================================ */
+.tag {
+  background-color: var(--dark-bg-card) !important;
+  color: var(--accent-secondary) !important;
+  border: 2px solid var(--accent-primary) !important;
+  padding: 5px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.85em !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.tag:hover {
+  background-color: var(--accent-primary) !important;
+  color: #000 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* ============================================
+   모달 & 팝업 스타일 - 개선된 가시성
+   ============================================ */
+.modal {
+  background-color: var(--dark-bg-secondary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid var(--dark-border) !important;
+}
+
+.modal-title {
+  color: var(--accent-secondary) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  font-size: 1.3rem !important;
+}
+
+.modal-content {
+  color: var(--text-primary) !important;
+}
+
+/* ============================================
+   입력 필드 스타일 - 개선된 가시성
+   ============================================ */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  background-color: var(--dark-bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--dark-border) !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
+  transition: all 0.2s ease !important;
+  font-size: 0.95rem !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
+  background-color: var(--dark-bg-hover) !important;
+}
+
+/* ============================================
+   상태 표시 아이콘 - 개선된 가시성
+   ============================================ */
+/* 완료 상태 */
+div[style*="color: #10b981"],
+span[style*="color: #10b981"] {
+  color: var(--color-green) !important;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5)) !important;
+  font-weight: 700 !important;
+}
+
+/* 진행중 상태 */
+div[style*="color: #f59e0b"],
+span[style*="color: #f59e0b"] {
+  color: var(--accent-primary) !important;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5)) !important;
+  font-weight: 700 !important;
+}
+
+/* 미완료 상태 */
+div[style*="color: #ef4444"],
+span[style*="color: #ef4444"] {
+  color: var(--color-red) !important;
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5)) !important;
+  font-weight: 700 !important;
+}
+
+/* ============================================
+   반응형 디자인 - 모바일 최적화 (강화)
+   ============================================ */
+
+/* 태블릿 & 모바일 최적화 */
+@media (max-width: 768px) {
+  /* 루트 변수 - 모바일에서 더 강한 색상 */
+  :root {
+    --accent-primary: #fbbf24 !important;
+    --accent-secondary: #fcd34d !important;
+    --accent-tertiary: #f59e0b !important;
+  }
+  
+  .action-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    gap: 10px !important;
+  }
+  
+  .action-card {
+    padding: 15px 10px !important;
+    font-size: 0.95rem !important;
+    min-height: 80px !important;
+  }
+  
+  .markdown-preview-view h1 {
+    font-size: 1.8em !important;
+    padding-bottom: 8px !important;
+  }
+  
+  .markdown-preview-view h2 {
+    font-size: 1.5em !important;
+  }
+  
+  .markdown-preview-view h3 {
+    font-size: 1.3em !important;
+  }
+  
+  .dataview.table-view-table {
+    font-size: 0.85em !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+  
+  .dataview.table-view-table thead tr th {
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
+  }
+  
+  .dataview.table-view-table tbody tr td {
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  /* 버튼 크기 증가 - 터치 최적화 */
+  button,
+  .clickable-icon,
+  input[type="button"],
+  input[type="submit"] {
+    padding: 12px 20px !important;
+    font-size: 15px !important;
+    min-height: 44px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 3px 12px rgba(245, 158, 11, 0.6) !important;
+  }
+  
+  /* 카드 여백 조정 */
+  .markdown-preview-view .block-language-dataviewjs > div,
+  .markdown-preview-view .block-language-dataview > div {
+    padding: 15px !important;
+    margin: 10px 0 !important;
+  }
+  
+  /* 통계 카드 패딩 조정 */
+  div[style*="display: grid"][style*="grid-template-columns: repeat(auto-fit"] > div {
+    padding: 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* 소형 모바일 (480px 이하) - 더욱 강화 */
+@media (max-width: 480px) {
+  /* 루트 변수 - 최고 밝기 */
+  :root {
+    --accent-primary: #fcd34d !important;
+    --accent-secondary: #fde68a !important;
+    --accent-tertiary: #fbbf24 !important;
+    --text-primary: #ffffff !important;
+    --text-secondary: #e5e7eb !important;
+  }
+  
+  /* 전체 패딩 감소 */
+  .markdown-preview-view {
+    padding: 10px !important;
+  }
+  
+  /* 제목 크기 조정 */
+  .markdown-preview-view h1 {
+    font-size: 1.5em !important;
+    padding: 10px 0 !important;
+    border-width: 2px !important;
+  }
+  
+  .markdown-preview-view h2 {
+    font-size: 1.3em !important;
+  }
+  
+  .markdown-preview-view h3 {
+    font-size: 1.15em !important;
+  }
+  
+  /* 액션 카드 1열 배치 */
+  .action-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .action-card {
+    padding: 18px 15px !important;
+    font-size: 1rem !important;
+    min-height: 70px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* 버튼 - 최대 터치 친화적 */
+  button,
+  .clickable-icon,
+  input[type="button"],
+  input[type="submit"] {
+    width: 100% !important;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+    min-height: 48px !important;
+    margin: 6px 0 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.7) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  /* 테이블 스크롤 강제 */
+  .dataview.table-view-table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    font-size: 0.75em !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .dataview.table-view-table thead,
+  .dataview.table-view-table tbody,
+  .dataview.table-view-table tr {
+    display: table !important;
+    width: 100% !important;
+  }
+  
+  .dataview.table-view-table thead tr th {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    font-weight: 900 !important;
+  }
+  
+  .dataview.table-view-table tbody tr td {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* 카드 최소 여백 */
+  .markdown-preview-view .block-language-dataviewjs > div,
+  .markdown-preview-view .block-language-dataview > div {
+    padding: 12px !important;
+    margin: 8px 0 !important;
+    border-width: 2px !important;
+  }
+  
+  /* 통계 카드 1열 또는 2열 */
+  div[style*="display: grid"][style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    gap: 10px !important;
+  }
+  
+  div[style*="display: grid"][style*="grid-template-columns: repeat(auto-fit"] > div {
+    padding: 12px !important;
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    box-shadow: 0 3px 12px rgba(245, 158, 11, 0.5) !important;
+  }
+  
+  /* 인풋 필드 크기 증가 */
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+  
+  /* 링크 터치 영역 증가 */
+  .markdown-preview-view a,
+  .internal-link {
+    padding: 4px 2px !important;
+    font-weight: 800 !important;
+  }
+  
+  /* 체크박스 크기 증가 */
+  .markdown-preview-view .task-list-item-checkbox {
+    width: 22px !important;
+    height: 22px !important;
+    border-width: 3px !important;
+  }
+  
+  /* 태그 크기 증가 */
+  .tag {
+    padding: 6px 14px !important;
+    font-size: 0.9em !important;
+    font-weight: 800 !important;
+    border-width: 2px !important;
+  }
+  
+  /* 모달 모바일 최적화 */
+  .modal {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px auto !important;
+  }
+  
+  .modal-title {
+    font-size: 1.2rem !important;
+    font-weight: 800 !important;
+  }
+  
+  /* 스크롤바 모바일용 */
+  ::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    border-width: 1px !important;
+  }
+}
+
+/* 초소형 기기 (360px 이하) */
+@media (max-width: 360px) {
+  .markdown-preview-view h1 {
+    font-size: 1.3em !important;
+  }
+  
+  .action-card {
+    padding: 15px 12px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  button,
+  .clickable-icon {
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+  }
+  
+  .dataview.table-view-table {
+    font-size: 0.7em !important;
+  }
+}
+
+/* ============================================
+   애니메이션
+   ============================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.markdown-preview-view .block-language-dataviewjs > div,
+.markdown-preview-view .block-language-dataview > div {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================
+   특수 요소 스타일 - 개선된 가시성
+   ============================================ */
+/* 이모지 크기 조정 */
+.markdown-preview-view span[style*="font-size: 48px"],
+.markdown-preview-view div[style*="font-size: 48px"],
+.markdown-preview-view span[style*="font-size: 2rem"],
+.markdown-preview-view span[style*="font-size: 3rem"] {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) !important;
+  display: inline-block !important;
+}
+
+/* 등급 배지 */
+div[style*="font-size: 1.3rem"][style*="font-weight: 600"],
+div[style*="font-size: 1.5rem"][style*="font-weight"] {
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 700 !important;
+}
+
+/* ============================================
+   프린트 스타일
+   ============================================ */
+@media print {
+  body {
+    background-color: white !important;
+  }
+  
+  .markdown-preview-view {
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  button,
+  .clickable-icon {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   END OF UNIFIED THEME
+   ============================================ */

@@ -1,0 +1,30 @@
+/* Timer Card Plugin 스타일 */
+
+.timer-card-image-button {
+    /* 기본 스타일은 main.js에서 인라인으로 적용됨 */
+    /* 여기는 추가 커스터마이징용 */
+}
+
+/* 다크모드 대응 */
+.theme-dark .timer-card-image-button {
+    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.5);
+}
+
+.theme-light .timer-card-image-button {
+    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+}
+
+/* 버튼 애니메이션 */
+@keyframes button-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(118, 75, 162, 0.5);
+    }
+}
+
+.timer-card-image-button:focus {
+    outline: none;
+    animation: button-pulse 2s infinite;
+}

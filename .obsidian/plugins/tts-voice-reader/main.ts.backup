@@ -1,0 +1,1475 @@
+import { App, Plugin, PluginSettingTab, Setting, Notice, Modal, Menu, Editor, MarkdownView } from 'obsidian';
+
+interface TTSSettings {
+    voiceMode: 'browser' | 'custom';
+    browserVoice: string;
+    speed: number;
+    pitch: number;
+    volume: number;
+    language: string;
+    customVoiceData: string | null;
+    autoSaveAudio: boolean;
+    outputFolder: string;
+    dashboardFolder: string;
+}
+
+const DEFAULT_SETTINGS: TTSSettings = {
+    voiceMode: 'browser',
+    browserVoice: '',
+    speed: 1.0,
+    pitch: 1.0,
+    volume: 1.0,
+    language: 'ko-KR',
+    customVoiceData: null,
+    autoSaveAudio: false,
+    outputFolder: 'TTS Audio',
+    dashboardFolder: 'TTS Dashboard'
+}
+
+export default class TTSVoiceReaderPlugin extends Plugin {
+    settings: TTSSettings;
+    synthesis: SpeechSynthesis;
+    currentUtterance: SpeechSynthesisUtterance | null = null;
+    isPlaying: boolean = false;
+    availableVoices: SpeechSynthesisVoice[] = [];
+    mediaRecorder: MediaRecorder | null = null;
+    recordedChunks: Blob[] = [];
+    currentAudio: HTMLAudioElement | null = null;
+    currentSpeakingText: string = ''; // 현재 읽고 있는 텍스트 (자동 저장용)
+
+    async onload() {
+        await this.loadSettings();
+        this.synthesis = window.speechSynthesis;
+
+        // 음성 목록 로드
+        this.loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => this.loadVoices();
+        }
+
+        // 리본 아이콘
+        this.addRibbonIcon('mic', 'TTS 음성 읽기', () => {
+            const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (activeView) {
+                const editor = activeView.editor;
+                const selectedText = editor.getSelection();
+                if (selectedText) {
+                    this.speakText(selectedText);
+                } else {
+                    new TTSReaderModal(this.app, this).open();
+                }
+            } else {
+                new TTSReaderModal(this.app, this).open();
+            }
+        });
+
+        // 커맨드: 선택한 텍스트 읽기
+        this.addCommand({
+            id: 'speak-selection',
+            name: '선택한 텍스트 읽기',
+            editorCallback: (editor: Editor) => {
+                const text = editor.getSelection();
+                if (text) {
+                    this.speakText(text);
+                } else {
+                    new Notice('텍스트를 선택해주세요');
+                }
+            }
+        });
+
+        // 커맨드: 전체 노트 읽기
+        this.addCommand({
+            id: 'speak-entire-note',
+            name: '전체 노트 읽기',
+            editorCallback: (editor: Editor) => {
+                const text = editor.getValue();
+                this.speakText(text);
+            }
+        });
+
+        // 커맨드: 정지
+        this.addCommand({
+            id: 'stop-speaking',
+            name: '음성 읽기 정지',
+            callback: () => {
+                this.stopSpeaking();
+            }
+        });
+
+        // 커맨드: 일시정지/재개
+        this.addCommand({
+            id: 'pause-resume-speaking',
+            name: '음성 읽기 일시정지/재개',
+            callback: () => {
+                this.togglePause();
+            }
+        });
+
+        // 커맨드: 음성 녹음
+        this.addCommand({
+            id: 'record-voice',
+            name: '내 음성 녹음하기',
+            callback: () => {
+                new VoiceRecordModal(this.app, this).open();
+            }
+        });
+
+        // 커맨드: 대시보드 생성
+        this.addCommand({
+            id: 'create-dashboard',
+            name: 'TTS 대시보드 생성',
+            callback: async () => {
+                await this.createDashboard();
+            }
+        });
+
+        // 설정 탭
+        this.addSettingTab(new TTSSettingTab(this.app, this));
+
+        // 컨텍스트 메뉴
+        this.registerEvent(
+            this.app.workspace.on('editor-menu', (menu: Menu, editor: Editor) => {
+                const selection = editor.getSelection();
+                if (selection) {
+                    menu.addItem((item) => {
+                        item
+                            .setTitle('🔊 선택한 텍스트 읽기')
+                            .setIcon('mic')
+                            .onClick(() => {
+                                this.speakText(selection);
+                            });
+                    });
+                }
+            })
+        );
+    }
+
+    loadVoices() {
+        this.availableVoices = this.synthesis.getVoices();
+        
+        // 한국어 음성 자동 선택
+        if (!this.settings.browserVoice && this.availableVoices.length > 0) {
+            const koreanVoice = this.availableVoices.find(voice => 
+                voice.lang.startsWith('ko')
+            );
+            this.settings.browserVoice = koreanVoice?.name || this.availableVoices[0]?.name || '';
+        }
+    }
+
+    speakText(text: string) {
+        // 이전 음성 정지
+        this.stopSpeaking();
+
+        // 마크다운 문법 제거
+        const cleanText = this.cleanMarkdown(text);
+
+        // 현재 읽는 텍스트 저장 (중지 시 자동 저장용)
+        this.currentSpeakingText = cleanText;
+
+        if (this.settings.voiceMode === 'browser') {
+            new Notice('🌐 브라우저 TTS 모드로 재생');
+            this.speakWithBrowser(cleanText);
+        } else {
+            // 커스텀 음성 - 녹음된 음성 재생
+            if (this.settings.customVoiceData) {
+                new Notice('🎭 샘플 오디오 재생 (텍스트와 무관)');
+                this.speakWithCustomVoice(cleanText);
+            } else {
+                new Notice('⚠️ 녹음된 음성이 없어 브라우저 TTS로 재생합니다');
+                // 폴백: 브라우저 TTS 사용
+                this.speakWithBrowser(cleanText);
+            }
+        }
+    }
+
+    async speakWithCustomVoice(text: string) {
+        try {
+            new Notice('🎭 내 목소리로 읽기 시작...');
+            
+            // Base64 데이터를 Blob으로 변환
+            const base64Data = this.settings.customVoiceData;
+            if (!base64Data) {
+                throw new Error('음성 프로필이 없습니다');
+            }
+
+            // Base64를 Blob으로 변환
+            const response = await fetch(base64Data);
+            const blob = await response.blob();
+            
+            // Audio 객체 생성
+            const audioUrl = URL.createObjectURL(blob);
+            this.currentAudio = new Audio(audioUrl);
+            
+            this.currentAudio.onplay = () => {
+                this.isPlaying = true;
+                new Notice('🔊 음성 재생 중...');
+            };
+
+            this.currentAudio.onended = async () => {
+                this.isPlaying = false;
+                URL.revokeObjectURL(audioUrl);
+                this.currentAudio = null;
+                new Notice('✅ 재생 완료');
+                
+                // 자동 저장이 활성화된 경우
+                if (this.settings.autoSaveAudio) {
+                    try {
+                        await this.saveTTSAsFile(text);
+                    } catch (error) {
+                        console.error('TTS 자동 저장 실패:', error);
+                    }
+                }
+            };
+
+            this.currentAudio.onerror = (error) => {
+                console.error('Audio playback error:', error);
+                this.isPlaying = false;
+                URL.revokeObjectURL(audioUrl);
+                this.currentAudio = null;
+                new Notice('❌ 음성 재생 실패. 브라우저 TTS로 전환합니다.');
+                // 폴백: 브라우저 TTS
+                this.speakWithBrowser(text);
+            };
+
+            // 볼륨 설정 적용
+            this.currentAudio.volume = this.settings.volume;
+            
+            // 재생
+            await this.currentAudio.play();
+
+            // 텍스트 정보 표시 (선택사항)
+            console.log('재생할 텍스트:', text.substring(0, 100) + '...');
+            new Notice(`📝 텍스트 길이: ${text.length}자 (녹음된 샘플 재생)`);
+            
+        } catch (error) {
+            console.error('Custom voice playback error:', error);
+            new Notice('❌ 내 목소리 재생 실패: ' + error.message + '. 브라우저 TTS로 전환합니다.');
+            // 폴백: 브라우저 TTS
+            this.speakWithBrowser(text);
+        }
+    }
+
+    speakWithBrowser(text: string) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // 설정 적용
+        const voice = this.availableVoices.find(v => v.name === this.settings.browserVoice);
+        if (voice) {
+            utterance.voice = voice;
+        }
+        
+        utterance.rate = this.settings.speed;
+        utterance.pitch = this.settings.pitch;
+        utterance.volume = this.settings.volume;
+        utterance.lang = this.settings.language;
+
+        // 이벤트 핸들러
+        utterance.onstart = () => {
+            this.isPlaying = true;
+            new Notice('🔊 음성 읽기 시작');
+        };
+
+        utterance.onend = async () => {
+            this.isPlaying = false;
+            this.currentUtterance = null;
+            new Notice('✅ 음성 읽기 완료');
+            
+            // 자동 저장이 활성화된 경우 TTS 출력을 파일로 저장
+            if (this.settings.autoSaveAudio) {
+                try {
+                    await this.saveTTSAsFile(text);
+                } catch (error) {
+                    console.error('TTS 자동 저장 실패:', error);
+                }
+            }
+        };
+
+        utterance.onerror = (event) => {
+            this.isPlaying = false;
+            this.currentUtterance = null;
+            new Notice('❌ 음성 읽기 오류: ' + event.error);
+        };
+
+        this.currentUtterance = utterance;
+        this.synthesis.speak(utterance);
+    }
+
+    async saveTTSAsFile(text: string) {
+        try {
+            const folderPath = this.settings.outputFolder;
+            const folder = this.app.vault.getAbstractFileByPath(folderPath);
+            
+            if (!folder) {
+                await this.app.vault.createFolder(folderPath);
+            }
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `tts_${timestamp}.txt`;
+            const filePath = `${folderPath}/${filename}`;
+            
+            const content = `# TTS 음성 텍스트\n\n생성: ${new Date().toLocaleString('ko-KR')}\n음성 모드: ${this.settings.voiceMode}\n언어: ${this.settings.language}\n\n---\n\n${text}`;
+            
+            await this.app.vault.create(filePath, content);
+            new Notice(`✅ TTS 텍스트 저장: ${filename}`);
+        } catch (error) {
+            console.error('TTS 파일 저장 실패:', error);
+            throw error;
+        }
+    }
+
+    async stopSpeaking() {
+        // 자동 저장이 활성화되어 있고 현재 읽고 있는 텍스트가 있으면 저장
+        if (this.settings.autoSaveAudio && this.currentSpeakingText && (this.synthesis.speaking || this.currentAudio)) {
+            try {
+                await this.saveTTSAsFile(this.currentSpeakingText);
+            } catch (error) {
+                console.error('중지 시 자동 저장 실패:', error);
+            }
+        }
+
+        // 브라우저 TTS 정지
+        if (this.synthesis.speaking) {
+            this.synthesis.cancel();
+            this.isPlaying = false;
+            this.currentUtterance = null;
+        }
+        
+        // 커스텀 오디오 정지
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
+            const audioUrl = this.currentAudio.src;
+            if (audioUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(audioUrl);
+            }
+            this.currentAudio = null;
+            this.isPlaying = false;
+        }
+
+        // 현재 텍스트 초기화
+        this.currentSpeakingText = '';
+        
+        new Notice('⏹️ 음성 읽기 정지');
+    }
+
+    togglePause() {
+        // 커스텀 오디오 일시정지/재개
+        if (this.currentAudio) {
+            if (this.currentAudio.paused) {
+                this.currentAudio.play();
+                new Notice('▶️ 재개');
+            } else {
+                this.currentAudio.pause();
+                new Notice('⏸️ 일시정지');
+            }
+            return;
+        }
+        
+        // 브라우저 TTS 일시정지/재개
+        if (this.synthesis.speaking) {
+            if (this.synthesis.paused) {
+                this.synthesis.resume();
+                new Notice('▶️ 재개');
+            } else {
+                this.synthesis.pause();
+                new Notice('⏸️ 일시정지');
+            }
+        }
+    }
+
+    cleanMarkdown(text: string): string {
+        return text
+            .replace(/^#+\s+/gm, '') // 헤더
+            .replace(/\*\*(.+?)\*\*/g, '$1') // 굵게
+            .replace(/\*(.+?)\*/g, '$1') // 기울임
+            .replace(/~~(.+?)~~/g, '$1') // 취소선
+            .replace(/\[(.+?)\]\(.+?\)/g, '$1') // 링크
+            .replace(/!\[.*?\]\(.+?\)/g, '') // 이미지
+            .replace(/```[\s\S]*?```/g, '') // 코드 블록
+            .replace(/`(.+?)`/g, '$1') // 인라인 코드
+            .replace(/^\s*[-*+]\s+/gm, '') // 리스트
+            .replace(/^\s*\d+\.\s+/gm, '') // 번호 리스트
+            .replace(/^\s*>\s+/gm, '') // 인용
+            .replace(/---+/g, '') // 구분선
+            .trim();
+    }
+
+    async startRecording(): Promise<void> {
+        try {
+            // 마이크 권한 확인
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('이 브라우저는 오디오 녹음을 지원하지 않습니다.');
+            }
+
+            new Notice('🎙️ 마이크 접근 권한을 요청합니다...');
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100
+                }
+            });
+            
+            this.recordedChunks = [];
+            
+            // MediaRecorder 지원 확인
+            if (!window.MediaRecorder) {
+                throw new Error('이 브라우저는 MediaRecorder를 지원하지 않습니다.');
+            }
+
+            // 지원되는 MIME 타입 확인
+            let mimeType = 'audio/webm';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/ogg';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'audio/mp4';
+                }
+            }
+            
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+            
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.recordedChunks.push(event.data);
+                    console.log('Recording chunk received:', event.data.size, 'bytes');
+                }
+            };
+
+            this.mediaRecorder.onerror = (event: any) => {
+                console.error('MediaRecorder error:', event.error);
+                new Notice('❌ 녹음 중 오류 발생: ' + event.error);
+            };
+
+            this.mediaRecorder.start(100); // 100ms마다 데이터 수집
+            console.log('MediaRecorder started, state:', this.mediaRecorder.state);
+            new Notice('🎙️ 녹음 시작됨');
+        } catch (error) {
+            console.error('Recording start error:', error);
+            new Notice('❌ 마이크 접근 실패: ' + error.message);
+            throw error;
+        }
+    }
+
+    async stopRecording(): Promise<Blob | null> {
+        return new Promise((resolve) => {
+            if (!this.mediaRecorder) {
+                console.warn('No MediaRecorder to stop');
+                resolve(null);
+                return;
+            }
+
+            if (this.mediaRecorder.state === 'inactive') {
+                console.warn('MediaRecorder already stopped');
+                resolve(null);
+                return;
+            }
+
+            this.mediaRecorder.onstop = () => {
+                console.log('MediaRecorder stopped, chunks:', this.recordedChunks.length);
+                
+                if (this.recordedChunks.length === 0) {
+                    new Notice('❌ 녹음된 데이터가 없습니다');
+                    resolve(null);
+                    return;
+                }
+
+                const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+                const blob = new Blob(this.recordedChunks, { type: mimeType });
+                console.log('Audio blob created:', blob.size, 'bytes, type:', blob.type);
+                
+                this.recordedChunks = [];
+                
+                // 스트림 정지
+                this.mediaRecorder?.stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Track stopped:', track.kind);
+                });
+                this.mediaRecorder = null;
+                
+                new Notice('⏹️ 녹음 완료 (' + Math.round(blob.size / 1024) + 'KB)');
+                resolve(blob);
+            };
+
+            this.mediaRecorder.stop();
+            console.log('Stopping MediaRecorder...');
+        });
+    }
+
+    async saveAudioFile(audioBlob: Blob, fileName: string) {
+        try {
+            // 출력 폴더 확인
+            const folderPath = this.settings.outputFolder;
+            const folder = this.app.vault.getAbstractFileByPath(folderPath);
+            
+            if (!folder) {
+                await this.app.vault.createFolder(folderPath);
+            }
+
+            // Blob을 ArrayBuffer로 변환
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            
+            // 파일명에 이미 확장자가 있으면 그대로 사용, 없으면 추가
+            const baseFileName = fileName.includes('.') ? fileName.split('.')[0] : fileName;
+            const extension = fileName.includes('.') ? fileName.split('.').pop() : 'webm';
+            const filePath = `${folderPath}/${baseFileName}_${timestamp}.${extension}`;
+
+            // 파일 저장
+            await this.app.vault.createBinary(filePath, arrayBuffer);
+            
+            console.log('Audio file saved:', filePath, arrayBuffer.byteLength, 'bytes');
+            return filePath;
+            new Notice(`✅ 음성 파일 저장: ${filePath}`);
+        } catch (error) {
+            new Notice('❌ 파일 저장 실패: ' + error.message);
+        }
+    }
+
+    async createDashboard() {
+        try {
+            const dashboardFolder = this.settings.dashboardFolder;
+            const audioFolder = this.settings.outputFolder;
+            
+            // 폴더 확인 및 생성
+            if (!this.app.vault.getAbstractFileByPath(dashboardFolder)) {
+                await this.app.vault.createFolder(dashboardFolder);
+            }
+            
+            // 대시보드 파일 생성
+            const dashboardPath = `${dashboardFolder}/TTS 통합 대시보드.md`;
+            const dashboardContent = this.generateDashboardContent();
+            
+            const existingFile = this.app.vault.getAbstractFileByPath(dashboardPath);
+            if (existingFile) {
+                await this.app.vault.modify(existingFile as any, dashboardContent);
+                new Notice('✅ TTS 대시보드 업데이트 완료');
+            } else {
+                await this.app.vault.create(dashboardPath, dashboardContent);
+                new Notice('✅ TTS 대시보드 생성 완료');
+            }
+            
+            // 대시보드 열기
+            const file = this.app.vault.getAbstractFileByPath(dashboardPath);
+            if (file) {
+                await this.app.workspace.openLinkText(dashboardPath, '', false);
+            }
+        } catch (error) {
+            new Notice('❌ 대시보드 생성 실패: ' + error.message);
+            console.error('Dashboard creation error:', error);
+        }
+    }
+
+    generateDashboardContent(): string {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        
+        return `---
+title: TTS 통합 대시보드
+created: ${dateStr}
+tags: [tts, dashboard, audio]
+---
+
+# 🎙️ TTS 통합 대시보드
+
+> 마지막 업데이트: ${now.toLocaleString('ko-KR')}
+
+## 🎯 빠른 실행
+
+\`\`\`button
+name � 새 텍스트 읽기
+type command
+action TTS 음성 읽기
+color blue
+\`\`\`
+^button-new-tts
+
+\`\`\`button
+name 🎙️ 음성 녹음
+type command
+action 내 음성 녹음하기
+color green
+\`\`\`
+^button-record
+
+\`\`\`button
+name ⏹️ 음성 정지
+type command
+action 음성 읽기 정지
+color red
+\`\`\`
+^button-stop
+
+\`\`\`button
+name ⏸️ 일시정지/재개
+type command
+action 음성 읽기 일시정지/재개
+color default
+\`\`\`
+^button-pause
+
+\`\`\`button
+name 🔄 대시보드 새로고침
+type command
+action TTS 대시보드 생성
+color purple
+\`\`\`
+^button-refresh
+
+---
+
+## �📊 통계 요약
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const txtFiles = dv.pages('"' + audioFolder + '"').where(p => p.file.name.endsWith('.txt'));
+const audioFiles = dv.pages('"' + audioFolder + '"').where(p => p.file.name.endsWith('.webm') || p.file.name.endsWith('.mp4') || p.file.name.endsWith('.ogg'));
+
+const totalTxt = txtFiles.length;
+const totalAudio = audioFiles.length;
+const voiceProfiles = audioFiles.where(f => f.file.name.includes('voice_profile')).length;
+
+dv.paragraph(\`
+📄 **저장된 TTS 텍스트**: \${totalTxt}개  
+🎵 **오디오 파일**: \${totalAudio}개  
+🎭 **음성 프로필**: \${voiceProfiles}개
+\`);
+\`\`\`
+
+---
+
+## 📄 저장된 TTS 텍스트 파일
+
+> 💡 **파일명을 클릭하면 내용을 읽어줍니다**
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const txtFiles = dv.pages('"' + audioFolder + '"')
+    .where(p => p.file.name.endsWith('.txt'))
+    .sort(p => p.file.ctime, 'desc');
+
+if (txtFiles.length === 0) {
+    dv.paragraph('❌ 저장된 TTS 텍스트 파일이 없습니다.');
+    dv.paragraph('💡 자동 저장 기능을 활성화하면 TTS로 읽은 텍스트가 자동으로 저장됩니다.');
+} else {
+    dv.table(
+        ['#', '파일명', '생성일', '크기', '📖 읽기'],
+        txtFiles.map((p, idx) => {
+            const fileName = p.file.name.replace('.txt', '');
+            const filePath = p.file.path;
+            return [
+                idx + 1,
+                fileName,
+                p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'N/A',
+                p.file.size ? (p.file.size / 1024).toFixed(1) + ' KB' : 'N/A',
+                '[\`▶️ 재생\`](' + filePath + ')'
+            ];
+        })
+    );
+    
+    dv.paragraph('');
+    dv.paragraph('**사용법**: 📖 읽기 열의 \`▶️ 재생\` 링크를 클릭하면 파일 내용이 TTS로 재생됩니다.');
+}
+\`\`\`
+
+---
+
+## 📂 폴더별 파일 목록
+
+\`\`\`dataviewjs
+const baseFolder = "${this.settings.outputFolder}";
+const allFiles = dv.pages('"' + baseFolder + '"');
+
+// 폴더별로 그룹화
+const folders = {};
+for (const page of allFiles) {
+    const pathParts = page.file.folder.split('/');
+    const folderName = pathParts[pathParts.length - 1] || baseFolder;
+    
+    if (!folders[folderName]) {
+        folders[folderName] = [];
+    }
+    folders[folderName].push(page);
+}
+
+// 각 폴더별 테이블 생성
+for (const [folderName, files] of Object.entries(folders)) {
+    if (files.length === 0) continue;
+    
+    dv.header(3, \`📂 \${folderName} (\${files.length}개)\`);
+    
+    dv.table(
+        ['파일명', '유형', '생성일', '크기', '링크'],
+        files.map(p => {
+            let fileType = '📄 기타';
+            if (p.file.name.endsWith('.txt')) fileType = '� 텍스트';
+            else if (p.file.name.endsWith('.webm') || p.file.name.endsWith('.mp4')) fileType = '🎵 오디오';
+            else if (p.file.name.includes('voice_profile')) fileType = '🎭 프로필';
+            
+            return [
+                p.file.name,
+                fileType,
+                p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR') : 'N/A',
+                p.file.size ? (p.file.size / 1024).toFixed(1) + ' KB' : 'N/A',
+                dv.fileLink(p.file.path, false, '🔗')
+            ];
+        })
+    );
+}
+\`\`\`
+
+---
+
+## 📅 최근 활동 (최근 15개)
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const recentFiles = dv.pages('"' + audioFolder + '"')
+    .sort(p => p.file.ctime, 'desc')
+    .limit(15);
+
+if (recentFiles.length === 0) {
+    dv.paragraph('❌ 최근 파일이 없습니다.');
+} else {
+    dv.table(
+        ['#', '파일명', '유형', '생성일', '동작'],
+        recentFiles.map((p, idx) => {
+            let fileType = '📄';
+            let action = dv.fileLink(p.file.path, false, '🔗 열기');
+            
+            if (p.file.name.endsWith('.txt')) {
+                fileType = '📝 TXT';
+                action = '[\`▶️ 재생\`](' + p.file.path + ')';
+            } else if (p.file.name.endsWith('.webm') || p.file.name.endsWith('.mp4')) {
+                fileType = '🎵 Audio';
+            } else if (p.file.name.includes('voice_profile')) {
+                fileType = '🎭 Profile';
+            }
+            
+            return [
+                idx + 1,
+                p.file.name,
+                fileType,
+                p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'N/A',
+                action
+            ];
+        })
+    );
+}
+\`\`\`
+
+---
+
+## ⚙️ 현재 설정
+
+\`\`\`dataviewjs
+dv.paragraph(\`
+**🎵 음성 모드**: ${this.settings.voiceMode === 'browser' ? '🌐 브라우저 TTS' : '🎭 샘플 오디오 재생'}  
+**🌍 언어**: ${this.settings.language}  
+**⚡ 속도**: ${this.settings.speed}x  
+**� 음높이**: ${this.settings.pitch}  
+**🔊 볼륨**: ${this.settings.volume}  
+**💾 자동 저장**: ${this.settings.autoSaveAudio ? '✅ 활성화' : '❌ 비활성화'}  
+**📁 출력 폴더**: \\\`${this.settings.outputFolder}\\\`  
+**🎭 음성 프로필**: ${this.settings.customVoiceData ? '✅ 등록됨' : '❌ 미등록'}
+\`);
+\`\`\`
+
+${this.settings.voiceMode === 'custom' ? `
+> ⚠️ **커스텀 음성 모드 안내**  
+> 현재 모드는 녹음한 샘플 오디오를 재생합니다.  
+> 텍스트에 따라 음성이 생성되지 않으며, 항상 같은 샘플이 재생됩니다.  
+> 텍스트를 음성으로 변환하려면 "브라우저 TTS" 모드를 사용하세요.
+` : ''}
+
+---
+
+## 💡 사용 팁
+
+- **TXT 파일 재생**: 위의 "저장된 TTS 텍스트 파일" 섹션에서 \`▶️ 재생\` 링크를 클릭하면 자동으로 내용을 읽어줍니다
+- **자동 저장**: 설정에서 "자동 저장" 기능을 활성화하면 TTS로 읽은 모든 텍스트가 자동으로 저장됩니다
+- **단축키**: 
+  - 선택한 텍스트 읽기: 텍스트 선택 후 커맨드 실행
+  - 전체 노트 읽기: 커맨드 팔레트에서 실행
+  - 정지/일시정지: 버튼 또는 커맨드로 제어
+
+---
+
+*📌 이 대시보드는 자동으로 생성되었습니다. "🔄 대시보드 새로고침" 버튼을 눌러 최신 정보로 업데이트하세요.*
+`;
+    }
+\`);
+\`\`\`
+
+## 🎭 음성 프로필
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const profiles = dv.pages('"' + audioFolder + '"')
+    .where(p => p.file.name.includes('voice_profile'))
+    .sort(p => p.file.ctime, 'desc');
+
+if (profiles.length === 0) {
+    dv.paragraph('❌ 등록된 음성 프로필이 없습니다.');
+    dv.paragraph('💡 **커맨드**: \`내 음성 녹음하기\`로 음성 프로필을 등록하세요.');
+} else {
+    dv.table(
+        ['파일명', '생성일', '크기', '링크'],
+        profiles.map(p => [
+            p.file.name,
+            p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR') : 'N/A',
+            p.file.size ? (p.file.size / 1024).toFixed(1) + ' KB' : 'N/A',
+            dv.fileLink(p.file.path, false, '열기')
+        ])
+    );
+}
+\`\`\`
+
+## 📁 폴더별 오디오 관리
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const allFiles = dv.pages('"' + audioFolder + '"')
+    .where(p => p.file.name.endsWith('.webm') || p.file.name.endsWith('.mp4') || p.file.name.endsWith('.ogg'))
+    .sort(p => p.file.ctime, 'desc');
+
+// 폴더별로 그룹화
+const folderGroups = {};
+for (const file of allFiles) {
+    const pathParts = file.file.path.split('/');
+    const folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Root';
+    
+    if (!folderGroups[folderName]) {
+        folderGroups[folderName] = [];
+    }
+    folderGroups[folderName].push(file);
+}
+
+// 폴더별로 표시
+for (const [folderName, files] of Object.entries(folderGroups)) {
+    dv.header(3, \`📂 \${folderName} (\${files.length}개)\`);
+    
+    dv.table(
+        ['파일명', '생성일', '크기', '링크'],
+        files.map(p => [
+            p.file.name,
+            p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR') : 'N/A',
+            p.file.size ? (p.file.size / 1024).toFixed(1) + ' KB' : 'N/A',
+            dv.fileLink(p.file.path, false, '▶️')
+        ])
+    );
+}
+\`\`\`
+
+## 📅 최근 녹음 (최근 10개)
+
+\`\`\`dataviewjs
+const audioFolder = "${this.settings.outputFolder}";
+const recentFiles = dv.pages('"' + audioFolder + '"')
+    .where(p => !p.file.name.includes('voice_profile'))
+    .where(p => p.file.name.endsWith('.webm') || p.file.name.endsWith('.mp4') || p.file.name.endsWith('.ogg'))
+    .sort(p => p.file.ctime, 'desc')
+    .limit(10);
+
+if (recentFiles.length === 0) {
+    dv.paragraph('❌ 최근 녹음 파일이 없습니다.');
+} else {
+    dv.table(
+        ['#', '파일명', '생성일', '크기', '링크'],
+        recentFiles.map((p, idx) => [
+            idx + 1,
+            p.file.name,
+            p.file.ctime ? new Date(p.file.ctime).toLocaleString('ko-KR') : 'N/A',
+            p.file.size ? (p.file.size / 1024).toFixed(1) + ' KB' : 'N/A',
+            dv.fileLink(p.file.path, false, '▶️')
+        ])
+    );
+}
+\`\`\`
+
+## ⚙️ 현재 설정
+
+\`\`\`dataviewjs
+dv.paragraph(\`
+**음성 모드**: ${this.settings.voiceMode === 'browser' ? '🌐 브라우저 TTS' : '🎭 내 목소리 (녹음)'}  
+**언어**: ${this.settings.language}  
+**속도**: ${this.settings.speed}x  
+**음높이**: ${this.settings.pitch}  
+**볼륨**: ${this.settings.volume}  
+**출력 폴더**: \\\`${this.settings.outputFolder}\\\`  
+**음성 프로필**: ${this.settings.customVoiceData ? '✅ 등록됨 (재생 가능)' : '❌ 미등록'}
+\`);
+\`\`\`
+
+${this.settings.customVoiceData ? `
+> 💡 **커스텀 음성 모드**: 설정에서 "커스텀 음성" 모드를 선택하면 녹음한 내 목소리 샘플이 재생됩니다.  
+> 현재는 녹음된 샘플이 그대로 재생되며, 텍스트에 따라 음성이 생성되지는 않습니다.
+` : ''}
+
+## 🎯 빠른 실행
+
+\`\`\`button
+name 📝 새 텍스트 읽기
+type command
+action TTS 음성 읽기
+\`\`\`
+
+\`\`\`button
+name 🎙️ 음성 녹음
+type command
+action 내 음성 녹음하기
+\`\`\`
+
+\`\`\`button
+name 🔄 대시보드 새로고침
+type command
+action TTS 대시보드 생성
+\`\`\`
+
+\`\`\`button
+name ⏹️ 음성 정지
+type command
+action 음성 읽기 정지
+\`\`\`
+
+## 📖 사용 가이드
+
+### 기본 사용법
+1. **텍스트 선택 후 읽기**: 텍스트 선택 → 우클릭 → "선택한 텍스트 읽기"
+2. **전체 노트 읽기**: \`Ctrl+P\` → "전체 노트 읽기"
+3. **음성 녹음**: \`Ctrl+P\` → "내 음성 녹음하기"
+
+### 음성 프로필 등록
+1. 조용한 환경에서 녹음 시작
+2. 10초 이상 자연스럽게 말하기
+3. 녹음 완료 후 자동 저장
+4. 설정에서 "커스텀 음성" 모드 활성화
+5. **샘플 재생**: 녹음한 음성 샘플이 그대로 재생됩니다
+
+> ⚠️ **참고**: 현재는 녹음된 샘플을 그대로 재생하는 방식입니다.  
+> 텍스트를 내 목소리로 변환하는 TTS 기능은 별도의 AI 모델이 필요합니다.
+
+### 폴더 관리
+- **음성 파일 위치**: \`${this.settings.outputFolder}\`
+- **파일 형식**: WebM, OGG, MP4
+- **정리 방법**: 하위 폴더 생성 가능
+
+---
+
+*이 대시보드는 자동으로 생성되었습니다. \`Ctrl+P\` → "TTS 대시보드 생성"으로 업데이트하세요.*
+`;
+    }
+
+    async onunload() {
+        this.stopSpeaking();
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+        }
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
+}
+
+class TTSReaderModal extends Modal {
+    plugin: TTSVoiceReaderPlugin;
+    textArea: HTMLTextAreaElement;
+
+    constructor(app: App, plugin: TTSVoiceReaderPlugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('tts-reader-modal');
+
+        contentEl.createEl('h2', { text: '🔊 TTS 음성 읽기' });
+
+        // 텍스트 입력
+        this.textArea = contentEl.createEl('textarea', {
+            attr: { placeholder: '읽을 텍스트를 입력하세요...' }
+        });
+        this.textArea.style.width = '100%';
+        this.textArea.style.minHeight = '200px';
+        this.textArea.style.marginBottom = '12px';
+
+        // 버튼 컨테이너
+        const buttonContainer = contentEl.createDiv({ cls: 'tts-button-container' });
+
+        // 읽기 버튼
+        const speakBtn = buttonContainer.createEl('button', { 
+            text: '▶️ 읽기',
+            cls: 'mod-cta'
+        });
+        speakBtn.onclick = () => {
+            const text = this.textArea.value;
+            if (text.trim()) {
+                this.plugin.speakText(text);
+            } else {
+                new Notice('텍스트를 입력해주세요');
+            }
+        };
+
+        // 정지 버튼
+        const stopBtn = buttonContainer.createEl('button', { text: '⏹️ 정지' });
+        stopBtn.onclick = () => {
+            this.plugin.stopSpeaking();
+        };
+
+        // 일시정지 버튼
+        const pauseBtn = buttonContainer.createEl('button', { text: '⏸️ 일시정지/재개' });
+        pauseBtn.onclick = () => {
+            this.plugin.togglePause();
+        };
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+class VoiceRecordModal extends Modal {
+    plugin: TTSVoiceReaderPlugin;
+    isRecording: boolean = false;
+    recordButton: HTMLButtonElement;
+    statusText: HTMLDivElement;
+    recordingTime: number = 0;
+    timerInterval: number | null = null;
+
+    constructor(app: App, plugin: TTSVoiceReaderPlugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('voice-record-modal');
+
+        contentEl.createEl('h2', { text: '🎙️ 내 음성 녹음하기' });
+        
+        contentEl.createEl('p', { 
+            text: '10초~60초 동안 자연스럽게 말해주세요. 녹음된 음성은 음성 프로필로 저장됩니다.',
+            cls: 'voice-record-desc'
+        });
+
+        // 상태 표시
+        this.statusText = contentEl.createDiv({ cls: 'recording-status' });
+        this.statusText.textContent = '준비됨';
+
+        // 타이머 표시
+        const timerDisplay = contentEl.createDiv({ cls: 'recording-timer' });
+        timerDisplay.textContent = '00:00';
+
+        // 녹음 버튼
+        this.recordButton = contentEl.createEl('button', { 
+            text: '🔴 녹음 시작',
+            cls: 'mod-cta record-button'
+        });
+
+        this.recordButton.onclick = async () => {
+            if (!this.isRecording) {
+                await this.startRecording(timerDisplay);
+            } else {
+                await this.stopRecording();
+            }
+        };
+
+        // 안내 텍스트
+        const guide = contentEl.createDiv({ cls: 'recording-guide' });
+        guide.innerHTML = `
+            <h4>📋 녹음 가이드:</h4>
+            <ul>
+                <li>조용한 환경에서 녹음하세요</li>
+                <li>마이크와 적당한 거리를 유지하세요</li>
+                <li>자연스럽고 또박또박 말해주세요</li>
+                <li>최소 10초 이상 녹음해주세요</li>
+                <li>예시: "안녕하세요. 저는 [이름]입니다. 오늘은 날씨가 좋네요. 옵시디언으로 공부 중입니다."</li>
+            </ul>
+        `;
+    }
+
+    async startRecording(timerDisplay: HTMLDivElement) {
+        try {
+            this.isRecording = true;
+            this.recordButton.textContent = '⏹️ 녹음 중지';
+            this.recordButton.removeClass('mod-cta');
+            this.recordButton.addClass('mod-warning');
+            this.statusText.textContent = '🎙️ 녹음 중...';
+            this.statusText.style.color = 'var(--text-error)';
+            
+            this.recordingTime = 0;
+            this.timerInterval = window.setInterval(() => {
+                this.recordingTime++;
+                const minutes = Math.floor(this.recordingTime / 60);
+                const seconds = this.recordingTime % 60;
+                timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+
+            await this.plugin.startRecording();
+        } catch (error) {
+            this.isRecording = false;
+            this.recordButton.textContent = '🔴 녹음 시작';
+            this.recordButton.removeClass('mod-warning');
+            this.recordButton.addClass('mod-cta');
+            this.statusText.textContent = '❌ 녹음 시작 실패';
+            this.statusText.style.color = 'var(--text-error)';
+            
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+        }
+    }
+
+    async stopRecording() {
+        this.isRecording = false;
+        this.recordButton.textContent = '� 처리 중...';
+        this.recordButton.removeClass('mod-warning');
+        this.recordButton.disabled = true;
+        this.statusText.textContent = '처리 중...';
+        this.statusText.style.color = 'var(--text-muted)';
+
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        try {
+            const audioBlob = await this.plugin.stopRecording();
+
+            if (audioBlob && audioBlob.size > 0) {
+                this.statusText.textContent = '💾 저장 중...';
+                
+                // Base64로 변환하여 저장
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    try {
+                        const base64 = reader.result as string;
+                        this.plugin.settings.customVoiceData = base64;
+                        await this.plugin.saveSettings();
+                        
+                        // 음성 파일도 저장
+                        const extension = audioBlob.type.includes('webm') ? 'webm' : 
+                                        audioBlob.type.includes('ogg') ? 'ogg' : 'mp4';
+                        await this.plugin.saveAudioFile(audioBlob, `my_voice_profile.${extension}`);
+                        
+                        this.statusText.textContent = '✅ 녹음 완료! 음성 프로필이 저장되었습니다.';
+                        this.statusText.style.color = 'var(--text-success)';
+                        new Notice('✅ 음성 프로필 저장 완료! (' + Math.round(audioBlob.size / 1024) + 'KB)');
+                        
+                        setTimeout(() => this.close(), 2000);
+                    } catch (error) {
+                        this.statusText.textContent = '❌ 저장 실패: ' + error.message;
+                        this.statusText.style.color = 'var(--text-error)';
+                        this.recordButton.disabled = false;
+                        this.recordButton.textContent = '🔴 녹음 시작';
+                        this.recordButton.addClass('mod-cta');
+                    }
+                };
+                reader.onerror = () => {
+                    this.statusText.textContent = '❌ 파일 읽기 실패';
+                    this.statusText.style.color = 'var(--text-error)';
+                    this.recordButton.disabled = false;
+                    this.recordButton.textContent = '🔴 녹음 시작';
+                    this.recordButton.addClass('mod-cta');
+                };
+                reader.readAsDataURL(audioBlob);
+            } else {
+                this.statusText.textContent = '❌ 녹음 데이터가 없습니다. 다시 시도하세요.';
+                this.statusText.style.color = 'var(--text-error)';
+                this.recordButton.disabled = false;
+                this.recordButton.textContent = '🔴 녹음 시작';
+                this.recordButton.addClass('mod-cta');
+            }
+        } catch (error) {
+            this.statusText.textContent = '❌ 녹음 중지 실패: ' + error.message;
+            this.statusText.style.color = 'var(--text-error)';
+            this.recordButton.disabled = false;
+            this.recordButton.textContent = '🔴 녹음 시작';
+            this.recordButton.addClass('mod-cta');
+        }
+    }
+
+    onClose() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+class TTSSettingTab extends PluginSettingTab {
+    plugin: TTSVoiceReaderPlugin;
+
+    constructor(app: App, plugin: TTSVoiceReaderPlugin) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
+
+    display(): void {
+        const { containerEl } = this;
+        containerEl.empty();
+
+        containerEl.createEl('h2', { text: 'TTS 음성 설정' });
+
+        // 음성 모드
+        new Setting(containerEl)
+            .setName('음성 모드')
+            .setDesc('브라우저 TTS: 텍스트를 음성으로 변환 | 커스텀: 녹음한 샘플 오디오 재생 (텍스트와 무관)')
+            .addDropdown(dropdown => dropdown
+                .addOption('browser', '🔊 브라우저 TTS (권장)')
+                .addOption('custom', '🎭 내 목소리 샘플 재생')
+                .setValue(this.plugin.settings.voiceMode)
+                .onChange(async (value: 'browser' | 'custom') => {
+                    this.plugin.settings.voiceMode = value;
+                    await this.plugin.saveSettings();
+                    if (value === 'custom' && !this.plugin.settings.customVoiceData) {
+                        new Notice('⚠️ 먼저 음성을 녹음해주세요');
+                    } else if (value === 'custom') {
+                        new Notice('⚠️ 커스텀 모드는 녹음한 샘플만 재생합니다 (TTS 아님)');
+                    }
+                    this.display(); // 설정 화면 새로고침
+                }));
+
+        // 브라우저 음성 선택
+        new Setting(containerEl)
+            .setName('브라우저 음성')
+            .setDesc('사용할 음성을 선택하세요')
+            .addDropdown(dropdown => {
+                this.plugin.availableVoices.forEach(voice => {
+                    dropdown.addOption(voice.name, `${voice.name} (${voice.lang})`);
+                });
+                dropdown.setValue(this.plugin.settings.browserVoice);
+                dropdown.onChange(async (value) => {
+                    this.plugin.settings.browserVoice = value;
+                    await this.plugin.saveSettings();
+                });
+                return dropdown;
+            });
+
+        // 언어
+        new Setting(containerEl)
+            .setName('언어')
+            .setDesc('음성 읽기 언어')
+            .addDropdown(dropdown => dropdown
+                .addOption('ko-KR', '한국어')
+                .addOption('en-US', '영어')
+                .addOption('ja-JP', '일본어')
+                .addOption('zh-CN', '중국어')
+                .setValue(this.plugin.settings.language)
+                .onChange(async (value) => {
+                    this.plugin.settings.language = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // 속도
+        new Setting(containerEl)
+            .setName('읽기 속도')
+            .setDesc('음성 읽기 속도 (0.5 = 느림, 1.0 = 보통, 2.0 = 빠름)')
+            .addSlider(slider => slider
+                .setLimits(0.5, 2.0, 0.1)
+                .setValue(this.plugin.settings.speed)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    this.plugin.settings.speed = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // 음높이
+        new Setting(containerEl)
+            .setName('음높이')
+            .setDesc('음성의 높낮이 (0.5 = 낮음, 1.0 = 보통, 2.0 = 높음)')
+            .addSlider(slider => slider
+                .setLimits(0.5, 2.0, 0.1)
+                .setValue(this.plugin.settings.pitch)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    this.plugin.settings.pitch = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // 음량
+        new Setting(containerEl)
+            .setName('음량')
+            .setDesc('음성의 크기 (0.0 = 무음, 1.0 = 최대)')
+            .addSlider(slider => slider
+                .setLimits(0.0, 1.0, 0.1)
+                .setValue(this.plugin.settings.volume)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    this.plugin.settings.volume = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // 자동 저장
+        new Setting(containerEl)
+            .setName('📝 자동 저장')
+            .setDesc('TTS 읽기가 완료되면 텍스트를 자동으로 파일로 저장')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.autoSaveAudio)
+                .onChange(async (value) => {
+                    this.plugin.settings.autoSaveAudio = value;
+                    await this.plugin.saveSettings();
+                    new Notice(value ? '✅ 자동 저장 활성화' : '❌ 자동 저장 비활성화');
+                }));
+
+        // 출력 폴더
+        new Setting(containerEl)
+            .setName('음성 파일 저장 폴더')
+            .setDesc('녹음된 음성 파일을 저장할 폴더')
+            .addText(text => text
+                .setPlaceholder('TTS Audio')
+                .setValue(this.plugin.settings.outputFolder)
+                .onChange(async (value) => {
+                    this.plugin.settings.outputFolder = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // 현재 모드 상태 표시
+        const modeStatus = containerEl.createDiv({
+            cls: 'current-mode-status'
+        });
+        modeStatus.style.padding = '12px';
+        modeStatus.style.backgroundColor = 'var(--background-secondary)';
+        modeStatus.style.borderRadius = '8px';
+        modeStatus.style.marginTop = '15px';
+        modeStatus.style.marginBottom = '15px';
+        modeStatus.style.borderLeft = '4px solid var(--interactive-accent)';
+
+        const modeText = this.plugin.settings.voiceMode === 'browser' 
+            ? '🌐 현재 모드: 브라우저 TTS' 
+            : '🎭 현재 모드: 샘플 오디오 재생';
+        const modeDesc = this.plugin.settings.voiceMode === 'browser'
+            ? '브라우저 기본 음성으로 텍스트를 읽어줍니다'
+            : this.plugin.settings.customVoiceData 
+                ? '⚠️ 녹음한 샘플 오디오만 재생됩니다 (TTS 아님)'
+                : '⚠️ 음성 프로필이 없습니다. 먼저 녹음해주세요!';
+        
+        modeStatus.innerHTML = `
+            <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 4px;">${modeText}</div>
+            <div style="color: var(--text-muted); font-size: 0.9em;">${modeDesc}</div>
+            <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">
+                ${this.plugin.settings.autoSaveAudio ? '💾 자동 저장: 켜짐' : ''}
+            </div>
+        `;
+
+        // 테스트 버튼
+        new Setting(containerEl)
+            .setName('음성 테스트')
+            .setDesc('현재 설정으로 테스트 음성을 들어보세요')
+            .addButton(button => button
+                .setButtonText('🔊 테스트')
+                .onClick(() => {
+                    const testMode = this.plugin.settings.voiceMode === 'browser' ? '브라우저 모드' : '커스텀 모드';
+                    new Notice(`🎵 ${testMode}로 재생 중...`);
+                    this.plugin.speakText('안녕하세요. 이것은 음성 테스트입니다. 옵시디언 TTS 플러그인이 정상적으로 작동하고 있습니다.');
+                }));
+
+        // 폴더 설정
+        containerEl.createEl('h2', { text: '📁 폴더 설정' });
+
+        new Setting(containerEl)
+            .setName('출력 폴더')
+            .setDesc('녹음된 음성 파일이 저장될 폴더')
+            .addText(text => text
+                .setPlaceholder('TTS Audio')
+                .setValue(this.plugin.settings.outputFolder)
+                .onChange(async (value) => {
+                    this.plugin.settings.outputFolder = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('대시보드 폴더')
+            .setDesc('TTS 대시보드가 생성될 폴더')
+            .addText(text => text
+                .setPlaceholder('TTS Dashboard')
+                .setValue(this.plugin.settings.dashboardFolder)
+                .onChange(async (value) => {
+                    this.plugin.settings.dashboardFolder = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('대시보드 생성')
+            .setDesc('TTS 파일 관리 및 통계를 위한 대시보드 생성')
+            .addButton(button => button
+                .setButtonText('📊 대시보드 생성')
+                .setCta()
+                .onClick(async () => {
+                    await this.plugin.createDashboard();
+                }));
+
+        // 녹음 버튼
+        containerEl.createEl('h2', { text: '🎙️ 음성 녹음' });
+
+        new Setting(containerEl)
+            .setName('음성 녹음')
+            .setDesc('내 목소리를 녹음하여 음성 프로필 생성')
+            .addButton(button => button
+                .setButtonText('🎙️ 녹음하기')
+                .onClick(() => {
+                    new VoiceRecordModal(this.app, this.plugin).open();
+                }));
+
+        // 녹음 상태
+        if (this.plugin.settings.customVoiceData) {
+            const statusDiv = containerEl.createDiv({ 
+                text: '✅ 음성 프로필이 저장되었습니다',
+                cls: 'voice-profile-status'
+            });
+            statusDiv.style.color = 'var(--text-success)';
+            statusDiv.style.padding = '10px';
+            statusDiv.style.backgroundColor = 'var(--background-secondary)';
+            statusDiv.style.borderRadius = '8px';
+            statusDiv.style.marginTop = '10px';
+
+            // 음성 프로필 테스트 버튼
+            new Setting(containerEl)
+                .setName('음성 프로필 테스트')
+                .setDesc('녹음한 내 목소리 샘플을 재생해봅니다')
+                .addButton(button => button
+                    .setButtonText('🔊 샘플 재생')
+                    .onClick(async () => {
+                        await this.plugin.speakWithCustomVoice('안녕하세요. 이것은 녹음된 음성 프로필 테스트입니다.');
+                    }));
+
+            // 음성 프로필 삭제
+            new Setting(containerEl)
+                .setName('음성 프로필 삭제')
+                .setDesc('저장된 음성 프로필을 삭제합니다')
+                .addButton(button => button
+                    .setButtonText('🗑️ 삭제')
+                    .setWarning()
+                    .onClick(async () => {
+                        if (confirm('음성 프로필을 삭제하시겠습니까?')) {
+                            this.plugin.settings.customVoiceData = null;
+                            await this.plugin.saveSettings();
+                            new Notice('✅ 음성 프로필이 삭제되었습니다');
+                            this.display(); // 설정 화면 새로고침
+                        }
+                    }));
+        }
+    }
+}

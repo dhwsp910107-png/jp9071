@@ -1,0 +1,20 @@
+/* Item Organizer 플러그인 스타일 */
+
+.item-modal {
+    padding: 20px;
+}
+
+.category-item {
+    transition: background-color 0.2s;
+}
+
+.category-item:hover {
+    background-color: var(--background-secondary);
+}
+
+.categories-list, .locations-list {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 5px;
+}

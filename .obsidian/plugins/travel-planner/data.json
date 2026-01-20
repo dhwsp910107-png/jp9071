@@ -1,0 +1,37 @@
+{
+  "travelFolderPath": "여행",
+  "defaultCurrency": "원",
+  "defaultPeople": 2,
+  "trips": [
+    {
+      "name": "ㅗㅗ",
+      "path": "여행/ㅗㅗ",
+      "createdAt": "2025-10-28T00:46:39.736Z",
+      "status": "planning",
+      "lastModified": "2025-10-28T11:50:43.390Z"
+    },
+    {
+      "name": "dd",
+      "path": "여행/dd",
+      "createdAt": "2025-10-28T07:16:29.901Z",
+      "status": "planning",
+      "lastModified": "2025-10-28T07:23:18.138Z"
+    },
+    {
+      "name": "fvf",
+      "path": "여행/fvf",
+      "createdAt": "2025-10-28T07:23:35.489Z",
+      "status": "planning",
+      "lastModified": "2025-10-28T07:25:29.200Z"
+    },
+    {
+      "name": "hhh",
+      "path": "여행/hhh",
+      "createdAt": "2025-10-28T11:50:51.361Z",
+      "status": "planning",
+      "lastModified": "2025-10-28T11:51:26.739Z"
+    }
+  ],
+  "lastSelectedTrip": "여행/ㅗㅗ",
+  "recentFilesLimit": 15
+}

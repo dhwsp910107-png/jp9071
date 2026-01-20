@@ -1,0 +1,134 @@
+// 타이머 전체 설정 모달 (새로 추가) - TimerSettingModal 뒤에 추가
+class TimerGlobalSettingModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('cloze-modal-content');
+
+        contentEl.createEl('h2', { text: '⏱️ 타이머 전체 설정' });
+
+        // 타이머 ON/OFF
+        const enableSetting = contentEl.createDiv('cloze-setting-item');
+        enableSetting.createEl('label', { text: '타이머 사용' });
+        const enableToggle = enableSetting.createEl('input', {
+            type: 'checkbox',
+            checked: this.plugin.settings.enableTimer
+        });
+        enableToggle.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
+        
+        // 기본 타이머 시간
+        const durationSetting = contentEl.createDiv('cloze-setting-item');
+        durationSetting.createEl('label', { text: '기본 타이머 시간 (초)' });
+        const durationInput = durationSetting.createEl('input', {
+            type: 'number',
+            value: String(this.plugin.settings.defaultTimerDuration),
+            attr: { min: '5', max: '300', placeholder: '30' }
+        });
+        durationInput.style.width = '100%';
+
+        // 경고 임계값
+        const warningSetting = contentEl.createDiv('cloze-setting-item');
+        warningSetting.createEl('label', { text: '경고 임계값 (초)' });
+        const warningInput = warningSetting.createEl('input', {
+            type: 'number',
+            value: String(this.plugin.settings.timerWarningThreshold),
+            attr: { min: '3', max: '30', placeholder: '5' }
+        });
+        warningInput.style.width = '100%';
+
+        // 자동 시작
+        const autoStartSetting = contentEl.createDiv('cloze-setting-item');
+        autoStartSetting.createEl('label', { text: '자동 시작' });
+        const autoStartToggle = autoStartSetting.createEl('input', {
+            type: 'checkbox',
+            checked: this.plugin.settings.autoStartTimer
+        });
+        autoStartToggle.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
+
+        // 타이머 위치
+        const positionSetting = contentEl.createDiv('cloze-setting-item');
+        positionSetting.createEl('label', { text: '타이머 위치' });
+        const positionSelect = positionSetting.createEl('select');
+        positionSelect.style.width = '100%';
+        
+        const positions = [
+            { value: 'top', text: '상단' },
+            { value: 'bottom', text: '하단' },
+            { value: 'floating', text: '플로팅' }
+        ];
+        
+        positions.forEach(pos => {
+            const option = positionSelect.createEl('option', {
+                text: pos.text,
+                value: pos.value
+            });
+            if (this.plugin.settings.timerPosition === pos.value) {
+                option.selected = true;
+            }
+        });
+
+        // 시간 종료 시 자동 공개
+        const autoRevealSetting = contentEl.createDiv('cloze-setting-item');
+        autoRevealSetting.createEl('label', { text: '시간 종료 시 자동으로 빈칸 공개' });
+        const autoRevealToggle = autoRevealSetting.createEl('input', {
+            type: 'checkbox',
+            checked: this.plugin.settings.enableAutoRevealOnTimeout
+        });
+        autoRevealToggle.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
+
+        // 진동 피드백
+        const vibrationSetting = contentEl.createDiv('cloze-setting-item');
+        vibrationSetting.createEl('label', { text: '진동 피드백 (모바일)' });
+        const vibrationToggle = vibrationSetting.createEl('input', {
+            type: 'checkbox',
+            checked: this.plugin.settings.enableVibration
+        });
+        vibrationToggle.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
+
+        contentEl.createEl('p', { 
+            text: '※ 설정 변경 후 노트를 새로고침해야 적용됩니다.',
+            cls: 'setting-item-description'
+        }).style.cssText = 'margin-top: 20px; padding: 10px; background: var(--background-secondary); border-radius: 5px;';
+
+        const buttonContainer = contentEl.createDiv('cloze-modal-buttons');
+        
+        const saveBtn = buttonContainer.createEl('button', { text: '저장', cls: 'mod-cta' });
+        saveBtn.addEventListener('click', async () => {
+            // 설정 저장
+            this.plugin.settings.enableTimer = enableToggle.checked;
+            
+            const duration = parseInt(durationInput.value);
+            if (duration && duration >= 5 && duration <= 300) {
+                this.plugin.settings.defaultTimerDuration = duration;
+            }
+            
+            const warning = parseInt(warningInput.value);
+            if (warning && warning >= 3 && warning <= 30) {
+                this.plugin.settings.timerWarningThreshold = warning;
+            }
+            
+            this.plugin.settings.autoStartTimer = autoStartToggle.checked;
+            this.plugin.settings.timerPosition = positionSelect.value;
+            this.plugin.settings.enableAutoRevealOnTimeout = autoRevealToggle.checked;
+            this.plugin.settings.enableVibration = vibrationToggle.checked;
+            
+            await this.plugin.saveSettings();
+            new Notice('⏱️ 타이머 설정이 저장되었습니다');
+            this.plugin.refreshAllClozes();
+            this.close();
+        });
+
+        const cancelBtn = buttonContainer.createEl('button', { text: '취소' });
+        cancelBtn.addEventListener('click', () => this.close());
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}

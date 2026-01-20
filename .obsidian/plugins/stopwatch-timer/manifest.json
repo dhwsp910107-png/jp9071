@@ -1,0 +1,10 @@
+{
+    "id": "stopwatch-timer",
+    "name": "Stopwatch Timer",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "문제 풀이용 스톱워치 타이머 - 밀리초 정확도, 일시정지, 자동 기록",
+    "author": "JSP",
+    "authorUrl": "",
+    "isDesktopOnly": false
+}

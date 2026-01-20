@@ -1,0 +1,97 @@
+// StudyHistoryModal을 찾아서 아래 코드로 교체하세요:
+
+class StudyHistoryModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('study-history-modal');
+
+        contentEl.createEl('h2', { text: '📋 학습 세션 기록' });
+        
+        const stats = this.plugin.settings.stats;
+        const history = stats.studyHistory || [];
+
+        if (history.length === 0) {
+            contentEl.createEl('p', { 
+                text: '아직 학습 기록이 없습니다. 퀴즈를 완료하거나 학습을 정지하면 기록이 쌓입니다.',
+                cls: 'setting-item-description'
+            }).style.cssText = 'padding: 20px; text-align: center; color: var(--text-muted);';
+            return;
+        }
+
+        // 헤더 버튼
+        const headerButtons = contentEl.createDiv();
+        headerButtons.style.cssText = 'display: flex; gap: 8px; margin-bottom: 16px;';
+        
+        const resetBtn = headerButtons.createEl('button', { text: '🗑️ 기록 초기화' });
+        resetBtn.style.cssText = 'flex: 1; padding: 8px 16px; background: var(--background-modifier-error); color: white;';
+        resetBtn.onclick = async () => {
+            if (confirm('모든 학습 기록을 삭제하시겠습니까?')) {
+                this.plugin.settings.stats = {
+                    totalAttempts: 0,
+                    totalCorrect: 0,
+                    totalTime: 0,
+                    lastStudyDate: null,
+                    studyHistory: [],
+                    folderStats: {},
+                    fileStats: {}
+                };
+                await this.plugin.saveSettings();
+                new Notice('학습 기록이 초기화되었습니다');
+                this.onOpen();
+            }
+        };
+
+        // 학습 세션 목록
+        contentEl.createEl('h3', { text: `📄 전체 학습 세션 (${history.length}개)` });
+        
+        const sessionList = contentEl.createDiv({ cls: 'session-list' });
+        sessionList.style.cssText = 'max-height: 60vh; overflow-y: auto; border: 1px solid var(--background-modifier-border); border-radius: 6px;';
+
+        // 최근 순으로 정렬
+        const sortedHistory = history.sort((a, b) => b.timestamp - a.timestamp);
+
+        for (const record of sortedHistory) {
+            const sessionDiv = sessionList.createDiv({ cls: 'session-item' });
+            sessionDiv.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--background-modifier-border); display: flex; justify-content: space-between; align-items: center;';
+
+            const infoDiv = sessionDiv.createDiv();
+            infoDiv.style.flex = '1';
+            
+            const date = new Date(record.timestamp);
+            const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+            const folderName = record.folderName || '알 수 없음';
+            const fileName = record.fileName || '알 수 없음';
+            const statusIcon = record.completed ? '✅' : '⏱️';
+            
+            infoDiv.createEl('div', { text: `${statusIcon} ${dateStr}` }).style.cssText = 'font-weight: 500; margin-bottom: 4px;';
+            infoDiv.createEl('div', { 
+                text: `📁 ${folderName} / 📄 ${fileName}`,
+                cls: 'setting-item-description'
+            }).style.fontSize = '0.9em';
+
+            const statsDiv = sessionDiv.createDiv();
+            statsDiv.style.cssText = 'text-align: right; display: flex; flex-direction: column; gap: 4px;';
+            
+            const statusBadge = statsDiv.createEl('span', { 
+                text: record.completed ? '완료' : '시간초과'
+            });
+            statusBadge.style.cssText = `padding: 2px 8px; border-radius: 4px; font-size: 0.85em; background: ${record.completed ? 'var(--color-green)' : 'var(--color-orange)'}; color: white; display: inline-block;`;
+            
+            statsDiv.createEl('span', { 
+                text: `${Math.round(record.duration)}초`,
+                cls: 'setting-item-description'
+            }).style.fontSize = '0.85em';
+        }
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}

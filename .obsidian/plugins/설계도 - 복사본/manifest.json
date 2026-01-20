@@ -1,0 +1,10 @@
+{
+    "id": "hexagram-table-plugin",
+    "name": "주역 64괘 표",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "주역 64괘 배열표를 쉽게 삽입할 수 있는 플러그인입니다. 빈 표와 채워진 표 두 가지 옵션을 제공합니다.",
+    "author": "Your Name",
+    "authorUrl": "https://github.com/yourusername",
+    "isDesktopOnly": false
+}

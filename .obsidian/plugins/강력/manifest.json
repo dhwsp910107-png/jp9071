@@ -1,0 +1,10 @@
+{
+  "id": "power-engineering-mindmap",
+  "name": "전력공학 마인드맵",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "전력공학 학습을 위한 마인드맵 및 개념 정리 플러그인",
+  "author": "Your Name",
+  "authorUrl": "https://yourwebsite.com",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,10 @@
+{
+  "id": "subjective-qa",
+  "name": "Subjective Q&A Cards",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "주관식 문제 카드 플러그인 - 문제를 읽고 답을 확인하는 학습 도구",
+  "author": "Your Name",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

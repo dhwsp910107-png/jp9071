@@ -1,0 +1,399 @@
+/* Learning Strategy Processor Plugin Styles - v2.0 */
+
+/* 메인 컨테이너 */
+.learning-strategy-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+.ls-content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 헤더 스타일 */
+.ls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: var(--background-secondary);
+  border-bottom: 2px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ls-header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.ls-header-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.ls-nav-btn {
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--divider-color);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.ls-nav-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.ls-nav-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: bold;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 사이드바 스타일 */
+.ls-sidebar {
+  width: 280px;
+  background-color: var(--background-secondary);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--divider-color);
+}
+
+.ls-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 섹션 스타일 */
+.ls-section {
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ls-section-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #3b82f6;
+  font-size: 1rem;
+}
+
+.ls-stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ls-stat-item {
+  background-color: var(--background-primary);
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+.ls-stat-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.ls-stat-value {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+/* 액션 버튼 */
+.ls-action-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--divider-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.ls-action-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: #3b82f6;
+  transform: translateX(2px);
+}
+
+/* 대시보드 뷰 */
+.ls-dashboard-container,
+.ls-strategies-container,
+.ls-daily-container {
+  overflow-y: auto;
+  padding: 20px;
+  flex: 1;
+}
+
+.ls-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ls-stat-card {
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ls-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ls-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ls-recent-item-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: var(--background-primary);
+  border-radius: 6px;
+  transition: all 0.2s;
+  border-left: 4px solid #3b82f6;
+}
+
+.ls-recent-item-container:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.ls-recent-item {
+  flex: 1;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.ls-recent-item:hover {
+  transform: none;
+}
+
+.ls-recent-item-container:hover .ls-recent-item {
+  color: #3b82f6;
+}
+
+/* 전략 뷰 */
+.ls-strategies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.ls-strategy-card {
+  background-color: var(--background-secondary);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+}
+
+.ls-strategy-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+/* Daily 뷰 */
+.ls-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.ls-date-header button {
+  background-color: var(--background-primary);
+  border: 1px solid var(--divider-color);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ls-date-header button:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: #3b82f6;
+}
+
+.ls-date-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--text-normal);
+}
+
+.ls-view-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: var(--text-normal);
+  margin-bottom: 24px;
+}
+
+/* 모달 스타일 */
+.learning-strategy-modal {
+  padding: 20px;
+  min-width: 600px;
+  max-width: 800px;
+}
+
+.learning-strategy-modal h2 {
+  margin-top: 0;
+  color: #3b82f6;
+}
+
+.learning-strategy-modal p {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.learning-strategy-modal textarea,
+.learning-strategy-modal input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--divider-color);
+  border-radius: 6px;
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  font-family: inherit;
+}
+
+.learning-strategy-modal textarea:focus,
+.learning-strategy-modal input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modal-buttons button.mod-cta {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.modal-buttons button.mod-cta:hover {
+  background-color: #1e40af;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.modal-buttons button {
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--divider-color);
+}
+
+.modal-buttons button:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+/* 반응형 디자인 */
+.ls-small-mobile {
+  --ls-sidebar-width: 0;
+}
+
+.ls-small-mobile .ls-sidebar {
+  display: none;
+}
+
+.ls-mobile .ls-sidebar {
+  width: 240px;
+}
+
+.ls-tablet .ls-sidebar {
+  width: 260px;
+}
+
+/* 스크롤 스타일 */
+.ls-sidebar::-webkit-scrollbar,
+.ls-dashboard-container::-webkit-scrollbar,
+.ls-strategies-container::-webkit-scrollbar,
+.ls-daily-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ls-sidebar::-webkit-scrollbar-track,
+.ls-dashboard-container::-webkit-scrollbar-track,
+.ls-strategies-container::-webkit-scrollbar-track,
+.ls-daily-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ls-sidebar::-webkit-scrollbar-thumb,
+.ls-dashboard-container::-webkit-scrollbar-thumb,
+.ls-strategies-container::-webkit-scrollbar-thumb,
+.ls-daily-container::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 3px;
+}
+
+.ls-sidebar::-webkit-scrollbar-thumb:hover,
+.ls-dashboard-container::-webkit-scrollbar-thumb:hover,
+.ls-strategies-container::-webkit-scrollbar-thumb:hover,
+.ls-daily-container::-webkit-scrollbar-thumb:hover {
+  background: #1e40af;
+}

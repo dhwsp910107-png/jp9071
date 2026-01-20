@@ -1,0 +1,27 @@
+Results of custom groupers
+
+
+
+group by function task.file.filename
+Like 'group by filename' but does not link to the file.
+=>
+_c_.md
+a_b_c.md
+b.md
+c.md
+====================================================================================
+
+
+group by function task.file.filenameWithoutExtension + (task.hasHeading ? (' > ' + task.heading) : '')
+Like 'group by backlink' but does not link to the heading in the file.
+=>
+ > heading
+_c_
+_c_ > heading _italic text_
+a_b_c > a_b_c
+b
+c
+c > c
+c > heading
+====================================================================================
+

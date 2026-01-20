@@ -1,0 +1,10 @@
+{
+	"id": "timer-card",
+	"name": "Timer Card",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "문제 노트에서 이미지를 쉽게 추가하고 관리하는 플러그인",
+	"author": "JSP",
+	"authorUrl": "",
+	"isDesktopOnly": false
+}

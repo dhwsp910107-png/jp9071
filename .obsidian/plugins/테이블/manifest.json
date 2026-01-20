@@ -1,0 +1,10 @@
+{
+	"id": "advanced-table-generator",
+	"name": "Advanced Table Generator",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Generate numbered tables (001-500) with grade-based color coding for learning dashboards",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
+	"isDesktopOnly": false
+}

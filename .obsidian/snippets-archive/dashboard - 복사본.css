@@ -1,0 +1,32 @@
+/* 📘 Study Dashboard Plugin 스타일 */
+
+.modal-button-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.modal-button-group button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-button-group button:first-child {
+    background-color: var(--interactive-accent);
+    color: white;
+}
+
+.modal-button-group button:last-child {
+    background-color: var(--background-modifier-error);
+    color: white;
+}
+
+/* 대시보드 기본 스타일 */
+.markdown-preview-view h1 {
+    color: var(--interactive-accent);
+}
+
+.markdown-preview-view ul {
+    margin-top: 8px;
+}

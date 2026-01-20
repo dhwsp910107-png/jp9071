@@ -1,0 +1,1120 @@
+/* ========================================
+   Smart Lecture Tracker - Styles
+   ======================================== */
+
+/* === 전역 변수 === */
+:root {
+  --tracker-primary: #667eea;
+  --tracker-secondary: #764ba2;
+  --tracker-success: #10b981;
+  --tracker-warning: #f59e0b;
+  --tracker-danger: #ef4444;
+  --tracker-bg-dark: #1e1e1e;
+  --tracker-bg-card: #2a2a2a;
+  --tracker-bg-hover: #333;
+  --tracker-border: #3a3a3a;
+  --tracker-text: #e0e0e0;
+  --tracker-text-dim: #999;
+  
+  /* React 스타일 변수 */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* === Modal 스타일 === */
+.lecture-tracker-modal {
+  padding: 20px;
+}
+
+.lecture-tracker-modal h2 {
+  margin-bottom: 20px;
+  color: var(--tracker-text);
+}
+
+.lecture-tracker-modal .setting-item {
+  border: none;
+  padding: 15px 0;
+}
+
+.lecture-tracker-modal .setting-item-info {
+  flex-grow: 1;
+}
+
+.lecture-tracker-modal .setting-item-name {
+  font-weight: 600;
+  color: var(--tracker-text);
+  margin-bottom: 5px;
+}
+
+.lecture-tracker-modal .setting-item-description {
+  color: var(--tracker-text-dim);
+  font-size: 0.9em;
+}
+
+.lecture-tracker-modal button {
+  margin-right: 10px;
+}
+
+/* === 강의 리스트 스타일 === */
+.lecture-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.lecture-item {
+  padding: 12px;
+  margin: 8px 0;
+  background: var(--tracker-bg-card);
+  border: 1px solid var(--tracker-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lecture-item:hover {
+  background: var(--tracker-bg-hover);
+  border-color: var(--tracker-primary);
+  transform: translateX(2px);
+}
+
+.lecture-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.lecture-item-title {
+  font-weight: 600;
+  color: var(--tracker-text);
+  font-size: 1.05em;
+}
+
+.lecture-item-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.lecture-item-badge.urgent {
+  background: var(--tracker-danger);
+  color: white;
+}
+
+.lecture-item-badge.upcoming {
+  background: var(--tracker-warning);
+  color: white;
+}
+
+.lecture-item-badge.completed {
+  background: var(--tracker-success);
+  color: white;
+}
+
+.lecture-item-info {
+  color: var(--tracker-text-dim);
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+.lecture-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* === 진행 바 === */
+.tracker-progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--tracker-bg-dark);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.tracker-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tracker-primary) 0%, var(--tracker-secondary) 100%);
+  transition: width 0.5s ease;
+  border-radius: 5px;
+}
+
+/* === 통계 카드 === */
+.tracker-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.tracker-stat-card {
+  background: var(--tracker-bg-card);
+  border: 1px solid var(--tracker-border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.tracker-stat-card:hover {
+  border-color: var(--tracker-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.tracker-stat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: var(--tracker-text-dim);
+  font-size: 0.9em;
+}
+
+.tracker-stat-value {
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.tracker-stat-label {
+  color: var(--tracker-text-dim);
+  font-size: 0.85em;
+}
+
+/* === 체크박스 스타일 === */
+.tracker-checkbox-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+
+.tracker-checkbox {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--tracker-primary);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--tracker-text-dim);
+}
+
+.tracker-checkbox:hover {
+  background: var(--tracker-primary);
+  color: white;
+}
+
+.tracker-checkbox.checked {
+  background: var(--tracker-primary);
+  color: white;
+}
+
+/* === 별표 (취약 구간) === */
+.tracker-star-toggle {
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.3;
+}
+
+.tracker-star-toggle:hover {
+  opacity: 0.7;
+  transform: scale(1.2);
+}
+
+.tracker-star-toggle.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px #fbbf24);
+}
+
+/* === 난이도 별 === */
+.tracker-difficulty {
+  display: flex;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.tracker-difficulty-star {
+  font-size: 1.2em;
+  transition: all 0.2s ease;
+  opacity: 0.3;
+}
+
+.tracker-difficulty-star.filled {
+  opacity: 1;
+  color: #fbbf24;
+}
+
+.tracker-difficulty-star:hover {
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+/* === 이해도 이모지 === */
+.tracker-understanding {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.tracker-understanding-emoji {
+  font-size: 2em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
+.tracker-understanding-emoji:hover {
+  opacity: 0.8;
+  filter: grayscale(0%);
+  transform: scale(1.2);
+}
+
+.tracker-understanding-emoji.selected {
+  opacity: 1;
+  filter: grayscale(0%);
+  transform: scale(1.3);
+}
+
+/* === 태그 === */
+.tracker-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.tracker-tag {
+  padding: 4px 12px;
+  background: var(--tracker-bg-dark);
+  border: 1px solid var(--tracker-border);
+  border-radius: 12px;
+  font-size: 0.85em;
+  color: var(--tracker-text-dim);
+  transition: all 0.2s ease;
+}
+
+.tracker-tag:hover {
+  border-color: var(--tracker-primary);
+  color: var(--tracker-primary);
+}
+
+.tracker-tag.active {
+  background: var(--tracker-primary);
+  border-color: var(--tracker-primary);
+  color: white;
+}
+
+/* === 피드백 히스토리 === */
+.tracker-feedback-history {
+  margin: 20px 0;
+}
+
+.tracker-feedback-item {
+  padding: 12px;
+  margin: 8px 0;
+  background: var(--tracker-bg-card);
+  border-left: 3px solid var(--tracker-primary);
+  border-radius: 4px;
+}
+
+.tracker-feedback-date {
+  font-weight: 600;
+  color: var(--tracker-primary);
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
+.tracker-feedback-content {
+  color: var(--tracker-text);
+  line-height: 1.6;
+}
+
+/* === 복습 스케줄 === */
+.tracker-review-schedule {
+  margin: 20px 0;
+}
+
+.tracker-review-group {
+  margin-bottom: 20px;
+}
+
+.tracker-review-group-title {
+  font-weight: 600;
+  color: var(--tracker-text-dim);
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.tracker-review-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tracker-review-badge {
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.tracker-review-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tracker-review-badge.urgent {
+  background: var(--tracker-danger);
+  color: white;
+}
+
+.tracker-review-badge.tomorrow {
+  background: var(--tracker-warning);
+  color: white;
+}
+
+.tracker-review-badge.this-week {
+  background: var(--tracker-primary);
+  color: white;
+}
+
+/* === 통계 그래프 === */
+.tracker-graph {
+  margin: 20px 0;
+}
+
+.tracker-bar-chart {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  height: 200px;
+  padding: 20px 0;
+}
+
+.tracker-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.tracker-bar-value {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--tracker-primary);
+}
+
+.tracker-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--tracker-primary) 0%, var(--tracker-secondary) 100%);
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+}
+
+.tracker-bar:hover .tracker-bar-fill {
+  filter: brightness(1.2);
+  transform: scaleY(1.05);
+}
+
+.tracker-bar-label {
+  font-size: 0.85em;
+  color: var(--tracker-text-dim);
+}
+
+/* === 히트맵 === */
+.tracker-heatmap {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+  margin: 20px 0;
+}
+
+.tracker-heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  cursor: pointer;
+  border: 1px solid var(--tracker-border);
+  transition: all 0.2s ease;
+}
+
+.tracker-heatmap-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+/* === 알림 스타일 === */
+.tracker-notice {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tracker-notice.info {
+  background: rgba(102, 126, 234, 0.1);
+  border-left: 3px solid var(--tracker-primary);
+}
+
+.tracker-notice.success {
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid var(--tracker-success);
+}
+
+.tracker-notice.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid var(--tracker-warning);
+}
+
+.tracker-notice.danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid var(--tracker-danger);
+}
+
+/* === 버튼 스타일 === */
+.tracker-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tracker-btn-primary {
+  background: var(--tracker-primary);
+  color: white;
+}
+
+.tracker-btn-primary:hover {
+  background: var(--tracker-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.tracker-btn-secondary {
+  background: var(--tracker-bg-card);
+  color: var(--tracker-text);
+  border: 1px solid var(--tracker-border);
+}
+
+.tracker-btn-secondary:hover {
+  border-color: var(--tracker-primary);
+  color: var(--tracker-primary);
+}
+
+.tracker-btn-success {
+  background: var(--tracker-success);
+  color: white;
+}
+
+.tracker-btn-success:hover {
+  background: #059669;
+}
+
+.tracker-btn-danger {
+  background: var(--tracker-danger);
+  color: white;
+}
+
+.tracker-btn-danger:hover {
+  background: #dc2626;
+}
+
+/* === 애니메이션 === */
+@keyframes tracker-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tracker-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.tracker-fade-in {
+  animation: tracker-fade-in 0.3s ease;
+}
+
+.tracker-pulse {
+  animation: tracker-pulse 2s infinite;
+}
+
+/* === 스크롤바 스타일 === */
+.lecture-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lecture-list::-webkit-scrollbar-track {
+  background: var(--tracker-bg-dark);
+  border-radius: 4px;
+}
+
+.lecture-list::-webkit-scrollbar-thumb {
+  background: var(--tracker-border);
+  border-radius: 4px;
+}
+
+.lecture-list::-webkit-scrollbar-thumb:hover {
+  background: var(--tracker-primary);
+}
+
+/* === 반응형 === */
+@media (max-width: 768px) {
+  .tracker-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tracker-bar-chart {
+    height: 150px;
+  }
+  
+  .tracker-heatmap {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+/* === 다크 모드 추가 지원 === */
+.theme-dark {
+  --tracker-bg-dark: #1e1e1e;
+  --tracker-bg-card: #2a2a2a;
+  --tracker-bg-hover: #333;
+  --tracker-border: #3a3a3a;
+  --tracker-text: #e0e0e0;
+  --tracker-text-dim: #999;
+}
+
+.theme-light {
+  --tracker-bg-dark: #f5f5f5;
+  --tracker-bg-card: #ffffff;
+  --tracker-bg-hover: #f0f0f0;
+  --tracker-border: #e0e0e0;
+  --tracker-text: #1a1a1a;
+  --tracker-text-dim: #666;
+}
+
+/* === 설정 페이지 === */
+.tracker-settings {
+  padding: 20px;
+}
+
+.tracker-settings h2 {
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--tracker-border);
+  padding-bottom: 10px;
+}
+
+.tracker-settings .setting-item {
+  border-bottom: 1px solid var(--tracker-border);
+  padding: 20px 0;
+}
+
+.tracker-settings .setting-item:last-child {
+  border-bottom: none;
+}
+
+/* === 툴팁 === */
+.tracker-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  z-index: 1000;
+  pointer-events: none;
+  white-space: pre-line;
+}
+
+.tracker-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* ========================================
+   Part 8: 모바일 최적화 CSS
+   ======================================== */
+
+/* === 모바일 메뉴 === */
+.mobile-menu-modal {
+  padding: 20px;
+}
+
+.mobile-menu-item {
+  padding: 15px;
+  margin: 8px 0;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-item:active {
+  transform: scale(0.98);
+  background: var(--background-modifier-hover);
+}
+
+.mobile-menu-item i {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.mobile-menu-item span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* === 모바일 반응형 레이아웃 === */
+@media (max-width: 768px) {
+  /* 헤더 */
+  .app-header {
+    padding: 10px 15px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  /* 네비게이션 */
+  .main-nav {
+    display: none;
+  }
+
+  /* 컨테이너 */
+  .app-container {
+    padding: 15px;
+  }
+
+  /* 카드 */
+  .card {
+    padding: 15px;
+  }
+
+  /* 버튼 */
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* 폼 요소 */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-input,
+  .form-textarea,
+  .form-select {
+    font-size: 16px; /* iOS 자동 줌 방지 */
+  }
+
+  /* 모달 */
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+    margin: 20px auto;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  .modal-footer {
+    padding: 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* 테이블 */
+  .table-container {
+    overflow-x: auto;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 10px 8px;
+  }
+
+  /* 그리드 */
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  /* 통계 카드 */
+  .stats-card {
+    padding: 15px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  /* 검색 */
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  /* 필터 */
+  .filter-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filter-group .form-select {
+    width: 100%;
+  }
+
+  /* 탭 */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    min-width: auto;
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+
+  /* 페이지네이션 */
+  .pagination {
+    gap: 5px;
+  }
+
+  .pagination button {
+    min-width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  /* 사이드바가 있는 레이아웃 */
+  .layout-with-sidebar {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+
+  /* 플로팅 액션 버튼 */
+  .fab {
+    bottom: 70px; /* 하단 네비게이션 위로 */
+    right: 15px;
+  }
+}
+
+/* === 작은 모바일 (360px 이하) === */
+@media (max-width: 360px) {
+  .app-container {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .modal-content {
+    margin: 10px auto;
+  }
+}
+
+/* === 태블릿 (769px ~ 1024px) === */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-container {
+    padding: 20px;
+  }
+
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modal-content {
+    width: 80%;
+    max-width: 600px;
+  }
+}
+
+/* === 터치 디바이스 최적화 === */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 영역 확대 */
+  .btn,
+  .btn-icon,
+  .tab,
+  .mobile-menu-item {
+    min-height: 44px; /* iOS 권장 터치 영역 */
+  }
+
+  /* 호버 효과 제거 */
+  .btn:hover,
+  .card:hover,
+  .tab:hover {
+    transform: none;
+  }
+
+  /* 액티브 효과로 대체 */
+  .btn:active,
+  .card:active,
+  .tab:active {
+    opacity: 0.8;
+  }
+
+  /* 스크롤 개선 */
+  .modal-body,
+  .table-container,
+  .tabs {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* === 가로 모드 최적화 === */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-content {
+    max-height: 85vh;
+  }
+
+  .app-header {
+    padding: 8px 15px;
+  }
+
+  .fab {
+    bottom: 15px;
+  }
+}
+
+/* === iOS Safe Area 대응 === */
+@supports (padding: max(0px)) {
+  .app-header {
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+  }
+
+  body.has-bottom-nav .app-container {
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+    padding-bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
+  }
+
+  .fab {
+    right: max(15px, env(safe-area-inset-right));
+    bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* === 접근성 개선 === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === 다크모드 모바일 최적화 === */
+@media (max-width: 768px) {
+  body.dark-mode {
+    background: var(--background-primary);
+  }
+
+  .dark-mode .mobile-menu-item {
+    background: var(--background-secondary);
+  }
+
+  .dark-mode .mobile-menu-item:active {
+    background: var(--background-modifier-hover);
+  }
+}
+
+/* === 하단 네비게이션 (모바일용) === */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--background-primary);
+    border-top: 1px solid var(--background-modifier-border);
+    padding: 8px 0;
+    justify-content: space-around;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.2s ease;
+    cursor: pointer;
+  }
+
+  .bottom-nav-item i {
+    font-size: 20px;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--interactive-accent);
+  }
+
+  .bottom-nav-item:active {
+    opacity: 0.6;
+  }
+
+  /* 하단 네비게이션이 있을 때 컨테이너 패딩 조정 */
+  .app-container.with-bottom-nav {
+    padding-bottom: 70px;
+  }
+}
+
+/* === 풀 페이지 모달 (모바일) === */
+@media (max-width: 768px) {
+  .modal.full-page-mobile .modal-content {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .modal.full-page-mobile .modal-header {
+    border-radius: 0;
+  }
+}
+
+/* === 스와이프 인디케이터 === */
+.swipe-indicator {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .swipe-indicator {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--background-modifier-border);
+    border-radius: 2px;
+    margin: 8px auto;
+  }
+}
+
+/* === 모바일 툴팁 === */
+@media (max-width: 768px) {
+  .tooltip {
+    display: none !important; /* 모바일에서는 툴팁 비활성화 */
+  }
+}
+
+/* === 텍스트 선택 개선 === */
+@media (max-width: 768px) {
+  .selectable-text {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .non-selectable {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

@@ -1,0 +1,15 @@
+파일이 너무 크고 복잡하여 오류를 수정하기 어렵습니다.
+
+간단한 해결 방법:
+
+1. Obsidian 종료
+2. .obsidian/plugins/travel-planner 폴더 삭제
+3. 플러그인 새로 설치
+
+또는
+
+main.js 파일의 2085라인 근처에 있는 
+generateBudgetDashboardContent 메서드에서
+HTML style 속성 구문이 잘못되었습니다.
+
+템플릿 리터럴 내의 backtick 이스케이프 문제입니다.

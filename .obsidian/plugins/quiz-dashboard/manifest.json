@@ -1,0 +1,10 @@
+{
+	"id": "quiz-dashboard",
+	"name": "Quiz Dashboard Pro",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "한자 문제 대시보드 전용 플러그인 - 모바일 최적화, 반응형 UI, 통계 카드, 필터링, 검색 기능",
+	"author": "지 티",
+	"authorUrl": "",
+	"isDesktopOnly": false
+}

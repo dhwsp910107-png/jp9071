@@ -1,0 +1,26 @@
+/* 학습 대시보드 최적화 */
+.dataview-container {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 통계 카드 호버 효과 */
+.stats-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+/* 포모도로 타이머 스타일 */
+.timer-display {
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+/* 진도 바 애니메이션 */
+.progress-bar {
+    transition: width 0.8s ease-in-out;
+}

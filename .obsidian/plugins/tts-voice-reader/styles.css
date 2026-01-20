@@ -1,0 +1,208 @@
+/* TTS Voice Reader Plugin Styles */
+
+.tts-reader-modal {
+    padding: 20px;
+    min-width: 500px;
+    max-width: 90vw;
+}
+
+.tts-reader-modal h2 {
+    margin-bottom: 16px;
+    font-size: clamp(18px, 5vw, 24px);
+}
+
+.tts-reader-modal textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 2px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-family: var(--font-text);
+    font-size: 16px;
+    resize: vertical;
+    margin-bottom: 12px;
+    touch-action: manipulation;
+}
+
+.tts-button-container {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tts-button-container button {
+    flex: 1;
+    min-width: 100px;
+    padding: 14px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Voice Record Modal */
+.voice-record-modal {
+    padding: 24px;
+    min-width: 450px;
+    max-width: 90vw;
+}
+
+.voice-record-modal h2 {
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: clamp(18px, 5vw, 24px);
+}
+
+.voice-record-desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.recording-status {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-accent);
+    min-height: 30px;
+    transition: color 0.3s ease;
+}
+
+.recording-status.recording {
+    color: var(--text-error);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.recording-timer {
+    text-align: center;
+    font-size: clamp(28px, 8vw, 36px);
+    font-weight: bold;
+    font-family: var(--font-monospace);
+    margin-bottom: 20px;
+    color: var(--text-normal);
+}
+
+.record-button {
+    width: 100%;
+    padding: 18px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.recording-guide {
+    background: var(--background-secondary);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.recording-guide h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: var(--text-normal);
+    font-size: 16px;
+}
+
+.recording-guide ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.recording-guide li {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+/* Settings */
+.voice-profile-status {
+    background: var(--background-secondary);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+    border-left: 3px solid var(--interactive-success);
+    color: var(--text-success);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .tts-reader-modal,
+    .voice-record-modal {
+        min-width: auto;
+        width: 100%;
+        padding: 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .tts-reader-modal textarea {
+        min-height: 150px;
+        font-size: 16px;
+        padding: 14px;
+    }
+    
+    .tts-button-container {
+        gap: 10px;
+    }
+    
+    .tts-button-container button {
+        min-width: 80px;
+        padding: 16px 12px;
+        font-size: 14px;
+    }
+    
+    .recording-guide {
+        padding: 12px;
+    }
+    
+    .recording-guide li {
+        font-size: 13px;
+    }
+}
+
+/* 작은 모바일 (360px 이하) */
+@media (max-width: 400px) {
+    .tts-reader-modal,
+    .voice-record-modal {
+        padding: 12px;
+    }
+    
+    .tts-button-container {
+        flex-direction: column;
+    }
+    
+    .tts-button-container button {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+/* 터치 최적화 */
+@media (hover: none) and (pointer: coarse) {
+    button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .tts-button-container button,
+    .record-button {
+        min-height: 48px;
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "language": "kor+jpn",
+  "separatePages": true,
+  "includeImages": true,
+  "outputFolder": "OCR Output",
+  "fastMode": true
+}

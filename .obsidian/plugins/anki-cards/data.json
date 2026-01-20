@@ -1,0 +1,20 @@
+{
+  "autoGenerateTimer": true,
+  "defaultTimerDuration": 180,
+  "showHints": true,
+  "autoShowAnswer": false,
+  "theme": "dark",
+  "enableAnimations": false,
+  "enableVibration": false,
+  "autoCreateFolders": true,
+  "defaultSubject": "일본어",
+  "defaultLevel": 2,
+  "enableAutoBackup": true,
+  "backupInterval": 7,
+  "enableDataviewIntegration": true,
+  "dashboardPath": "Anki-Cards-DB/통계/Dashboard.md",
+  "autoUpdateDashboard": true,
+  "enableDebugMode": false,
+  "customCSS": "",
+  "exportFormat": "json"
+}

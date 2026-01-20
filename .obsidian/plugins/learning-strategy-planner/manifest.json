@@ -1,0 +1,9 @@
+{
+  "id": "learning-strategy-planner",
+  "name": "학습 플래너",
+  "version": "1.2.8",
+  "minAppVersion": "0.15.0",
+  "description": "과학적으로 검증된 학습 플래너로 맞춤형 학습 계획 생성",
+  "author": "Your Name",
+  "isDesktopOnly": false
+}

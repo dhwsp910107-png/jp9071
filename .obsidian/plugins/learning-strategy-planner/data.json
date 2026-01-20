@@ -1,0 +1,953 @@
+{
+  "dashboardFileName": "Learning Planner Dashboard.md",
+  "clozeFolder": "Learning",
+  "questionFolders": [
+    "기본",
+    "고급",
+    "ㅏㅏ"
+  ],
+  "questionSubFolder": "Questions",
+  "imageSubFolder": "첨부파일",
+  "imageClozeFolder": "Learning/첨부파일",
+  "shuffleQuestions": false,
+  "showProgress": false,
+  "autoSave": false,
+  "historyRetentionDays": 30,
+  "autoCreateWrongAnswerNote": false,
+  "defaultDifficulty": "보통",
+  "defaultQuizCount": 1,
+  "defaultTimerEnabled": false,
+  "defaultTimerPerQuestion": 10,
+  "defaultShuffleQuestions": false,
+  "defaultShuffleOptions": false,
+  "bookmarks": [],
+  "bookmarkFolder": "⭐ 북마크 목록",
+  "quizzes": {},
+  "stats": {
+    "totalAttempts": 59,
+    "totalCorrect": 62,
+    "totalTime": 426,
+    "lastStudyDate": "2025-12-09T04:31:52.587Z",
+    "studyHistory": [
+      {
+        "timestamp": 1764661756002,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 2,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764662045674,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764662298041,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674023624,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 11,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674039048,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674116296,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 7,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764674138256,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 4,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764674144048,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 2,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674162776,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 2,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674645280,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 4,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764674658712,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 12,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764674670336,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 3,
+        "duration": 10,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 300
+      },
+      {
+        "timestamp": 1764675826869,
+        "date": "2025-12-02",
+        "folder": "⭐ 북마크",
+        "folderName": "⭐ 북마크",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764675835040,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764675848728,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764680759025,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 5,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764680798440,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764681348521,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 3,
+        "duration": 22,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 300
+      },
+      {
+        "timestamp": 1764681353352,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764681552456,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 22,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764682319830,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 35,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764682324783,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764682328175,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764682507593,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 2,
+        "duration": 17,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764682509575,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764687441175,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 9,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764687464199,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 3,
+        "duration": 22,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 300
+      },
+      {
+        "timestamp": 1764687470319,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 5,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764690182423,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 6,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691216919,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 18,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691224502,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 6,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691257142,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 11,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691525287,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 8,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691561101,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 35,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764691564502,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 2,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764693059071,
+        "date": "2025-12-02",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764814466871,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 2,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764814579327,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 18,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764814922651,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 7,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764814926674,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 1,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764814937740,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 2,
+        "duration": 10,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 200
+      },
+      {
+        "timestamp": 1764814943746,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 5,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815182771,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 3,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815458779,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 7,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815618611,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 8,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815624074,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815728931,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 0,
+        "duration": 15,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 0
+      },
+      {
+        "timestamp": 1764815756547,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 1,
+        "duration": 4,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764815760602,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 1,
+        "correct": 1,
+        "duration": 1,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764815773850,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 2,
+        "correct": 1,
+        "duration": 4,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 50
+      },
+      {
+        "timestamp": 1764815784954,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 2,
+        "correct": 1,
+        "duration": 7,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 50
+      },
+      {
+        "timestamp": 1764815799795,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 2,
+        "correct": 1,
+        "duration": 4,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 50
+      },
+      {
+        "timestamp": 1764816226780,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/고급",
+        "folderName": "고급",
+        "total": 1,
+        "correct": 1,
+        "duration": 9,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      },
+      {
+        "timestamp": 1764816244738,
+        "date": "2025-12-04",
+        "folder": "Learning/Questions/ㅏㅏ",
+        "folderName": "ㅏㅏ",
+        "total": 2,
+        "correct": 1,
+        "duration": 12,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 50
+      },
+      {
+        "timestamp": 1765254712586,
+        "date": "2025-12-09",
+        "folder": "Learning/Questions/기본",
+        "folderName": "기본",
+        "total": 1,
+        "correct": 1,
+        "duration": 2,
+        "completed": true,
+        "action": "quiz",
+        "percentage": 100
+      }
+    ],
+    "folderStats": {
+      "기본": {
+        "attempts": 34,
+        "correct": 47,
+        "time": 296,
+        "fileStats": {
+          "2_ㅗㅓㅓㅏ.md": {
+            "attempts": 21,
+            "correct": 20,
+            "time": 188
+          },
+          "1_sdsd....md": {
+            "attempts": 13,
+            "correct": 12,
+            "time": 108
+          }
+        }
+      },
+      "ㅏㅏ": {
+        "attempts": 23,
+        "correct": 13,
+        "time": 118,
+        "fileStats": {
+          "1_ㅗㅓㅓㅏ.md": {
+            "attempts": 17,
+            "correct": 5,
+            "time": 99
+          },
+          "2_ㅗㅓㅓㅏ.md": {
+            "attempts": 6,
+            "correct": 6,
+            "time": 18
+          }
+        }
+      },
+      "⭐ 북마크": {
+        "attempts": 1,
+        "correct": 1,
+        "time": 3,
+        "fileStats": {
+          "1_ㅗㅓㅓㅏ.md": {
+            "attempts": 1,
+            "correct": 1,
+            "time": 3
+          }
+        }
+      },
+      "고급": {
+        "attempts": 1,
+        "correct": 1,
+        "time": 9,
+        "fileStats": {
+          "1_ㅏ.md": {
+            "attempts": 1,
+            "correct": 1,
+            "time": 9
+          }
+        }
+      }
+    },
+    "fileStats": {}
+  },
+  "cardNumbersByFolder": {},
+  "enableTimer": true,
+  "defaultTimerDuration": 30,
+  "timerWarningThreshold": 5,
+  "enableVibration": true,
+  "timerPosition": "top",
+  "autoStartTimer": false,
+  "timerDurationsByFolder": {},
+  "enableAutoRevealOnTimeout": false,
+  "enableAutoReveal": false,
+  "autoRevealDelay": 3,
+  "studySessions": [],
+  "totalStudyTime": 0,
+  "enableStudyTracking": true,
+  "showTimerInDashboard": true,
+  "dashboardAutoRefresh": true,
+  "dashboardMemo": "ㄹㄹ",
+  "difficulties": [
+    "쉬움",
+    "보통",
+    "어려움",
+    "매우 어려움"
+  ],
+  "testManagementEnabled": true,
+  "testFolder": "Tests",
+  "testFolderStructure": "monthly",
+  "autoCreateTestFolder": true,
+  "syncTestsWithFiles": true,
+  "testTemplates": [
+    {
+      "id": "1",
+      "name": "일일 복습 10개",
+      "type": "daily",
+      "quizCount": 10,
+      "folders": []
+    },
+    {
+      "id": "2",
+      "name": "일일 복습 20개",
+      "type": "daily",
+      "quizCount": 20,
+      "folders": []
+    },
+    {
+      "id": "3",
+      "name": "주간 전체 복습",
+      "type": "weekly",
+      "quizCount": 50,
+      "folders": []
+    },
+    {
+      "id": "4",
+      "name": "월간 총정리",
+      "type": "monthly",
+      "quizCount": 100,
+      "folders": []
+    }
+  ],
+  "testTypes": [
+    "일별",
+    "주간",
+    "월간",
+    "특별"
+  ],
+  "weekStart": 0,
+  "testThemeColor": "#10b981",
+  "dailyChecklists": {
+    "2025-12-02": {
+      "items": [],
+      "notes": []
+    },
+    "2025-12-01": {
+      "items": [],
+      "notes": []
+    },
+    "2025-12-03": {
+      "items": [],
+      "notes": []
+    },
+    "2025-12-04": {
+      "items": [],
+      "notes": []
+    }
+  },
+  "weeklyChecklists": {
+    "2025-W49": {
+      "items": [
+        {
+          "text": "ㅡㅓ",
+          "completed": false
+        }
+      ],
+      "notes": [
+        "나는 1000억 벌었다"
+      ]
+    }
+  },
+  "monthlyChecklists": {
+    "2025-12": {
+      "items": [],
+      "notes": []
+    }
+  },
+  "checklistTemplates": [
+    {
+      "id": "1",
+      "name": "기본 일일 루틴",
+      "type": "daily",
+      "items": [
+        "아침 복습",
+        "저녁 복습",
+        "오답 정리"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "주간 목표",
+      "type": "weekly",
+      "items": [
+        "핵심 개념 정리",
+        "모의고사 풀기",
+        "약점 보완"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "월간 할일",
+      "type": "monthly",
+      "items": [
+        "전체 복습",
+        "다음 달 계획",
+        "학습 통계 분석"
+      ]
+    }
+  ],
+  "scrollToClozeOnToggle": true,
+  "animateScroll": true,
+  "showHintsForPseudoClozes": true,
+  "underlineRevealedPseudoClozes": false,
+  "underlineRevealedGenuineClozes": true,
+  "revealPseudoClozesByDefault": false,
+  "swapLeftAndRightBorderActions": false,
+  "currentCardNumber": 1,
+  "clozeFolders": [
+    "기본",
+    "중급",
+    "고급"
+  ],
+  "learningFolder": "Learning Plans",
+  "bookmarksFolder": "Learning Plans/Bookmarks",
+  "attachmentFolderName": "첨부파일",
+  "enableImages": true,
+  "shuffleOptions": true,
+  "showHintAfterWrong": true,
+  "reducedAnimations": false,
+  "routineEnabled": true,
+  "routineFolder": "Routine",
+  "folderStructure": "monthly",
+  "autoCreateFolder": true,
+  "syncWithFiles": true,
+  "routineTemplates": [
+    {
+      "id": "1",
+      "name": "영어 학습",
+      "items": [
+        "영어 강의 2강",
+        "영어 뉴스 읽기",
+        "Anki 단어"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "일본어 학습",
+      "items": [
+        "일본어 강의 2강",
+        "Anki 단어"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "그림 연습",
+      "items": [
+        "크로키 3장",
+        "인체 드로잉"
+      ]
+    }
+  ],
+  "themeColor": "#f59e0b",
+  "defaultDuration": "30",
+  "defaultLevel": "beginner",
+  "defaultDailyTime": "60",
+  "enabledStrategies": [
+    "deliberate",
+    "spaced",
+    "interleaving",
+    "retrieval",
+    "chunking"
+  ]
+}
