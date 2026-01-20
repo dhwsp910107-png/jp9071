@@ -12421,7 +12421,7 @@ class BookmarkFolderSelectionModal extends Modal {
         
         newFolderBtn.addEventListener('click', () => {
             this.close();
-            const inputModal = new TextInputModal(this.app, '새 폴더 이름', '', async (folderName) => {
+            const inputModal = new TextInputModal(this.app, '새 폴더 이름', '폴더 이름 입력', '', async (folderName) => {
                 if (folderName && folderName.trim()) {
                     const trimmedName = folderName.trim();
                     
