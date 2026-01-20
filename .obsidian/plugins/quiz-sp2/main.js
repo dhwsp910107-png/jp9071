@@ -16943,10 +16943,10 @@ class QuizPlayModal extends Modal {
             });
         }
 
-        // 노트 컨테이너 (힌트와 독립적으로 표시)
+        // 노트 컨테이너 (선택지 바로 위에 배치)
         let noteEl = null;
         if ((question.note && question.note.trim()) || (question.noteImage && question.noteImage.trim())) {
-            noteEl = questionText.createDiv({ cls: 'note-container' });
+            noteEl = scrollableContent.createDiv({ cls: 'note-container' });
             noteEl.style.cssText = `
                 position: relative;
                 z-index: 999;

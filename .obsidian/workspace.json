@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "0a6d95f9cd091ff9",
+            "id": "93c7fa5f95f7460d",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -179,13 +179,23 @@
               "icon": "layout-dashboard",
               "title": "📊 한자 퀴즈 대시보드"
             }
+          },
+          {
+            "id": "42f7679ef7040faa",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
           }
         ],
         "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 588.5
+    "width": 802.5
   },
   "left-ribbon": {
     "hiddenItems": {
