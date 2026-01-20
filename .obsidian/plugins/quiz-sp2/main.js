@@ -4122,6 +4122,24 @@ class QuizDashboardView extends ItemView {
         refreshBtn.style.cssText = 'padding: 6px 12px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         refreshBtn.addEventListener('click', () => this.onOpen());
 
+        // Git 설정 버튼
+        const gitBtn = headerButtons.createEl('button', { 
+            text: '🔧 Git',
+            cls: 'quiz-dashboard-btn'
+        });
+        gitBtn.style.cssText = 'padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);';
+        gitBtn.addEventListener('click', () => {
+            new GitSettingsModal(this.app, this.plugin).open();
+        });
+        gitBtn.addEventListener('mouseenter', () => {
+            gitBtn.style.transform = 'translateY(-2px)';
+            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+        });
+        gitBtn.addEventListener('mouseleave', () => {
+            gitBtn.style.transform = 'translateY(0)';
+            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+        });
+
         // 목표 요약 섹션 (모든 탭에서 표시)
         await this.renderGoalsSummary(container);
 
@@ -7308,7 +7326,28 @@ class DashboardModal extends Modal {
         
         header.createEl('h1', { text: '🏆 한자 퀴즈 대시보드' });
         
-        const settingsBtn = header.createEl('button', { text: '⚙️ 설정' });
+        const headerButtons = header.createDiv({ cls: 'header-buttons' });
+        headerButtons.style.cssText = 'display: flex; gap: 10px; align-items: center;';
+        
+        const gitBtn = headerButtons.createEl('button', { text: '🔧 Git' });
+        gitBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);`;
+        gitBtn.onclick = () => {
+            new GitSettingsModal(this.app, this.plugin).open();
+        };
+        gitBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            new GitSettingsModal(this.app, this.plugin).open();
+        });
+        gitBtn.addEventListener('mouseenter', () => {
+            gitBtn.style.transform = 'translateY(-2px)';
+            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+        });
+        gitBtn.addEventListener('mouseleave', () => {
+            gitBtn.style.transform = 'translateY(0)';
+            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+        });
+        
+        const settingsBtn = headerButtons.createEl('button', { text: '⚙️ 설정' });
         settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
         settingsBtn.onclick = () => {
             this.app.setting.open();
@@ -9427,6 +9466,278 @@ class QuestionDashboardModal extends Modal {
             }
         `;
         document.head.appendChild(style);
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+// 🔧 Git 설정 모달
+class GitSettingsModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('git-settings-modal');
+        
+        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+
+        // 모달 스타일
+        contentEl.style.cssText = `
+            padding: ${isMobile ? '16px' : '24px'};
+            max-width: ${isMobile ? '100%' : '600px'};
+            margin: 0 auto;
+        `;
+
+        // 헤더
+        const header = contentEl.createDiv({ cls: 'git-settings-header' });
+        header.style.cssText = 'margin-bottom: 24px;';
+        
+        const title = header.createEl('h2', { text: '🔧 Git 설정' });
+        title.style.cssText = 'margin: 0 0 8px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px; font-weight: 700;';
+        
+        const subtitle = header.createEl('p', { text: 'Git 저장소 자동 커밋 및 동기화 설정' });
+        subtitle.style.cssText = 'margin: 0; color: var(--text-muted); font-size: 14px;';
+
+        // 현재 설정 상태 표시
+        const statusSection = contentEl.createDiv({ cls: 'git-status-section' });
+        statusSection.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--background-modifier-border);';
+        
+        const statusTitle = statusSection.createEl('h3', { text: '📊 현재 상태' });
+        statusTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
+        
+        const autoCommit = this.plugin.settings.autoGitCommit !== false;
+        const statusText = statusSection.createEl('div');
+        statusText.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 20px;">${autoCommit ? '✅' : '⭕'}</span>
+                <span style="font-weight: 500;">자동 커밋: ${autoCommit ? '활성화' : '비활성화'}</span>
+            </div>
+            <div style="color: var(--text-muted); font-size: 13px; margin-left: 28px;">
+                ${autoCommit ? '문제 생성/수정 시 자동으로 Git에 커밋됩니다' : '수동으로 Git 커밋을 실행해야 합니다'}
+            </div>
+        `;
+
+        // 빠른 액션 섹션
+        const actionsSection = contentEl.createDiv({ cls: 'git-actions-section' });
+        actionsSection.style.cssText = 'margin-bottom: 24px;';
+        
+        const actionsTitle = actionsSection.createEl('h3', { text: '⚡ 빠른 액션' });
+        actionsTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
+        
+        const actionsGrid = actionsSection.createDiv();
+        actionsGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;';
+
+        // 액션 버튼들
+        const actions = [
+            {
+                icon: '🚀',
+                label: '바로 커밋',
+                desc: '즉시 Git 커밋 & 푸시',
+                color: '#48bb78',
+                action: async () => {
+                    try {
+                        new Notice('🚀 Git 커밋 시작...');
+                        await this.plugin.autoGitCommitAndPush('✨ 수동 커밋 (대시보드)');
+                        new Notice('✅ Git 커밋 완료!');
+                    } catch (error) {
+                        console.error('Git 커밋 오류:', error);
+                        new Notice(`❌ Git 커밋 실패: ${error.message}`);
+                    }
+                }
+            },
+            {
+                icon: '📊',
+                label: 'Git 상태',
+                desc: '변경된 파일 확인',
+                color: '#4299e1',
+                action: async () => {
+                    try {
+                        const { exec } = require('child_process');
+                        const { promisify } = require('util');
+                        const execAsync = promisify(exec);
+                        
+                        const { stdout, stderr } = await execAsync('git status --short', {
+                            cwd: this.app.vault.adapter.basePath
+                        });
+                        
+                        if (stderr) {
+                            new Notice(`❌ 오류: ${stderr}`);
+                            return;
+                        }
+                        
+                        if (!stdout || stdout.trim() === '') {
+                            new Notice('✨ 변경된 파일이 없습니다');
+                        } else {
+                            const lines = stdout.trim().split('\n');
+                            const statusModal = new Modal(this.app);
+                            statusModal.titleEl.setText('📊 Git 상태');
+                            
+                            const content = statusModal.contentEl.createDiv();
+                            content.style.cssText = 'padding: 16px; font-family: monospace; white-space: pre-wrap;';
+                            
+                            const count = content.createEl('p', { 
+                                text: `변경된 파일: ${lines.length}개`
+                            });
+                            count.style.cssText = 'margin-bottom: 12px; font-weight: 600;';
+                            
+                            const fileList = content.createEl('pre', { text: stdout });
+                            fileList.style.cssText = 'background: var(--background-secondary); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;';
+                            
+                            statusModal.open();
+                        }
+                    } catch (error) {
+                        console.error('Git 상태 확인 오류:', error);
+                        new Notice(`❌ Git 상태 확인 실패: ${error.message}`);
+                    }
+                }
+            },
+            {
+                icon: autoCommit ? '⏸️' : '▶️',
+                label: autoCommit ? '자동 OFF' : '자동 ON',
+                desc: autoCommit ? '자동 커밋 끄기' : '자동 커밋 켜기',
+                color: autoCommit ? '#f56565' : '#667eea',
+                action: async () => {
+                    this.plugin.settings.autoGitCommit = !autoCommit;
+                    await this.plugin.saveSettings();
+                    new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
+                    this.onOpen(); // 모달 새로고침
+                }
+            }
+        ];
+
+        for (const action of actions) {
+            const btn = actionsGrid.createEl('button');
+            btn.style.cssText = `
+                background: linear-gradient(135deg, ${action.color}20 0%, ${action.color}40 100%);
+                border: 2px solid ${action.color}60;
+                border-radius: 10px;
+                padding: ${isMobile ? '14px' : '16px'};
+                cursor: pointer;
+                transition: all 0.3s;
+                text-align: center;
+                min-height: ${isMobile ? '100px' : '110px'};
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            `;
+            
+            const icon = btn.createEl('div', { text: action.icon });
+            icon.style.cssText = 'font-size: 28px;';
+            
+            const label = btn.createEl('div', { text: action.label });
+            label.style.cssText = `font-weight: 700; color: ${action.color}; font-size: 14px;`;
+            
+            const desc = btn.createEl('div', { text: action.desc });
+            desc.style.cssText = 'color: var(--text-muted); font-size: 11px;';
+            
+            btn.onclick = action.action;
+            btn.addEventListener('mouseenter', () => {
+                btn.style.transform = 'translateY(-4px)';
+                btn.style.boxShadow = `0 6px 16px ${action.color}40`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'translateY(0)';
+                btn.style.boxShadow = 'none';
+            });
+            btn.addEventListener('touchstart', () => {
+                btn.style.opacity = '0.8';
+            });
+            btn.addEventListener('touchend', () => {
+                btn.style.opacity = '1';
+            });
+        }
+
+        // 고급 설정 섹션
+        const advancedSection = contentEl.createDiv({ cls: 'git-advanced-section' });
+        advancedSection.style.cssText = 'margin-bottom: 24px;';
+        
+        const advancedTitle = advancedSection.createEl('h3', { text: '🔧 고급 설정' });
+        advancedTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
+        
+        const settingsList = advancedSection.createDiv();
+        settingsList.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; display: flex; flex-direction: column; gap: 14px;';
+        
+        // 자동 커밋 토글
+        const autoCommitSetting = settingsList.createDiv();
+        autoCommitSetting.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
+        
+        const autoCommitLabel = autoCommitSetting.createDiv();
+        autoCommitLabel.innerHTML = `
+            <div style="font-weight: 600; margin-bottom: 4px;">✅ 자동 Git 커밋</div>
+            <div style="font-size: 12px; color: var(--text-muted);">문제 생성/수정 시 자동으로 Git에 커밋</div>
+        `;
+        
+        const autoCommitToggle = autoCommitSetting.createEl('button', { 
+            text: autoCommit ? 'ON' : 'OFF'
+        });
+        autoCommitToggle.style.cssText = `
+            padding: 8px 20px;
+            background: ${autoCommit ? '#48bb78' : '#718096'};
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            min-width: 70px;
+            transition: all 0.3s;
+        `;
+        autoCommitToggle.onclick = async () => {
+            this.plugin.settings.autoGitCommit = !autoCommit;
+            await this.plugin.saveSettings();
+            new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
+            this.onOpen();
+        };
+
+        // 도움말 섹션
+        const helpSection = contentEl.createDiv({ cls: 'git-help-section' });
+        helpSection.style.cssText = 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 16px; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.3);';
+        
+        const helpTitle = helpSection.createEl('h3', { text: '💡 도움말' });
+        helpTitle.style.cssText = 'margin: 0 0 10px 0; font-size: 15px; font-weight: 600;';
+        
+        const helpContent = helpSection.createEl('div');
+        helpContent.innerHTML = `
+            <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 13px; line-height: 1.8;">
+                <li><strong>자동 커밋 ON</strong>: 문제를 만들거나 수정하면 자동으로 Git에 저장됩니다</li>
+                <li><strong>자동 커밋 OFF</strong>: 수동으로 "바로 커밋" 버튼을 눌러야 합니다</li>
+                <li><strong>바로 커밋</strong>: 현재 변경사항을 즉시 Git에 저장하고 푸시합니다</li>
+                <li><strong>Git 상태</strong>: 어떤 파일이 변경되었는지 확인할 수 있습니다</li>
+            </ul>
+        `;
+
+        // 닫기 버튼
+        const closeBtn = contentEl.createEl('button', { text: '✕ 닫기' });
+        closeBtn.style.cssText = `
+            width: 100%;
+            padding: ${isMobile ? '14px' : '12px'};
+            background: var(--interactive-normal);
+            color: var(--text-normal);
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+        `;
+        closeBtn.onclick = () => this.close();
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.background = 'var(--interactive-hover)';
+        });
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.background = 'var(--interactive-normal)';
+        });
     }
 
     onClose() {
