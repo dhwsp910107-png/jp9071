@@ -1,0 +1,60 @@
+# Obsidian 설정 파일 (플러그인 제외)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/app.json
+.obsidian/appearance.json
+.obsidian/hotkeys.json
+.obsidian/graph.json
+.obsidian/community-plugins.json
+.obsidian/core-plugins.json
+.obsidian/core-plugins-migration.json
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+
+# 빌드 결과물
+dist/
+build/
+*.log
+
+# 임시 파일
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 개인 설정
+.env
+.env.local
+
+# 대용량 미디어 파일 (필요시 주석 해제)
+# *.mp3
+# *.mp4
+# *.avi
+# *.mov
+# *.wav
+
+# TTS 및 음성 파일 (자동 생성되므로 제외)
+TTS Audio/
+Note Narration Audio/
+
+# 여행 관련 임시 파일
+여행/ㅗㅗ/
+여행/dd/
+여행/fvf/
+여행/hhh/
+
+# 무제 파일들 (임시 파일)
+무제*.md
+무제*.base
+무제/
+
+# 학습 세션 기록 (선택사항 - 필요시 주석 해제)
+# Learning/학습_*.md
+
+# Scripts 빌드 결과물
+scripts/.git/
+scripts/node_modules/

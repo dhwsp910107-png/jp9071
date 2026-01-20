@@ -1925,6 +1925,9 @@ ${keywordSections}
         if (isNew) {
             new Notice(`✅ 문제 "${question.hanzi}" 저장됨 ([${folder}] 폴더, 번호: ${question.number})`);
         }
+        
+        // Git 자동 커밋 및 푸시 (백그라운드에서 실행)
+        this.autoGitCommitAndPush(newFileName, question, isNew);
     }
     generateQuestionContent(question) {
         return `# ${question.title || question.hanzi + ' 문제'}
@@ -1993,6 +1996,50 @@ ${question.audio || ''}
 생성일: ${question.created || new Date().toLocaleDateString('ko-KR')}
 수정일: ${new Date().toLocaleDateString('ko-KR')}
 `;
+    }
+
+    async autoGitCommitAndPush(filePath, question, isNew) {
+        try {
+            // 비동기로 실행하여 UI 블로킹 방지
+            const action = isNew ? '생성' : '수정';
+            const message = `✨ 문제 ${action}: ${question.hanzi} (번호: ${question.number}, 폴더: ${question.folder || '기본'})`;
+            
+            console.log(`🔄 Git 자동 커밋 시작: ${message}`);
+            
+            // Windows 환경에서 PowerShell 명령 실행
+            const { exec } = require('child_process');
+            const util = require('util');
+            const execPromise = util.promisify(exec);
+            
+            // Vault 경로 가져오기
+            const vaultPath = this.app.vault.adapter.basePath;
+            
+            // Git add
+            await execPromise(`git add "${filePath}"`, { cwd: vaultPath });
+            console.log(`✅ Git add 완료: ${filePath}`);
+            
+            // Git commit
+            await execPromise(`git commit -m "${message}"`, { cwd: vaultPath });
+            console.log(`✅ Git commit 완료`);
+            
+            // Git push (백그라운드)
+            execPromise(`git push`, { cwd: vaultPath })
+                .then(() => {
+                    console.log(`✅ Git push 완료`);
+                    new Notice(`📤 Git 업로드 완료: ${question.hanzi}`);
+                })
+                .catch((pushError) => {
+                    console.warn(`⚠️ Git push 실패:`, pushError.message);
+                    // push 실패는 조용히 처리 (원격 저장소 미설정 등)
+                    if (!pushError.message.includes('No configured push destination')) {
+                        new Notice(`⚠️ Git push 실패: ${pushError.message}`, 5000);
+                    }
+                });
+            
+        } catch (error) {
+            console.error('Git 자동 커밋 오류:', error);
+            // Git 오류는 조용히 처리 (사용자 경험 방해하지 않음)
+        }
     }
 
     async updateQuestionStats(question, isCorrect) {
