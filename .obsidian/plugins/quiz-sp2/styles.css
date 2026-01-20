@@ -903,6 +903,13 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
+    /* 모달 크기 조정 */
+    .modal {
+        max-width: 95vw !important;
+        width: 95vw !important;
+        margin: 0 auto;
+    }
+    
     .hanzi-dashboard {
         padding: 15px;
     }
@@ -913,6 +920,7 @@
 
     .dashboard-actions {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
 
     .quiz-hanzi {
@@ -926,12 +934,14 @@
     }
 
     .quiz-options {
-        gap: 12px;
+        gap: 14px;
+        padding: 0 12px;
     }
 
     .quiz-option-btn {
-        padding: 20px;
+        padding: 18px;
         font-size: 1em;
+        min-height: 56px;
     }
 
     .result-emoji {
@@ -944,7 +954,9 @@
 
     /* 태블릿 퀴즈 컨트롤 */
     .quiz-control-bar {
-        gap: 6px;
+        gap: 8px;
+        padding: 8px;
+        flex-wrap: wrap;
     }
 
     .control-button {
@@ -1011,43 +1023,46 @@
     }
 
     .quiz-control-bar {
-        gap: 5px;
-        margin-bottom: 10px;
-        padding: 0;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 6px;
         justify-content: flex-start;
+        flex-wrap: wrap;
     }
 
     .control-button {
-        padding: 5px 8px;
-        font-size: 0.7em;
-        border-radius: 5px;
-        height: 30px;
+        padding: 10px 12px;
+        font-size: 0.9em;
+        border-radius: 6px;
+        min-height: 44px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(0,0,0,0.1);
     }
 
     .control-button.dashboard-button {
-        min-width: 75px !important;
-        font-size: 0.65em;
+        min-width: 80px !important;
+        font-size: 0.85em;
     }
 
     .control-button.difficulty-settings-button {
-        min-width: 35px !important;
-        height: 30px !important;
-        font-size: 1em;
-        padding: 4px 6px;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 1.1em;
+        padding: 10px;
     }
 
     .control-button.prev-button,
     .control-button.pause-button {
-        min-width: 55px !important;
-        height: 30px !important;
-        font-size: 0.65em;
+        min-width: 70px !important;
+        min-height: 44px !important;
+        font-size: 0.85em;
     }
 
     .control-button.settings-button,
     .control-button.bookmark-button {
-        min-width: 35px !important;
-        height: 30px !important;
-        padding: 4px 6px;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        padding: 10px;
         font-size: 1em;
     }
 
@@ -1121,30 +1136,33 @@
 /* 초소형 화면 (320px 이하) */
 @media (max-width: 320px) {
     .quiz-control-bar {
-        gap: 3px;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     .control-button {
-        padding: 4px 6px;
-        font-size: 0.65em;
+        padding: 8px 10px;
+        font-size: 0.8em;
+        min-height: 44px;
     }
 
     .control-button.dashboard-button {
-        min-width: 60px !important;
-        font-size: 0.6em;
+        min-width: 70px !important;
+        font-size: 0.75em;
     }
 
     .control-button.difficulty-button {
-        min-width: 40px !important;
+        min-width: 44px !important;
     }
 
     .quiz-progress {
-        font-size: 0.7em;
+        font-size: 0.85em;
+        padding: 6px 10px;
     }
 
     .question-text {
-        font-size: 14px;
-        padding: 10px;
+        font-size: 15px;
+        padding: 12px;
     }
 
     .option-button {
@@ -1444,34 +1462,64 @@
 
 .image-preview-container {
     margin-top: 10px;
-    max-height: 200px;
-    overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
     border: 1px solid var(--background-modifier-border);
     border-radius: 6px;
     background: var(--background-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
 }
 
 .image-preview-container img {
-    width: 100%;
+    max-width: 100%;
+    max-height: 280px;
+    width: auto;
     height: auto;
     display: block;
+    object-fit: contain;
+    border-radius: 4px;
 }
 
 /* 모바일 최적화 */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .image-upload-container input[type="text"] {
-        font-size: 0.85em;
-        padding: 6px 10px;
+        font-size: 0.9em;
+        padding: 10px 12px;
+        min-height: 44px;
     }
     
     .image-upload-btn,
     .image-clear-btn {
-        padding: 6px 12px;
-        font-size: 0.85em;
+        padding: 12px 16px;
+        font-size: 0.95em;
+        min-height: 44px;
     }
     
     .image-preview-container {
-        max-height: 150px;
+        max-height: 250px;
+    }
+    
+    .image-preview-container img {
+        max-height: 230px;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-upload-container input[type="text"] {
+        font-size: 0.85em;
+        padding: 8px 10px;
+    }
+    
+    .image-preview-container {
+        max-height: 200px;
+    }
+    
+    .image-preview-container img {
+        max-height: 180px;
     }
 }
 

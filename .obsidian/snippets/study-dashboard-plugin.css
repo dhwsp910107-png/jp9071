@@ -1,53 +1,63 @@
 /* ===============================================
-   📚 학습 대시보드 전용 CSS
-   Study Dashboard Plugin Styling
+   📚 Study Dashboard - Anki Dark Style
+   anki-dark-theme.css와 통합 사용
    =============================================== */
 
-/* 플러그인 전용 네임스페이스 - 다른 CSS와 충돌 방지 */
-.study-dashboard-plugin {
-  --sd-primary: #3b82f6;
-  --sd-primary-dark: #2563eb;
-  --sd-success: #10b981;
-  --sd-success-dark: #059669;
-  --sd-warning: #f59e0b;
-  --sd-warning-dark: #d97706;
-  --sd-danger: #ef4444;
-  --sd-danger-dark: #dc2626;
-  --sd-purple: #8b5cf6;
-  --sd-pink: #ec4899;
-  --sd-gray: #6b7280;
-  --sd-light-gray: #f3f4f6;
-  --sd-border: #e5e7eb;
-  --sd-radius: 8px;
-  --sd-radius-lg: 12px;
-  --sd-radius-xl: 15px;
-  --sd-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  --sd-shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
-  --sd-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 다크 테마 지원 */
-.theme-dark .study-dashboard-plugin {
-  --sd-light-gray: #374151;
-  --sd-border: #4b5563;
-  --sd-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  --sd-shadow-lg: 0 8px 25px rgba(0,0,0,0.4);
-}
-
-/* 메인 컨테이너 - 기존 .study-dashboard-container와 분리 */
 .study-dashboard-plugin .dashboard-main {
-  padding: 20px;
-  background: var(--background-primary);
-  color: var(--text-normal);
-  overflow-y: auto;
-  height: 100%;
-  min-height: 100vh;
-  font-family: var(--font-interface);
+    padding: 20px;
+    background: var(--background-primary) !important;
+    color: var(--text-normal) !important;
 }
 
-/* 헤더 섹션 */
 .study-dashboard-plugin .dashboard-header {
-  text-align: center;
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--text-normal) !important;
+}
+
+.study-dashboard-plugin .stat-card {
+    background: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    transition: transform 0.2s ease !important;
+}
+
+.study-dashboard-plugin .stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.study-dashboard-plugin .stat-number {
+    font-size: 2em !important;
+    font-weight: 700 !important;
+    color: var(--interactive-accent) !important;
+}
+
+.study-dashboard-plugin .stat-label {
+    color: var(--text-muted) !important;
+    font-size: 0.9em !important;
+}
+
+/* 차트 영역 */
+.study-dashboard-plugin .chart-container {
+    background: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .study-dashboard-plugin .dashboard-main {
+        padding: 16px !important;
+    }
+    
+    .study-dashboard-plugin .stat-card {
+        padding: 16px !important;
+    }
+}
+
   margin-bottom: 30px;
   padding: 25px;
   background: var(--background-secondary);

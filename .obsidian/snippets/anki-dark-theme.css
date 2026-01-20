@@ -1,0 +1,523 @@
+/* ================================================
+   🌙 Anki Style Dark Theme for Obsidian
+   안드로이드/PC 호환 | 가독성 최적화 다크모드
+   ================================================ */
+
+/* ================================================
+   1. 다크모드 색상 변수 (Anki 스타일)
+   ================================================ */
+.theme-dark {
+    /* 배경색 */
+    --background-primary: #1e1e1e;
+    --background-primary-alt: #252525;
+    --background-secondary: #2a2a2a;
+    --background-secondary-alt: #303030;
+    --background-modifier-border: #3a3a3a;
+    --background-modifier-hover: #333333;
+    --background-modifier-active: #3a3a3a;
+    
+    /* 텍스트 색상 */
+    --text-normal: #e0e0e0;
+    --text-muted: #999999;
+    --text-faint: #666666;
+    --text-on-accent: #ffffff;
+    
+    /* 액센트 색상 */
+    --interactive-accent: #4a9eff;
+    --interactive-accent-hover: #5fadff;
+    --interactive-accent-rgb: 74, 158, 255;
+    
+    /* 상태 색상 */
+    --color-green: #10b981;
+    --color-red: #ef4444;
+    --color-orange: #f59e0b;
+    --color-yellow: #fbbf24;
+    
+    /* 그림자 */
+    --shadow-s: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-m: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --shadow-l: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ================================================
+   2. 전체 레이아웃 최적화
+   ================================================ */
+
+/* 기본 폰트 및 가독성 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+}
+
+/* 모바일 기본 폰트 크기 */
+.is-mobile {
+    font-size: 16px !important;
+}
+
+/* 워크스페이스 */
+.workspace {
+    background-color: var(--background-primary);
+}
+
+.workspace-leaf-content {
+    background-color: var(--background-primary);
+}
+
+/* ================================================
+   3. 모달 스타일 (Anki 카드 느낌)
+   ================================================ */
+
+.modal {
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-l);
+}
+
+.modal-container {
+    background-color: var(--background-primary);
+}
+
+.modal-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-normal);
+    padding: 20px 24px 16px;
+}
+
+.modal-content {
+    padding: 0 24px 24px;
+    color: var(--text-normal);
+}
+
+/* ================================================
+   4. 버튼 스타일 (Anki 스타일)
+   ================================================ */
+
+button,
+.button,
+.clickable-icon {
+    background-color: var(--background-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    min-height: 36px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+button:hover,
+.button:hover {
+    background-color: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+
+button:active,
+.button:active {
+    transform: scale(0.98);
+}
+
+/* 주요 액션 버튼 */
+.mod-cta,
+button.mod-cta {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.mod-cta:hover {
+    background-color: var(--interactive-accent-hover);
+}
+
+/* ================================================
+   5. 입력 필드 (다크모드 최적화)
+   ================================================ */
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+    background-color: var(--background-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    min-height: 40px;
+    transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* iOS 자동 줌 방지 */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* ================================================
+   6. 리스트 및 아이템 스타일
+   ================================================ */
+
+.nav-file,
+.nav-folder {
+    transition: none !important;
+}
+
+.nav-file-title,
+.nav-folder-title {
+    color: var(--text-normal);
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+.nav-file-title:hover,
+.nav-folder-title:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.nav-file-title.is-active {
+    background-color: var(--background-modifier-active);
+    color: var(--text-normal);
+}
+
+/* ================================================
+   7. 퀴즈 모달 스타일 (Anki 카드 느낌)
+   ================================================ */
+
+/* 퀴즈 컨테이너 */
+.quiz-modal,
+.quiz-container {
+    background-color: var(--background-primary);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 한자 표시 영역 */
+.hanzi-display,
+.question-text {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: var(--background-primary);
+    border-radius: 8px;
+}
+
+.hanzi-display {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-normal);
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+/* 선택지 버튼 */
+.option-button,
+.quiz-option-button {
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    color: var(--text-normal) !important;
+    padding: 16px 20px !important;
+    margin: 8px 0 !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    min-height: 52px !important;
+}
+
+.option-button:hover,
+.quiz-option-button:hover {
+    background-color: var(--background-modifier-hover) !important;
+    border-color: var(--interactive-accent) !important;
+    transform: translateX(4px) !important;
+}
+
+.option-button:active {
+    transform: translateX(2px) scale(0.99) !important;
+}
+
+/* 정답/오답 표시 */
+.option-button.correct {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border-color: var(--color-green) !important;
+}
+
+.option-button.incorrect {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border-color: var(--color-red) !important;
+}
+
+/* ================================================
+   8. 대시보드 스타일
+   ================================================ */
+
+.dashboard-container {
+    padding: 20px;
+    background-color: var(--background-primary);
+}
+
+.dashboard-card {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-s);
+    transition: box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-m);
+}
+
+/* ================================================
+   9. 모바일 최적화 (안드로이드 호환)
+   ================================================ */
+
+@media (max-width: 768px) {
+    /* 터치 타겟 최소 크기 */
+    button,
+    .clickable,
+    a {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        touch-action: manipulation;
+    }
+    
+    /* 모달 크기 조정 */
+    .modal {
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+        margin: 20px auto !important;
+    }
+    
+    /* 폰트 크기 */
+    body {
+        font-size: 16px !important;
+    }
+    
+    h1 { font-size: 1.8em !important; }
+    h2 { font-size: 1.5em !important; }
+    h3 { font-size: 1.3em !important; }
+    
+    /* 패딩 조정 */
+    .modal-content {
+        padding: 16px !important;
+    }
+    
+    /* 버튼 간격 */
+    button {
+        margin: 8px 0 !important;
+    }
+    
+    /* 선택지 간격 */
+    .option-button,
+    .quiz-option-button {
+        margin: 10px 0 !important;
+        padding: 18px 16px !important;
+    }
+}
+
+/* ================================================
+   10. 스크롤바 스타일 (다크모드)
+   ================================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--background-modifier-border);
+    border-radius: 5px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-faint);
+}
+
+/* ================================================
+   11. 타이머 및 프로그레스 바
+   ================================================ */
+
+.timer-container {
+    background-color: var(--background-secondary);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+/* ================================================
+   12. 통계 및 카드 스타일
+   ================================================ */
+
+.stat-card {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-m);
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--interactive-accent);
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* ================================================
+   13. 애니메이션 최적화 (성능 개선)
+   ================================================ */
+
+/* 불필요한 애니메이션 제거 */
+.nav-folder,
+.nav-file,
+.tree-item {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* 필수 애니메이션만 유지 */
+.modal {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ================================================
+   14. 접근성 개선
+   ================================================ */
+
+/* 포커스 표시 */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .theme-dark {
+        --text-normal: #ffffff;
+        --background-primary: #000000;
+        --background-modifier-border: #555555;
+    }
+}
+
+/* ================================================
+   15. 인쇄 스타일 (불필요한 요소 제거)
+   ================================================ */
+
+@media print {
+    .nav-header,
+    .workspace-ribbon,
+    .status-bar,
+    button {
+        display: none !important;
+    }
+    
+    body {
+        background: white;
+        color: black;
+    }
+}
+
+/* ================================================
+   16. 추가 퀴즈 플러그인 최적화
+   ================================================ */
+
+/* 북마크 컨테이너 */
+.bookmark-container {
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 6px !important;
+    padding: 12px 16px !important;
+    margin: 12px 0 !important;
+}
+
+/* 힌트 영역 */
+.hint-container {
+    background-color: rgba(var(--interactive-accent-rgb), 0.1) !important;
+    border: 1px solid var(--interactive-accent) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 16px 0 !important;
+}
+
+/* 이미지 뷰어 */
+.image-zoom-overlay {
+    background-color: rgba(0, 0, 0, 0.95) !important;
+}
+
+/* 노트 섹션 */
+.quiz-note-section {
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin-top: 16px !important;
+}

@@ -1,28 +1,5 @@
-/* 📱 모바일 최적화 CSS - QuickAdd 강의 시스템 (사이드바 안정화 버전) */
-
-/* =========================
-   기본 모바일 반응형 설정
-   ========================= */
-
-/* 모바일 뷰포트 기본 설정 */
-.mobile-optimized {
-    max-width: 100vw;
-    overflow-x: hidden;
-    font-size: 16px; /* 모바일 기본 폰트 크기 */
-    line-height: 1.6;
-}
-
-/* 터치 친화적 요소들 */
-.touch-friendly {
-    min-height: 44px; /* iOS 권장 터치 타겟 크기 */
-    min-width: 44px;
-    padding: 12px;
-    margin: 8px 0;
-}
-
-/* =========================
-   사이드바 안정화 - 핵심 수정 (우선순위 최상)
-   ========================= */
+/* 📱 모바일 사이드바 안정화 전용 */
+/* anki-dark-theme.css와 함께 사용 */
 
 /* 사이드바 모든 애니메이션 제거 */
 .nav-folder,
@@ -41,7 +18,7 @@
     transform: none !important;
 }
 
-/* 폴더 접기/펼치기 아이콘 완전 고정 */
+/* 폴더 접기/펼치기 아이콘 고정 */
 .nav-folder-collapse-indicator {
     transition: none !important;
     animation: none !important;
@@ -53,51 +30,6 @@
     animation: none !important;
 }
 
-/* 파일 아이콘들 고정 */
-.nav-file-title-content::before,
-.nav-folder-title-content::before {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-}
-
-/* =========================
-   모바일 버튼 스타일링
-   ========================= */
-
-/* QuickAdd 메인 버튼들 */
-.main-btn button,
-.dashboard-btn button {
-    width: 100% !important;
-    min-height: 60px !important;
-    font-size: 18px !important;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    margin: 10px 0;
-    padding: 15px 20px;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease; /* 단축된 애니메이션 */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    
-    /* 터치 피드백 */
-    -webkit-tap-highlight-color: rgba(255,255,255,0.3);
-    user-select: none;
-}
-
-/* 메인 버튼 색상 */
-.main-btn button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.dashboard-btn button {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-}
-
-/* 버튼 터치 효과 - 단축된 애니메이션 */
-.main-btn button:active,
 .dashboard-btn button:active {
     transform: scale(0.95);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);

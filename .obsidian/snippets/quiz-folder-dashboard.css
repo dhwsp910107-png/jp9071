@@ -1,153 +1,89 @@
 /* ========================================
-   📊 Quiz Dashboard Modal - 최적화 v3.0
-   문제 대시보드 전용 CSS (전체화면 모드 지원)
+   📊 Quiz Dashboard - Anki Dark Style
+   anki-dark-theme.css와 통합된 스타일
    ======================================== */
 
-/* 📱 CSS 변수 */
-:root {
-    --qd-primary: #667eea;
-    --qd-primary-dark: #764ba2;
-    --qd-success: #10b981;
-    --qd-warning: #f59e0b;
-    --qd-danger: #ef4444;
-    --qd-info: #3b82f6;
-    
-    --qd-radius-sm: 6px;
-    --qd-radius-md: 8px;
-    --qd-radius-lg: 12px;
-    
-    --qd-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.1);
-    --qd-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --qd-shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.2);
-    
-    --qd-transition-fast: all 0.2s ease;
-    --qd-transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ============================================
-   전체화면 모드 스타일
-   ============================================ */
-.modal.qd-fullscreen-mode,
-.modal-container.qd-fullscreen-mode {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    z-index: 10000 !important;
-}
-
-.modal.qd-fullscreen-mode .modal-bg {
-    background: rgba(0, 0, 0, 0.85) !important;
-}
-
-/* ============================================
-   기본 모달 스타일
-   ============================================ */
+/* 대시보드 모달 기본 */
 .question-dashboard-modal,
 .question-list-dashboard-modal {
-    padding: 0 !important;
+    background-color: var(--background-primary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 12px !important;
     max-width: 95vw !important;
-    width: 1400px !important;
     max-height: 92vh !important;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border-radius: var(--qd-radius-lg);
 }
 
-.question-dashboard-modal .modal-content,
-.question-list-dashboard-modal .modal-content {
-    padding: 0 !important;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    height: 100%;
-}
-
-/* 🎯 헤더 영역 */
+/* 헤더 영역 - 다크모드 그라디언트 */
 .qd-header,
 .qld-header {
-    background: linear-gradient(135deg, var(--qd-primary) 0%, var(--qd-primary-dark) 100%);
-    color: white;
-    padding: 24px 28px;
-    border-radius: var(--qd-radius-lg) var(--qd-radius-lg) 0 0;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: var(--qd-shadow-md);
+    background: linear-gradient(135deg, #2a4a7c 0%, #1e3a5f 100%) !important;
+    color: #ffffff !important;
+    padding: 20px 24px !important;
+    border-radius: 12px 12px 0 0 !important;
 }
 
-.qd-header::before,
-.qld-header::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-    pointer-events: none;
-}
-
-.qd-header *,
-.qld-header * {
-    position: relative;
-    z-index: 1;
-}
-
-/* ⬅️ 뒤로가기/전체화면 버튼 공통 스타일 */
+/* 버튼 스타일 */
 .qd-fullscreen-btn,
 .qld-back-btn {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    padding: 10px 16px;
-    border-radius: var(--qd-radius-sm);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--qd-transition-smooth);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    transition: all 0.15s ease !important;
 }
 
 .qd-fullscreen-btn:hover,
 .qld-back-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.6);
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px) !important;
 }
 
-.qd-fullscreen-btn:active,
-.qld-back-btn:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+/* 통계 카드 */
+.stat-card,
+.qd-stat-card {
+    background: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    transition: transform 0.2s ease !important;
 }
 
-.qld-back-btn {
-    position: absolute;
-    top: 22px;
-    left: 22px;
+.stat-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
 }
 
-.qld-back-btn:active {
-    transform: translateX(-3px) scale(0.98);
+/* 문제 리스트 아이템 */
+.question-item,
+.qld-question-item {
+    background: var(--background-secondary) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 6px !important;
+    padding: 12px 16px !important;
+    margin: 8px 0 !important;
+    transition: all 0.15s ease !important;
 }
 
-/* 📝 제목 & 부제목 */
-.qld-title {
-    font-size: 2.2rem;
-    margin: 0 0 12px 0;
-    font-weight: 800;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    letter-spacing: -0.5px;
+.question-item:hover {
+    background: var(--background-modifier-hover) !important;
+    border-color: var(--interactive-accent) !important;
+    transform: translateX(4px) !important;
 }
 
-.qld-subtitle {
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .qd-header,
+    .qld-header {
+        padding: 16px 20px !important;
+    }
+    
+    .question-item {
+        padding: 14px !important;
+    }
+}
+
     margin: 0;
     opacity: 0.95;
     font-size: 1.05rem;

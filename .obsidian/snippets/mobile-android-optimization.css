@@ -1,103 +1,38 @@
 /* ================================================
-   📱 안드로이드 모바일 최적화 CSS 스니펫
-   Quiz Plugin (quiz-sp) 전용
+   📱 안드로이드 전용 추가 최적화
+   anki-dark-theme.css와 함께 사용
    ================================================ */
 
-/* ================================================
-   1. 키보드 대응 - 입력 필드 가시성 보장
-   ================================================ */
-
-/* 모든 입력 필드: 키보드가 나타나도 보이도록 스크롤 여유 공간 */
+/* 키보드 대응 강화 */
 @media (max-width: 768px) {
-    .modal input[type="text"],
-    .modal textarea,
-    .modal input[type="number"] {
-        scroll-margin-top: 200px;
-        scroll-margin-bottom: 200px;
+    /* 키보드가 나타날 때 입력 필드 가시성 */
+    .modal input,
+    .modal textarea {
+        scroll-margin-top: 150px;
+        scroll-margin-bottom: 150px;
     }
-
-    /* 모달: 키보드 공간 확보를 위해 최대 높이 조정 */
+    
+    /* 안드로이드 키보드 공간 확보 */
     .modal {
-        max-height: 75vh !important;
-        margin-bottom: 0 !important;
-    }
-
-    .modal-container {
-        display: flex;
-        flex-direction: column;
-        max-height: 75vh;
-    }
-
-    /* 스크롤 컨테이너: 키보드가 올라와도 스크롤 가능 */
-    .modal .scroll-container {
-        flex: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 100px; /* 키보드 여유 공간 */
+        padding-bottom: env(safe-area-inset-bottom, 20px) !important;
     }
 }
 
-/* ================================================
-   2. 터치 타겟 최적화 - 최소 44px 크기
-   ================================================ */
-
-@media (max-width: 768px) {
-    /* 모든 버튼 */
-    .modal button,
-    .dashboard-button,
-    .quiz-option-button,
-    .nav-button {
-        min-height: 44px !important;
-        min-width: 44px !important;
-        padding: 12px 16px !important;
-        font-size: 15px !important;
+/* 안드로이드 터치 최적화 */
+@media (hover: none) and (pointer: coarse) {
+    /* 터치 피드백 강화 */
+    button:active,
+    .clickable:active {
+        opacity: 0.7;
+        transform: scale(0.97) !important;
     }
-
-    /* 작은 아이콘 버튼 */
-    button[class*="close"],
-    button[class*="icon"] {
-        min-height: 44px !important;
-        min-width: 44px !important;
-        padding: 10px !important;
-    }
-
-    /* 터치 피드백 최적화 */
-    button,
-    a,
-    .clickable {
-        -webkit-tap-highlight-color: rgba(0, 123, 255, 0.2);
+    
+    /* 더블탭 줌 방지 */
+    * {
         touch-action: manipulation;
     }
-
-    /* 입력 필드: 줌 방지 + 터치 최적화 */
-    input[type="text"],
-    textarea,
-    select {
-        font-size: 16px !important; /* iOS 자동 줌 방지 */
-        min-height: 44px !important;
-        padding: 12px !important;
-    }
 }
 
-/* ================================================
-   3. 대시보드 레이아웃 최적화
-   ================================================ */
-
-@media (max-width: 768px) {
-    /* 대시보드 컨테이너 */
-    .dashboard-container {
-        padding: 12px !important;
-        gap: 16px !important;
-    }
-
-    /* 섹션 제목 */
-    .dashboard-section h3 {
-        font-size: 18px !important;
-        margin-bottom: 10px !important;
-    }
-
-    /* 버튼 그리드: 2열 레이아웃 */
-    .dashboard-buttons-grid {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;

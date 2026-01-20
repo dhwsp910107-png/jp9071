@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "d06234e5f12b1d22",
+            "id": "5e079436619d0407",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -85,8 +85,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 318.5124969482422,
-    "collapsed": true
+    "width": 318.5124969482422
   },
   "right": {
     "id": "2ba02a60ff07df06",
@@ -163,17 +162,16 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Learning Plans/일별목표_2026-01-09.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "일별목표_2026-01-09 의 개요"
+              "title": "개요"
             }
           },
           {
-            "id": "c798016f80b4abf4",
+            "id": "a99f2da069fdd6f6",
             "type": "leaf",
             "state": {
               "type": "quiz-sp2-dashboard-view",
@@ -187,10 +185,11 @@
       }
     ],
     "direction": "horizontal",
-    "width": 867.5
+    "width": 588.5
   },
   "left-ribbon": {
     "hiddenItems": {
+      "obsidian-git:Open Git source control": false,
       "quiz-sp:한자 퀴즈 대시보드": false,
       "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false,
       "switcher:빠른 전환기 열기": true,
@@ -202,8 +201,22 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "5977fbe14e2f2ed2",
+  "active": "a99f2da069fdd6f6",
   "lastOpenFiles": [
+    "HanziQuiz/⭐ 북마크/400번대/문제목록.md",
+    "HanziQuiz/⭐ 북마크/400번대",
+    "📘 Obsidian Git 사용 가이드.md",
+    "HanziQuiz/⭐ 북마크/300번대/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/300번대",
+    "HanziQuiz/⭐ 북마크/컴활필기/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/false/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/false",
+    "HanziQuiz/⭐ 북마크/true/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/true",
+    "HanziQuiz/⭐ 북마크/001번대-b/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/기본/선택지목록.md",
+    "HanziQuiz/⭐ 북마크/001번대-b/문제목록.md",
+    "HanziQuiz/⭐ 북마크/001번대-b",
     "HanziQuiz/Questions/001번대-b/3_001b번대.md",
     "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215456087.png",
     "HanziQuiz/001번대-b/첨부파일/Pasted image 20260109215443088.png",
@@ -228,7 +241,6 @@
     "HanziQuiz/⭐ 북마크/100번대/문제목록.md",
     "HanziQuiz/⭐ 북마크/100번대",
     "HanziQuiz/001번대-b/첨부파일",
-    "HanziQuiz/001번대-b",
     "HanziQuiz/Questions/001번대-b/문제목록.md",
     "HanziQuiz/Questions/001번대-b/1_001번대b.md",
     "HanziQuiz/001번대-b.md",
@@ -237,19 +249,6 @@
     "HanziQuiz/Questions/001번대-b/3_001번대.md",
     "HanziQuiz/Questions/001번대-b/4_001번대.md",
     "HanziQuiz/Questions/001번대-b/5_001번대.md",
-    "HanziQuiz/Questions/001번대-b/6_001번대.md",
-    "HanziQuiz/Questions/001번대-b/7_001번대.md",
-    "HanziQuiz/Questions/001번대-b/8_001번대.md",
-    "HanziQuiz/Questions/001번대-b/9_001번대.md",
-    "HanziQuiz/Questions/001번대-b",
-    "HanziQuiz/001번대/첨부파일",
-    "HanziQuiz/001번대",
-    "HanziQuiz/Questions/a-001번대/문제목록.md",
-    "HanziQuiz/Questions/300번대/10_300번대.md",
-    "HanziQuiz/Questions/a001번대",
-    "HanziQuiz/Questions/a-001번대/10_001번대.md",
-    "HanziQuiz/Questions/a-001번대/9_001번대.md",
-    "HanziQuiz/Questions/a-001번대/8_001번대.md",
     "무제 1.canvas",
     "무제.canvas"
   ]

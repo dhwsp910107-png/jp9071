@@ -256,31 +256,25 @@
   ],
   "enableMobileOptimization": false,
   "stats": {
-    "totalAttempts": 33,
-    "totalCorrect": 5,
-    "totalWrong": 28,
+    "totalAttempts": 18,
+    "totalCorrect": 8,
+    "totalWrong": 10,
     "totalQuestions": 0,
-    "bookmarkedCount": 6,
-    "lastStudyDate": "2026-01-14T16:35:11.537Z",
+    "bookmarkedCount": 1,
+    "lastStudyDate": "2026-01-20T06:18:46.981Z",
     "studyHistory": [
       {
-        "date": "2026. 1. 9.",
-        "correct": 4,
-        "wrong": 28,
-        "timestamp": 1767962948412
-      },
-      {
-        "date": "2026. 1. 15.",
+        "date": "2026. 1. 20.",
         "correct": 1,
-        "wrong": 0,
-        "timestamp": 1768408511538
+        "wrong": 7,
+        "timestamp": 1768889926981
       }
     ]
   },
   "folderOrder": [
+    "200번대",
     "001번대",
     "100번대",
-    "200번대",
     "300번대",
     "001번대-b",
     "400번대",
@@ -304,6 +298,7 @@
   ],
   "folderBookmarkSettings": {
     "컴활필기": "컴활필기",
-    "001번대": "001번대"
+    "001번대": "001번대",
+    "001번대-b": "001번대-b"
   }
 }
