@@ -1,4 +1,9 @@
 {
   "minimal-advanced@@hide-settings-desc": true,
-  "minimal-advanced@@mobile-toolbar-off": false
+  "minimal-advanced@@mobile-toolbar-off": false,
+  "anki-style-theme@@color-scheme": "anki-auto",
+  "anki-style-theme@@font-size-base": 16,
+  "anki-style-theme@@quiz-card-style": true,
+  "anki-style-theme@@mobile-padding": 16,
+  "anki-style-theme@@button-min-height": 44
 }

@@ -16,6 +16,16 @@
     "001번대-b",
     "400번대"
   ],
+  "questionBookmarkFolders": [
+    "📌 중요문제",
+    "🔥 어려운문제",
+    "⭐ 복습필요"
+  ],
+  "choiceBookmarkFolders": [
+    "❌ 헷갈리는선택지",
+    "💡 주의선택지",
+    "📝 암기선택지"
+  ],
   "timerPerQuestion": 5,
   "enableTimer": true,
   "shuffleQuestions": false,
@@ -213,6 +223,7 @@
       ]
     }
   ],
+  "noteDefaultExpanded": false,
   "ribbonMenuItems": [
     {
       "id": "dashboard",
@@ -266,18 +277,30 @@
   ],
   "enableMobileOptimization": false,
   "stats": {
-    "totalAttempts": 31,
+    "totalAttempts": 86,
     "totalCorrect": 10,
-    "totalWrong": 21,
+    "totalWrong": 76,
     "totalQuestions": 0,
     "bookmarkedCount": 1,
-    "lastStudyDate": "2026-01-20T13:30:26.244Z",
+    "lastStudyDate": "2026-01-22T10:16:25.739Z",
     "studyHistory": [
       {
         "date": "2026. 1. 20.",
         "correct": 3,
         "wrong": 18,
         "timestamp": 1768915826244
+      },
+      {
+        "date": "2026. 1. 21.",
+        "correct": 0,
+        "wrong": 32,
+        "timestamp": 1769007455064
+      },
+      {
+        "date": "2026. 1. 22.",
+        "correct": 0,
+        "wrong": 23,
+        "timestamp": 1769076985740
       }
     ]
   },
@@ -312,6 +335,6 @@
     "001번대-b": "001번대-b"
   },
   "folderSortOrder": "name",
-  "autoGitCommit": false,
+  "autoGitCommit": true,
   "bookmarkFolderOrder": []
 }

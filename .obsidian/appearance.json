@@ -8,17 +8,18 @@
     "Study Dashboard Plugin",
     "custom-admonitions.08b5eb",
     "mobile-optimized - 복사본",
-    "lecture-tracker-unified"
+    "lecture-tracker-unified",
+    "anki-style-theme"
   ],
   "cssTheme": "AnuPpuccin",
   "accentColor": "",
   "interfaceFontFamily": "",
-  "baseFontSize": 21,
+  "baseFontSize": 16,
   "baseFontSizeAction": true,
   "theme": "obsidian",
   "nativeMenus": true,
-  "textFontFamily": "",
-  "monospaceFontFamily": "JetBrains Mono",
+  "textFontFamily": "Noto Sans KR, Pretendard, -apple-system, sans-serif",
+  "monospaceFontFamily": "D2Coding, Fira Code, Consolas, monospace",
   "showRibbon": true,
   "showViewHeader": true
 }

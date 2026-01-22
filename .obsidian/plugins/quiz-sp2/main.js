@@ -49,6 +49,8 @@ const DEFAULT_SETTINGS = {
     bookmarkFolder: '⭐ 북마크',  // 북마크 폴더
     attachmentFolderName: '첨부파일',  // 첨부파일 폴더명 (각 문제 폴더 하위)
     questionFolders: ['기본', '한자', '어휘', '문법'],
+    questionBookmarkFolders: ['📌 중요문제', '🔥 어려운문제', '⭐ 복습필요'],  // 문제 북마크 전용 폴더
+    choiceBookmarkFolders: ['❌ 헷갈리는선택지', '💡 주의선택지', '📝 암기선택지'],  // 선택지 북마크 전용 폴더
     timerPerQuestion: 30,
     enableTimer: true,
     shuffleQuestions: true,
@@ -62,6 +64,7 @@ const DEFAULT_SETTINGS = {
     weeklyTemplates: [],  // 주간 템플릿 { name: "", items: [], timestamp: 0 }
     monthlyTemplates: [],  // 월간 템플릿 { name: "", items: [], timestamp: 0 }
     checklistTemplates: [],  // 체크리스트 템플릿 (일별/주간/월별 통합) { name: "", items: [], type: "daily|weekly|monthly" }
+    noteDefaultExpanded: false,  // 노트 기본값: false=접기, true=펼치기
     ribbonMenuItems: [  // 리본 메뉴 항목 설정
         {
             id: 'dashboard',
@@ -106,6 +109,20 @@ const DEFAULT_SETTINGS = {
             enabled: true
         },
         {
+            id: 'note-settings',
+            title: '📝 노트설정',
+            icon: 'sticky-note',
+            action: 'note-settings',
+            enabled: true
+        },
+        {
+            id: 'view-note',
+            title: '📖 노트보기',
+            icon: 'book-open',
+            action: 'view-note',
+            enabled: true
+        },
+        {
             id: 'edit',
             title: '✏️ 편집',
             icon: 'pencil',
@@ -117,6 +134,13 @@ const DEFAULT_SETTINGS = {
             title: '🗑️ 삭제',
             icon: 'trash',
             action: 'delete',
+            enabled: true
+        },
+        {
+            id: 'recording',
+            title: '🎤 녹음하기',
+            icon: 'microphone',
+            action: 'recording',
             enabled: true
         }
     ]
@@ -229,6 +253,16 @@ class HanziQuizPlugin extends Plugin {
 
         // 북마크 구조 마이그레이션 (bookmarked → bookmarkFolder)
         await this.migrateBookmarkStructure();
+
+        // 북마크 폴더 설정 마이그레이션 (기본값 설정)
+        if (!this.settings.questionBookmarkFolders) {
+            this.settings.questionBookmarkFolders = ['📌 중요문제', '🔥 어려운문제', '⭐ 복습필요'];
+            await this.saveSettings();
+        }
+        if (!this.settings.choiceBookmarkFolders) {
+            this.settings.choiceBookmarkFolders = ['❌ 헷갈리는선택지', '💡 주의선택지', '📝 암기선택지'];
+            await this.saveSettings();
+        }
 
         console.log('🚀 Hanzi Quiz 플러그인 로드됨');
     }
@@ -599,7 +633,7 @@ button:hover,
 /* 퀴즈 대시보드 스타일 */
 .quiz-dashboard-container {
     height: 100%;
-    overflow-y: auto;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--background-primary);
 }
 
@@ -2002,7 +2036,28 @@ ${question.audio || ''}
         try {
             // 비동기로 실행하여 UI 블로킹 방지
             const action = isNew ? '생성' : '수정';
-            const message = `✨ 문제 ${action}: ${question.hanzi} (번호: ${question.number}, 폴더: ${question.folder || '기본'})`;
+            
+            // question 객체가 문자열인 경우 (수동 커밋)
+            let message;
+            let targetFilePath = null;
+            
+            if (typeof filePath === 'string' && typeof question === 'string') {
+                // 첫 번째 파라미터가 메시지, 두 번째가 파일 경로인 경우 (수동 커밋)
+                message = filePath;
+                targetFilePath = question;
+            } else if (typeof filePath === 'string' && question === null) {
+                // 첫 번째 파라미터만 있고 메시지인 경우 (대시보드 수동 커밋)
+                message = filePath;
+                targetFilePath = null;
+            } else if (question && question.hanzi) {
+                // 일반적인 문제 저장 시
+                message = `✨ 문제 ${action}: ${question.hanzi} (번호: ${question.number}, 폴더: ${question.folder || '기본'})`;
+                targetFilePath = filePath;
+            } else {
+                // question 정보 없을 때
+                message = `✨ 파일 ${action}: ${filePath || '알 수 없음'}`;
+                targetFilePath = filePath;
+            }
             
             console.log(`🔄 Git 자동 커밋 시작: ${message}`);
             
@@ -2014,9 +2069,10 @@ ${question.audio || ''}
             // Vault 경로 가져오기
             const vaultPath = this.app.vault.adapter.basePath;
             
-            // Git add
-            await execPromise(`git add "${filePath}"`, { cwd: vaultPath });
-            console.log(`✅ Git add 완료: ${filePath}`);
+            // Git add (targetFilePath가 있으면 특정 파일, 없으면 전체)
+            const addCommand = targetFilePath ? `git add "${targetFilePath}"` : 'git add .';
+            await execPromise(addCommand, { cwd: vaultPath });
+            console.log(`✅ Git add 완료: ${targetFilePath || '전체 변경사항'}`);
             
             // Git commit
             await execPromise(`git commit -m "${message}"`, { cwd: vaultPath });
@@ -2026,7 +2082,8 @@ ${question.audio || ''}
             execPromise(`git push`, { cwd: vaultPath })
                 .then(() => {
                     console.log(`✅ Git push 완료`);
-                    new Notice(`📤 Git 업로드 완료: ${question.hanzi}`);
+                    const noticeMsg = question && question.hanzi ? `📤 Git 업로드 완료: ${question.hanzi}` : '📤 Git 업로드 완료';
+                    new Notice(noticeMsg);
                 })
                 .catch((pushError) => {
                     console.warn(`⚠️ Git push 실패:`, pushError.message);
@@ -3496,7 +3553,7 @@ class QuizSortModal extends Modal {
         contentEl.empty();
         
         // 모바일 감지
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         const title = contentEl.createEl('h2', { text: '⚙️ 퀴즈 설정' });
         title.style.fontSize = isMobile ? '1.3em' : '1.5em';
@@ -4021,7 +4078,7 @@ class QuizDashboardView extends ItemView {
             modal.titleEl.setText('📋 학습플랜 목록');
             
             const { contentEl } = modal;
-            contentEl.style.cssText = 'padding: 20px; max-height: 500px; overflow-y: auto;';
+            contentEl.style.cssText = 'padding: 20px; max-height: 500px; overflow-y: auto; -webkit-overflow-scrolling: touch;';
             
             files.sort((a, b) => b.stat.mtime - a.stat.mtime).forEach(file => {
                 const fileBtn = contentEl.createEl('button', { text: `${file.basename}` });
@@ -7319,7 +7376,7 @@ class DashboardModal extends Modal {
         contentEl.empty();
         contentEl.addClass('hanzi-quiz-dashboard');
 
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         const header = contentEl.createDiv({ cls: 'dashboard-header' });
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;';
@@ -7330,7 +7387,7 @@ class DashboardModal extends Modal {
         headerButtons.style.cssText = 'display: flex; gap: 10px; align-items: center;';
         
         const gitBtn = headerButtons.createEl('button', { text: '🔧 Git' });
-        gitBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);`;
+        gitBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);`;
         gitBtn.onclick = () => {
             new GitSettingsModal(this.app, this.plugin).open();
         };
@@ -7348,7 +7405,7 @@ class DashboardModal extends Modal {
         });
         
         const settingsBtn = headerButtons.createEl('button', { text: '⚙️ 설정' });
-        settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
+        settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
         settingsBtn.onclick = () => {
             this.app.setting.open();
             this.app.setting.openTabById('quiz-sp2');
@@ -7388,55 +7445,80 @@ class DashboardModal extends Modal {
         const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
         
         const statsData = [
-            { icon: '📚', value: totalQuestions, label: '총 문제수', color: '#667eea' },
-            { icon: '⭐', value: bookmarkedQuestions, label: '북마크', color: '#ffa500' },
-            { icon: '❌', value: wrongQuestions, label: '오답 문제', color: '#f56565' },
-            { icon: '🎯', value: `${accuracy}%`, label: '정답률', color: '#48bb78' },
-            { icon: '🔥', value: stats.studyHistory?.length || 0, label: '학습 일수', color: '#ed8936' },
-            { icon: '⏱️', value: totalAttempts, label: '총 시도', color: '#4299e1' }
+            { icon: '📚', value: totalQuestions, label: '총 문제수', color: '#667eea', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            { icon: '⭐', value: bookmarkedQuestions, label: '북마크', color: '#ffa500', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+            { icon: '❌', value: wrongQuestions, label: '오답 문제', color: '#f56565', gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+            { icon: '🎯', value: `${accuracy}%`, label: '정답률', color: '#48bb78', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { icon: '🔥', value: stats.studyHistory?.length || 0, label: '학습 일수', color: '#ed8936', gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' },
+            { icon: '⏱️', value: totalAttempts, label: '총 시도', color: '#4299e1', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }
         ];
         
         statsData.forEach(stat => {
             const card = statsGrid.createDiv({ cls: 'stat-card' });
             card.style.cssText = `
-                background: linear-gradient(135deg, ${stat.color}15 0%, ${stat.color}30 100%);
-                padding: ${isMobile ? '16px' : '20px'};
-                border-radius: 12px;
+                background: ${stat.gradient};
+                padding: ${isMobile ? '18px 14px' : '22px 18px'};
+                border-radius: 14px;
                 text-align: center;
-                border: 2px solid ${stat.color}40;
-                transition: all 0.3s;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                transition: all 0.3s ease;
                 cursor: pointer;
-                min-height: ${isMobile ? '100px' : '120px'};
+                min-height: ${isMobile ? '120px' : '140px'};
                 -webkit-tap-highlight-color: rgba(0,0,0,0.05);
                 touch-action: manipulation;
                 user-select: none;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
             `;
             
             card.onmouseenter = () => {
-                card.style.transform = 'translateY(-5px)';
-                card.style.boxShadow = `0 8px 20px ${stat.color}30`;
+                card.style.transform = 'translateY(-6px) scale(1.02)';
+                card.style.boxShadow = `0 12px 24px rgba(0, 0, 0, 0.2)`;
             };
             card.onmouseleave = () => {
-                card.style.transform = 'translateY(0)';
-                card.style.boxShadow = 'none';
+                card.style.transform = 'translateY(0) scale(1)';
+                card.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
             };
             
             // 터치 피드백
             card.addEventListener('touchstart', () => {
-                card.style.opacity = '0.8';
+                card.style.opacity = '0.85';
+                card.style.transform = 'scale(0.97)';
             });
             card.addEventListener('touchend', () => {
                 card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
             });
             
             const icon = card.createEl('div', { text: stat.icon });
-            icon.style.cssText = `font-size: ${isMobile ? '32px' : '36px'}; margin-bottom: ${isMobile ? '8px' : '10px'};`;
+            icon.style.cssText = `
+                font-size: ${isMobile ? '36px' : '42px'}; 
+                margin-bottom: ${isMobile ? '10px' : '12px'};
+                filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+            `;
             
             const value = card.createEl('div', { text: String(stat.value) });
-            value.style.cssText = `font-size: ${isMobile ? '24px' : '28px'}; font-weight: bold; color: ${stat.color}; margin-bottom: 5px;`;
+            value.style.cssText = `
+                font-size: ${isMobile ? '30px' : '34px'}; 
+                font-weight: 900; 
+                color: white; 
+                margin-bottom: 6px;
+                text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+                letter-spacing: -0.8px;
+            `;
             
             const label = card.createEl('div', { text: stat.label });
-            label.style.cssText = `font-size: ${isMobile ? '12px' : '13px'}; color: var(--text-muted); font-weight: 600;`;
+            label.style.cssText = `
+                font-size: ${isMobile ? '15px' : '14px'}; 
+                color: rgba(255, 255, 255, 0.95); 
+                font-weight: 700;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            `;
         });
 
         // 📂 폴더별 퀴즈 (최상단)
@@ -7449,7 +7531,7 @@ class DashboardModal extends Modal {
         
         // 정렬 버튼
         const sortFolders = foldersHeader.createEl('button', { text: '⇅ 정렬' });
-        sortFolders.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation;`;
+        sortFolders.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation;`;
         sortFolders.onclick = () => {
             const menu = new Menu();
             
@@ -7517,34 +7599,34 @@ class DashboardModal extends Modal {
         if (allBookmarkedQuestions.length > 0) {
             const folderCard = foldersGrid.createDiv({ cls: 'folder-quiz-card bookmark-folder-card' });
             folderCard.style.cssText = `
-                background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-                padding: 15px;
-                border-radius: 10px;
-                color: #000;
-                transition: all 0.3s;
-                box-shadow: 0 3px 10px rgba(255, 165, 0, 0.4);
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                padding: ${isMobile ? '16px' : '18px'};
+                border-radius: 12px;
+                color: white;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 16px rgba(240, 147, 251, 0.4);
                 position: relative;
                 overflow: hidden;
-                border: 2px solid #FF8C00;
+                border: 1px solid rgba(255, 255, 255, 0.3);
             `;
             
             folderCard.onmouseenter = () => {
-                folderCard.style.transform = 'translateY(-3px)';
-                folderCard.style.boxShadow = '0 6px 20px rgba(255, 140, 0, 0.5)';
+                folderCard.style.transform = 'translateY(-5px) scale(1.02)';
+                folderCard.style.boxShadow = '0 12px 24px rgba(240, 147, 251, 0.5)';
             };
             folderCard.onmouseleave = () => {
-                folderCard.style.transform = 'translateY(0)';
-                folderCard.style.boxShadow = '0 3px 10px rgba(255, 165, 0, 0.4)';
+                folderCard.style.transform = 'translateY(0) scale(1)';
+                folderCard.style.boxShadow = '0 6px 16px rgba(240, 147, 251, 0.4)';
             };
             
             const mainArea = folderCard.createDiv();
             mainArea.style.cssText = 'cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 48px;';
             mainArea.innerHTML = `
-                <div style="font-size: 28px; margin-bottom: 6px;">⭐</div>
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;">${bookmarkFolderName}</div>
-                <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px;">${allBookmarkedQuestions.length}문제</div>
-                <div style="display: flex; gap: 8px; justify-content: center; font-size: 11px; opacity: 0.9; margin-bottom: 10px;">
-                    <span>북마크 전용</span>
+                <div style="font-size: ${isMobile ? '36px' : '40px'}; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">⭐</div>
+                <div style="font-size: ${isMobile ? '17px' : '18px'}; font-weight: 800; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${bookmarkFolderName}</div>
+                <div style="font-size: ${isMobile ? '26px' : '28px'}; font-weight: 900; margin-bottom: 10px; text-shadow: 0 2px 6px rgba(0,0,0,0.4);">${allBookmarkedQuestions.length}문제</div>
+                <div style="display: flex; gap: 8px; justify-content: center; font-size: ${isMobile ? '13px' : '12px'}; opacity: 0.95; margin-bottom: 10px; font-weight: 700;">
+                    <span style="background: rgba(255,255,255,0.25); padding: 4px 8px; border-radius: 8px;">북마크 전용</span>
                 </div>
             `;
             
@@ -7744,35 +7826,36 @@ class DashboardModal extends Modal {
             
             const folderCard = foldersGrid.createDiv({ cls: 'folder-quiz-card' });
             folderCard.style.cssText = `
-                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                padding: 15px;
-                border-radius: 10px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: ${isMobile ? '16px' : '18px'};
+                border-radius: 12px;
                 color: #fff;
-                transition: all 0.3s;
-                box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
                 position: relative;
                 overflow: hidden;
+                border: 1px solid rgba(255, 255, 255, 0.2);
             `;
             
             folderCard.onmouseenter = () => {
-                folderCard.style.transform = 'translateY(-3px)';
-                folderCard.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+                folderCard.style.transform = 'translateY(-5px) scale(1.02)';
+                folderCard.style.boxShadow = '0 12px 24px rgba(102, 126, 234, 0.4)';
             };
             folderCard.onmouseleave = () => {
-                folderCard.style.transform = 'translateY(0)';
-                folderCard.style.boxShadow = '0 3px 10px rgba(59, 130, 246, 0.3)';
+                folderCard.style.transform = 'translateY(0) scale(1)';
+                folderCard.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.3)';
             };
             
             // 카드 메인 영역
             const mainArea = folderCard.createDiv();
             mainArea.style.cssText = 'cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 48px;';
             mainArea.innerHTML = `
-                <div style="font-size: 28px; margin-bottom: 6px;">📁</div>
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;">${folder}</div>
-                <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px;">${folderCount}문제</div>
-                <div style="display: flex; gap: 8px; justify-content: center; font-size: 11px; opacity: 0.9; margin-bottom: 10px;">
-                    <span>⭐${folderBookmarked}</span>
-                    <span>❌${folderWrong}</span>
+                <div style="font-size: ${isMobile ? '32px' : '36px'}; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">📁</div>
+                <div style="font-size: ${isMobile ? '17px' : '18px'}; font-weight: 800; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${folder}</div>
+                <div style="font-size: ${isMobile ? '26px' : '28px'}; font-weight: 900; margin-bottom: 10px; text-shadow: 0 2px 6px rgba(0,0,0,0.4);">${folderCount}문제</div>
+                <div style="display: flex; gap: 10px; justify-content: center; font-size: ${isMobile ? '13px' : '12px'}; opacity: 0.95; margin-bottom: 10px; font-weight: 700;">
+                    <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 8px;">⭐${folderBookmarked}</span>
+                    <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 8px;">❌${folderWrong}</span>
                 </div>
             `;
             
@@ -7964,7 +8047,7 @@ class DashboardModal extends Modal {
         
         // 북마크 폴더 관리 버튼
         const manageBmBtn = bookmarkFoldersHeader.createEl('button', { text: '⚙️ 북마크 폴더 관리' });
-        manageBmBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation;`;
+        manageBmBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation;`;
         manageBmBtn.onclick = () => {
             this.close();
             new BookmarkFolderManagementModal(this.app, this.plugin).open();
@@ -8161,7 +8244,7 @@ class DashboardModal extends Modal {
         
         // 정렬 버튼 추가
         const sortActions = actionsHeader.createEl('button', { text: '⇅ 정렬' });
-        sortActions.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation;`;
+        sortActions.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 12px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 13px; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation;`;
         sortActions.onclick = () => {
             const menu = new Menu();
             
@@ -8369,7 +8452,7 @@ class DashboardModal extends Modal {
                 border-radius: 12px;
                 color: #fff;
                 font-weight: 600;
-                font-size: ${isMobile ? '14px' : '15px'};
+                font-size: ${isMobile ? '16px' : '15px'};
                 cursor: pointer;
                 transition: all 0.3s ease;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
@@ -8393,12 +8476,12 @@ class DashboardModal extends Modal {
             
             const textSpan = btn.createEl('span');
             textSpan.textContent = action.text;
-            textSpan.style.cssText = `font-size: ${isMobile ? '13px' : '14px'};`;
+            textSpan.style.cssText = `font-size: ${isMobile ? '16px' : '14px'};`;
             
             if (action.count !== undefined) {
                 const countSpan = btn.createEl('span');
                 countSpan.textContent = `${action.count}개`;
-                countSpan.style.cssText = `font-size: ${isMobile ? '11px' : '12px'}; opacity: 0.9; font-weight: 500;`;
+                countSpan.style.cssText = `font-size: ${isMobile ? '16px' : '12px'}; opacity: 0.9; font-weight: 500;`;
             }
             
             // 터치 피드백
@@ -8783,7 +8866,7 @@ class QuestionDashboardModal extends Modal {
         contentEl.addClass('question-dashboard-modal');
 
         // 헤더
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         const header = contentEl.createDiv({ cls: 'qd-header' });
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;';
@@ -8793,7 +8876,7 @@ class QuestionDashboardModal extends Modal {
         titleSection.createEl('p', { text: '전체 문제를 한눈에 확인하고 관리하세요', cls: 'qd-subtitle' });
         
         const settingsBtn = header.createEl('button', { text: '⚙️ 설정' });
-        settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '40px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
+        settingsBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
         settingsBtn.onclick = () => {
             this.close();
             this.app.setting.open();
@@ -9014,7 +9097,7 @@ class QuestionDashboardModal extends Modal {
                         this.close();
                         
                         // 모바일 감지
-                        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+                        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
                         
                         if (isMobile) {
                             // 모바일: 현재 리프에서 열기
@@ -9113,7 +9196,7 @@ class QuestionDashboardModal extends Modal {
                     if (file) {
                         this.close();
                         
-                        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+                        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
                         const leaf = isMobile ? this.app.workspace.getLeaf() : this.app.workspace.getLeaf(false);
                         await leaf.openFile(file);
                     }
@@ -9215,7 +9298,7 @@ class QuestionDashboardModal extends Modal {
                 max-width: 95vw;
                 width: 1400px;
                 max-height: 90vh;
-                overflow-y: auto;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
             }
             .qd-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -9486,7 +9569,7 @@ class GitSettingsModal extends Modal {
         contentEl.empty();
         contentEl.addClass('git-settings-modal');
         
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
 
         // 모달 스타일
         contentEl.style.cssText = `
@@ -9544,7 +9627,7 @@ class GitSettingsModal extends Modal {
                 action: async () => {
                     try {
                         new Notice('🚀 Git 커밋 시작...');
-                        await this.plugin.autoGitCommitAndPush('✨ 수동 커밋 (대시보드)');
+                        await this.plugin.autoGitCommitAndPush('✨ 수동 커밋 (대시보드)', null, false);
                         new Notice('✅ Git 커밋 완료!');
                     } catch (error) {
                         console.error('Git 커밋 오류:', error);
@@ -9758,7 +9841,7 @@ class BookmarkFolderManagementModal extends Modal {
         contentEl.empty();
         contentEl.addClass('bookmark-folder-management-modal');
         
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         contentEl.style.cssText = `
             display: flex;
@@ -9781,7 +9864,7 @@ class BookmarkFolderManagementModal extends Modal {
 
         const desc = header.createDiv({ cls: 'bookmark-desc' });
         desc.innerHTML = '북마크 폴더를 추가, 수정, 삭제하고 정렬할 수 있습니다.';
-        desc.style.cssText = `font-size: ${isMobile ? '13px' : '14px'}; color: var(--text-muted); padding: ${isMobile ? '8px' : '10px'}; background: var(--background-secondary); border-radius: 6px; margin-bottom: ${isMobile ? '8px' : '10px'};`;
+        desc.style.cssText = `font-size: ${isMobile ? '16px' : '14px'}; color: var(--text-muted); padding: ${isMobile ? '8px' : '10px'}; background: var(--background-secondary); border-radius: 6px; margin-bottom: ${isMobile ? '8px' : '10px'};`;
 
         // 탭 버튼
         const tabContainer = header.createDiv({ cls: 'tab-container' });
@@ -9797,7 +9880,7 @@ class BookmarkFolderManagementModal extends Modal {
         const scrollContainer = contentEl.createDiv({ cls: 'bookmark-scroll-container' });
         scrollContainer.style.cssText = `
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             overflow-x: hidden;
             padding: ${isMobile ? '5px 2px' : '10px 5px'};
             margin: ${isMobile ? '5px 0' : '10px 0'};
@@ -9978,10 +10061,10 @@ class BookmarkFolderManagementModal extends Modal {
             folderInfo.style.cssText = 'flex: 1; min-width: 0;';
             
             const folderName = folderInfo.createEl('div', { text: folder });
-            folderName.style.cssText = `font-weight: 600; font-size: ${isMobile ? '15px' : '14px'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
+            folderName.style.cssText = `font-weight: 600; font-size: ${isMobile ? '16px' : '14px'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
             
             const folderCount = folderInfo.createEl('div', { text: `${count}개` });
-            folderCount.style.cssText = `font-size: ${isMobile ? '13px' : '12px'}; color: var(--text-muted);`;
+            folderCount.style.cssText = `font-size: ${isMobile ? '16px' : '12px'}; color: var(--text-muted);`;
 
             // 버튼 컨테이너
             const buttonContainer = folderCard.createDiv();
@@ -9989,12 +10072,12 @@ class BookmarkFolderManagementModal extends Modal {
 
             // 수정 버튼
             const editBtn = buttonContainer.createEl('button', { text: '✏️' });
-            editBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 10px'}; background: var(--interactive-normal); border: none; border-radius: 5px; cursor: pointer; font-size: ${isMobile ? '16px' : '14px'}; min-height: ${isMobile ? '40px' : 'auto'}; min-width: ${isMobile ? '40px' : 'auto'};`;
+            editBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 10px'}; background: var(--interactive-normal); border: none; border-radius: 5px; cursor: pointer; font-size: ${isMobile ? '16px' : '14px'}; min-height: ${isMobile ? '44px' : 'auto'}; min-width: ${isMobile ? '40px' : 'auto'};`;
             editBtn.onclick = () => this.showEditFolderModal(folder, type, isMobile);
 
             // 삭제 버튼
             const deleteBtn = buttonContainer.createEl('button', { text: '🗑️' });
-            deleteBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 10px'}; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 5px; cursor: pointer; font-size: ${isMobile ? '16px' : '14px'}; min-height: ${isMobile ? '40px' : 'auto'}; min-width: ${isMobile ? '40px' : 'auto'};`;
+            deleteBtn.style.cssText = `padding: ${isMobile ? '8px 12px' : '6px 10px'}; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 5px; cursor: pointer; font-size: ${isMobile ? '16px' : '14px'}; min-height: ${isMobile ? '44px' : 'auto'}; min-width: ${isMobile ? '40px' : 'auto'};`;
             deleteBtn.onclick = () => this.showDeleteFolderModal(folder, type, count, isMobile);
         });
     }
@@ -10794,7 +10877,7 @@ class HanziQuestionModal extends Modal {
             }, { passive: true });
             
             const handleSwipe = () => {
-                const swipeThreshold = 50; // 최소 스와이프 거리
+                const swipeThreshold = 60; // Galaxy Ultra25: 큰 화면용 조정 // 최소 스와이프 거리
                 const diff = touchStartX - touchEndX;
                 
                 if (Math.abs(diff) > swipeThreshold) {
@@ -11072,7 +11155,7 @@ class HanziQuestionModal extends Modal {
         const scrollContainer = contentEl.createDiv({ cls: 'modal-scroll-container' });
         scrollContainer.style.cssText = `
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             overflow-x: hidden;
             padding: 20px;
             background: var(--background-primary);
@@ -11903,7 +11986,7 @@ class HanziQuestionModal extends Modal {
             '힌트 이미지'
         );
 
-        // 노트 - 큰 독립 섹션
+        // 노트 - 큰 독립 섹션 (기본 접기 모드)
         const noteSection = form.createDiv({ cls: 'note-section' });
         noteSection.style.cssText = `
             background: linear-gradient(135deg, #e3f2fd15 0%, #90caf915 100%);
@@ -11920,22 +12003,42 @@ class HanziQuestionModal extends Modal {
             font-weight: 700;
             color: #1976d2;
             margin: 0 0 8px 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         `;
+        
+        // 접기/펼치기 아이콘
+        const toggleIcon = noteHeader.createSpan({ text: '▼' });
+        toggleIcon.style.cssText = 'font-size: 0.8em; transition: transform 0.2s;';
         
         const noteDesc = noteSection.createEl('p', { text: '추가 설명이나 기억할 내용을 입력하세요 (선택사항)' });
         noteDesc.style.cssText = `
             font-size: 13px;
             color: var(--text-muted);
             margin: 0 0 16px 0;
+            display: none;
         `;
         
         const noteContainer = noteSection.createDiv({ cls: 'note-container' });
         noteContainer.style.cssText = `
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 8px;
             width: 100%;
         `;
+        
+        // 노트 섹션 접기/펼치기 토글
+        let isNoteExpanded = false;
+        noteHeader.onclick = () => {
+            isNoteExpanded = !isNoteExpanded;
+            noteContainer.style.display = isNoteExpanded ? 'flex' : 'none';
+            noteDesc.style.display = isNoteExpanded ? 'block' : 'none';
+            toggleIcon.style.transform = isNoteExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+            toggleIcon.setText(isNoteExpanded ? '▲' : '▼');
+        };
         
         // 노트 입력 영역 - 단순화
         const noteInput = noteContainer.createEl('textarea', {
@@ -12356,7 +12459,7 @@ class FolderSelectionModal extends Modal {
     }
 }
 
-// 북마크 폴더 선택 모달
+// 북마크 폴더 선택 모달 (문제/선택지 구분)
 class BookmarkFolderSelectionModal extends Modal {
     constructor(app, plugin, question, onSelect, isOptionBookmark = false, optionIndex = null) {
         super(app);
@@ -12372,26 +12475,43 @@ class BookmarkFolderSelectionModal extends Modal {
         contentEl.empty();
         contentEl.addClass('bookmark-folder-selection-modal');
 
-        contentEl.createEl('h2', { text: '⭐ 북마크 폴더 선택' });
-        
+        // 제목: 문제/선택지 구분
         if (this.isOptionBookmark && this.optionIndex !== null) {
+            contentEl.createEl('h2', { text: '📌 선택지 북마크 폴더' });
             contentEl.createEl('p', { 
-                text: `선택지 ${this.optionIndex + 1}: "${this.question.options[this.optionIndex]}"를 어느 폴더에 북마크할까요?` 
-            });
+                text: `선택지 ${this.optionIndex + 1}: "${this.question.options[this.optionIndex]}"` 
+            }).style.cssText = 'color: var(--text-muted); margin-bottom: 20px; font-size: 14px;';
         } else {
-            contentEl.createEl('p', { text: `"${this.question.hanzi}" 문제를 어느 폴더에 북마크할까요?` });
+            contentEl.createEl('h2', { text: '⭐ 문제 북마크 폴더' });
+            contentEl.createEl('p', { 
+                text: `문제: "${this.question.hanzi}"` 
+            }).style.cssText = 'color: var(--text-muted); margin-bottom: 20px; font-size: 14px;';
         }
 
         const folderList = contentEl.createDiv({ cls: 'bookmark-folder-list' });
 
-        // 사용 가능한 모든 폴더 표시
-        const folders = this.plugin.settings.questionFolders || ['기본'];
+        // 폴더 타입에 따라 다른 폴더 목록 표시
+        const folders = this.isOptionBookmark 
+            ? (this.plugin.settings.choiceBookmarkFolders || ['❌ 헷갈리는선택지', '💡 주의선택지', '📝 암기선택지'])
+            : (this.plugin.settings.questionBookmarkFolders || ['📌 중요문제', '🔥 어려운문제', '⭐ 복습필요']);
+        
+        const folderTypeLabel = contentEl.createEl('div', {
+            text: this.isOptionBookmark ? '🎯 선택지 전용 폴더' : '📚 문제 전용 폴더'
+        });
+        folderTypeLabel.style.cssText = 'font-weight: 600; margin-bottom: 12px; color: var(--interactive-accent); font-size: 15px;';
         
         folders.forEach(folder => {
             const folderBtn = folderList.createEl('button', {
-                text: `📁 ${folder}`,
+                text: folder,
                 cls: 'bookmark-folder-btn'
             });
+            
+            // 선택지/문제 구분 스타일
+            if (this.isOptionBookmark) {
+                folderBtn.style.cssText += 'border-left: 3px solid var(--color-orange);';
+            } else {
+                folderBtn.style.cssText += 'border-left: 3px solid var(--color-blue);';
+            }
             
             folderBtn.addEventListener('click', () => {
                 this.close();
@@ -12404,14 +12524,14 @@ class BookmarkFolderSelectionModal extends Modal {
         newFolderContainer.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--background-modifier-border);';
         
         const newFolderBtn = newFolderContainer.createEl('button', {
-            text: '➕ 새 폴더 만들기',
+            text: this.isOptionBookmark ? '➕ 새 선택지 폴더 만들기' : '➕ 새 문제 폴더 만들기',
             cls: 'new-folder-btn'
         });
         newFolderBtn.style.cssText = `
             width: 100%;
             padding: 12px;
-            background: var(--interactive-accent);
-            color: var(--text-on-accent);
+            background: ${this.isOptionBookmark ? 'var(--color-orange)' : 'var(--color-blue)'};
+            color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -12421,33 +12541,32 @@ class BookmarkFolderSelectionModal extends Modal {
         
         newFolderBtn.addEventListener('click', () => {
             this.close();
-            const inputModal = new TextInputModal(this.app, '새 폴더 이름', '폴더 이름 입력', '', async (folderName) => {
-                if (folderName && folderName.trim()) {
-                    const trimmedName = folderName.trim();
-                    
-                    // 폴더 목록에 추가
-                    if (!this.plugin.settings.questionFolders.includes(trimmedName)) {
-                        this.plugin.settings.questionFolders.push(trimmedName);
-                        await this.plugin.saveSettings();
+            const inputModal = new TextInputModal(
+                this.app, 
+                this.isOptionBookmark ? '새 선택지 폴더 이름' : '새 문제 폴더 이름', 
+                '폴더 이름 입력 (이모지 포함 가능)', 
+                '', 
+                async (folderName) => {
+                    if (folderName && folderName.trim()) {
+                        const trimmedName = folderName.trim();
                         
-                        // 폴더 생성
-                        const folderPath = `${this.plugin.settings.questionsFolder}/${trimmedName}`;
-                        try {
-                            const exists = this.app.vault.getAbstractFileByPath(folderPath);
-                            if (!exists) {
-                                await this.app.vault.createFolder(folderPath);
-                            }
-                        } catch (e) {
-                            console.log('폴더 생성 중 오류:', e);
+                        // 해당 타입의 폴더 목록에 추가
+                        const targetArray = this.isOptionBookmark 
+                            ? this.plugin.settings.choiceBookmarkFolders 
+                            : this.plugin.settings.questionBookmarkFolders;
+                        
+                        if (!targetArray.includes(trimmedName)) {
+                            targetArray.push(trimmedName);
+                            await this.plugin.saveSettings();
+                            
+                            new Notice(`✅ ${this.isOptionBookmark ? '선택지' : '문제'} 폴더 "${trimmedName}" 생성됨`);
                         }
                         
-                        new Notice(`✅ 폴더 "${trimmedName}" 생성됨`);
+                        // 새 폴더로 북마크
+                        this.onSelect(trimmedName);
                     }
-                    
-                    // 새 폴더로 북마크
-                    this.onSelect(trimmedName);
                 }
-            });
+            );
             inputModal.open();
         });
 
@@ -12536,7 +12655,7 @@ class FolderManagementModal extends Modal {
         contentEl.addClass('folder-management-modal');
         
         // 모바일 감지
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         // 모달 전체 레이아웃 설정
         contentEl.style.cssText = `
@@ -12570,23 +12689,23 @@ class FolderManagementModal extends Modal {
         const scrollContainer = contentEl.createDiv({ cls: 'folder-scroll-container' });
         scrollContainer.style.cssText = `
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             overflow-x: hidden;
             padding: ${isMobile ? '5px 2px' : '10px 5px'};
             margin: ${isMobile ? '5px 0' : '10px 0'};
             -webkit-overflow-scrolling: touch;
         `;
 
-        // 현재 폴더 목록
-        const foldersSection = scrollContainer.createDiv({ cls: 'folders-section' });
-        foldersSection.createEl('h3', { text: '현재 폴더' });
+        // ===== 1. 문제 폴더 섹션 =====
+        const questionFoldersSection = scrollContainer.createDiv({ cls: 'folders-section' });
+        questionFoldersSection.createEl('h3', { text: '📚 문제 폴더' }).style.cssText = 'color: var(--interactive-accent);';
 
-        const foldersList = foldersSection.createDiv({ cls: 'folders-list' });
+        const questionFoldersList = questionFoldersSection.createDiv({ cls: 'folders-list' });
 
         const folders = this.plugin.settings.questionFolders || ['기본'];
         
         folders.forEach((folder, index) => {
-            const folderItem = foldersList.createDiv({ cls: 'folder-item' });
+            const folderItem = questionFoldersList.createDiv({ cls: 'folder-item' });
             folderItem.style.display = 'flex';
             folderItem.style.justifyContent = 'space-between';
             folderItem.style.alignItems = 'center';
@@ -12843,6 +12962,112 @@ class FolderManagementModal extends Modal {
             folderInput.value = '';
             this.onOpen(); // 새로고침
         });
+
+        // ===== 2. 문제 북마크 폴더 섹션 =====
+        scrollContainer.createEl('hr').style.cssText = 'margin: 20px 0; border-color: var(--background-modifier-border);';
+        
+        const questionBookmarkSection = scrollContainer.createDiv({ cls: 'bookmark-folders-section' });
+        questionBookmarkSection.createEl('h3', { text: '⭐ 문제 북마크 폴더' }).style.cssText = 'color: var(--color-blue);';
+        
+        const qbDesc = questionBookmarkSection.createEl('p', { 
+            text: '문제 전체를 북마크할 때 사용하는 폴더입니다.' 
+        });
+        qbDesc.style.cssText = 'font-size: 13px; color: var(--text-muted); margin-bottom: 10px;';
+        
+        const qbList = questionBookmarkSection.createDiv({ cls: 'bookmark-folders-list' });
+        const questionBookmarkFolders = this.plugin.settings.questionBookmarkFolders || ['📌 중요문제', '🔥 어려운문제', '⭐ 복습필요'];
+        
+        questionBookmarkFolders.forEach((folder, index) => {
+            const item = qbList.createDiv({ cls: 'bookmark-folder-item' });
+            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 5px; background: var(--background-secondary); border-radius: 5px; border-left: 3px solid var(--color-blue);';
+            
+            item.createEl('span', { text: folder }).style.fontWeight = '500';
+            
+            const deleteBtn = item.createEl('button', { text: '🗑️' });
+            deleteBtn.style.cssText = 'padding: 4px 8px; background: var(--background-modifier-error); color: white; border: none; border-radius: 3px; cursor: pointer;';
+            deleteBtn.onclick = async () => {
+                this.plugin.settings.questionBookmarkFolders.splice(index, 1);
+                await this.plugin.saveSettings();
+                new Notice(`✅ "${folder}" 삭제됨`);
+                this.onOpen();
+            };
+        });
+        
+        // 문제 북마크 폴더 추가 입력
+        const qbInputContainer = questionBookmarkSection.createDiv();
+        qbInputContainer.style.cssText = 'display: flex; gap: 8px; margin-top: 10px;';
+        
+        const qbInput = qbInputContainer.createEl('input', { type: 'text', placeholder: '새 문제 북마크 폴더 (예: 📌 시험대비)' });
+        qbInput.style.cssText = 'flex: 1; padding: 8px; border: 1px solid var(--background-modifier-border); border-radius: 4px;';
+        
+        const qbAddBtn = qbInputContainer.createEl('button', { text: '➕' });
+        qbAddBtn.style.cssText = 'padding: 8px 16px; background: var(--color-blue); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;';
+        qbAddBtn.onclick = async () => {
+            const name = qbInput.value.trim();
+            if (!name) return;
+            if (this.plugin.settings.questionBookmarkFolders.includes(name)) {
+                new Notice('❌ 이미 존재하는 폴더입니다!');
+                return;
+            }
+            this.plugin.settings.questionBookmarkFolders.push(name);
+            await this.plugin.saveSettings();
+            new Notice(`✅ "${name}" 추가됨`);
+            qbInput.value = '';
+            this.onOpen();
+        };
+
+        // ===== 3. 선택지 북마크 폴더 섹션 =====
+        scrollContainer.createEl('hr').style.cssText = 'margin: 20px 0; border-color: var(--background-modifier-border);';
+        
+        const choiceBookmarkSection = scrollContainer.createDiv({ cls: 'bookmark-folders-section' });
+        choiceBookmarkSection.createEl('h3', { text: '📌 선택지 북마크 폴더' }).style.cssText = 'color: var(--color-orange);';
+        
+        const cbDesc = choiceBookmarkSection.createEl('p', { 
+            text: '헷갈리는 선택지를 개별적으로 북마크할 때 사용하는 폴더입니다.' 
+        });
+        cbDesc.style.cssText = 'font-size: 13px; color: var(--text-muted); margin-bottom: 10px;';
+        
+        const cbList = choiceBookmarkSection.createDiv({ cls: 'bookmark-folders-list' });
+        const choiceBookmarkFolders = this.plugin.settings.choiceBookmarkFolders || ['❌ 헷갈리는선택지', '💡 주의선택지', '📝 암기선택지'];
+        
+        choiceBookmarkFolders.forEach((folder, index) => {
+            const item = cbList.createDiv({ cls: 'bookmark-folder-item' });
+            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 5px; background: var(--background-secondary); border-radius: 5px; border-left: 3px solid var(--color-orange);';
+            
+            item.createEl('span', { text: folder }).style.fontWeight = '500';
+            
+            const deleteBtn = item.createEl('button', { text: '🗑️' });
+            deleteBtn.style.cssText = 'padding: 4px 8px; background: var(--background-modifier-error); color: white; border: none; border-radius: 3px; cursor: pointer;';
+            deleteBtn.onclick = async () => {
+                this.plugin.settings.choiceBookmarkFolders.splice(index, 1);
+                await this.plugin.saveSettings();
+                new Notice(`✅ "${folder}" 삭제됨`);
+                this.onOpen();
+            };
+        });
+        
+        // 선택지 북마크 폴더 추가 입력
+        const cbInputContainer = choiceBookmarkSection.createDiv();
+        cbInputContainer.style.cssText = 'display: flex; gap: 8px; margin-top: 10px;';
+        
+        const cbInput = cbInputContainer.createEl('input', { type: 'text', placeholder: '새 선택지 북마크 폴더 (예: ❌ 자주틀림)' });
+        cbInput.style.cssText = 'flex: 1; padding: 8px; border: 1px solid var(--background-modifier-border); border-radius: 4px;';
+        
+        const cbAddBtn = cbInputContainer.createEl('button', { text: '➕' });
+        cbAddBtn.style.cssText = 'padding: 8px 16px; background: var(--color-orange); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;';
+        cbAddBtn.onclick = async () => {
+            const name = cbInput.value.trim();
+            if (!name) return;
+            if (this.plugin.settings.choiceBookmarkFolders.includes(name)) {
+                new Notice('❌ 이미 존재하는 폴더입니다!');
+                return;
+            }
+            this.plugin.settings.choiceBookmarkFolders.push(name);
+            await this.plugin.saveSettings();
+            new Notice(`✅ "${name}" 추가됨`);
+            cbInput.value = '';
+            this.onOpen();
+        };
 
         // 하단 고정 버튼 영역
         const footer = contentEl.createDiv({ cls: 'modal-footer-fixed' });
@@ -13180,7 +13405,7 @@ class AudioListManagementModal extends Modal {
         contentEl.empty();
         contentEl.addClass('audio-list-modal');
         
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
         
         contentEl.style.cssText = `
             display: flex;
@@ -13273,7 +13498,7 @@ class AudioListManagementModal extends Modal {
         const scrollArea = contentEl.createDiv();
         scrollArea.style.cssText = `
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             padding: 10px;
         `;
 
@@ -13462,6 +13687,274 @@ class AudioListManagementModal extends Modal {
 
     onClose() {
         this.stopAudio();
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+// 노트 설정 모달
+class NoteSettingsModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
+        
+        this.titleEl.setText('📝 노트 설정');
+        
+        contentEl.style.cssText = `
+            padding: ${isMobile ? '16px' : '20px'};
+            min-width: ${isMobile ? '90vw' : '400px'};
+            max-width: ${isMobile ? '95vw' : '500px'};
+        `;
+
+        // 설명
+        const desc = contentEl.createDiv();
+        desc.style.cssText = `
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: var(--background-secondary);
+            border-radius: 6px;
+            border-left: 3px solid var(--interactive-accent);
+        `;
+        desc.innerHTML = '퀴즈 화면에서 노트 섹션의 기본 표시 상태를 설정합니다.';
+
+        // 기본 펼치기/접기 설정
+        const defaultExpandedSection = contentEl.createDiv();
+        defaultExpandedSection.style.cssText = `
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--background-primary-alt);
+            border-radius: 8px;
+            border: 1px solid var(--background-modifier-border);
+        `;
+
+        const defaultExpandedHeader = defaultExpandedSection.createEl('h3', { 
+            text: '🔽 기본 표시 상태' 
+        });
+        defaultExpandedHeader.style.cssText = `
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 600;
+        `;
+
+        const radioContainer = defaultExpandedSection.createDiv();
+        radioContainer.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+
+        // 접기 옵션
+        const collapseOption = radioContainer.createDiv();
+        collapseOption.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--background-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid ${!this.plugin.settings.noteDefaultExpanded ? 'var(--interactive-accent)' : 'transparent'};
+        `;
+
+        const collapseRadio = collapseOption.createEl('input', { type: 'radio' });
+        collapseRadio.name = 'noteDefaultState';
+        collapseRadio.checked = !this.plugin.settings.noteDefaultExpanded;
+        collapseRadio.style.cssText = `
+            width: ${isMobile ? '24px' : '20px'};
+            height: ${isMobile ? '24px' : '20px'};
+            cursor: pointer;
+            accent-color: var(--interactive-accent);
+        `;
+
+        const collapseLabel = collapseOption.createEl('label');
+        collapseLabel.style.cssText = 'cursor: pointer; flex: 1; font-weight: 500;';
+        collapseLabel.innerHTML = '▶ 접기 (기본값)<br><span style="font-size: 12px; color: var(--text-muted);">노트가 접힌 상태로 시작</span>';
+
+        // 펼치기 옵션
+        const expandOption = radioContainer.createDiv();
+        expandOption.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--background-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid ${this.plugin.settings.noteDefaultExpanded ? 'var(--interactive-accent)' : 'transparent'};
+        `;
+
+        const expandRadio = expandOption.createEl('input', { type: 'radio' });
+        expandRadio.name = 'noteDefaultState';
+        expandRadio.checked = this.plugin.settings.noteDefaultExpanded;
+        expandRadio.style.cssText = `
+            width: ${isMobile ? '24px' : '20px'};
+            height: ${isMobile ? '24px' : '20px'};
+            cursor: pointer;
+            accent-color: var(--interactive-accent);
+        `;
+
+        const expandLabel = expandOption.createEl('label');
+        expandLabel.style.cssText = 'cursor: pointer; flex: 1; font-weight: 500;';
+        expandLabel.innerHTML = '▼ 펼치기<br><span style="font-size: 12px; color: var(--text-muted);">노트가 펼쳐진 상태로 시작</span>';
+
+        // 라디오 버튼 이벤트
+        const updateSelection = (isExpanded) => {
+            collapseOption.style.borderColor = !isExpanded ? 'var(--interactive-accent)' : 'transparent';
+            expandOption.style.borderColor = isExpanded ? 'var(--interactive-accent)' : 'transparent';
+        };
+
+        collapseOption.onclick = () => {
+            collapseRadio.checked = true;
+            expandRadio.checked = false;
+            updateSelection(false);
+        };
+
+        expandOption.onclick = () => {
+            expandRadio.checked = true;
+            collapseRadio.checked = false;
+            updateSelection(true);
+        };
+
+        // 고급 설정 섹션
+        const advancedSection = contentEl.createDiv();
+        advancedSection.style.cssText = `
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--background-primary-alt);
+            border-radius: 8px;
+            border: 1px solid var(--background-modifier-border);
+        `;
+
+        const advancedHeader = advancedSection.createEl('h3', { 
+            text: '⚙️ 고급 설정' 
+        });
+        advancedHeader.style.cssText = `
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 600;
+        `;
+
+        // 노트 자동 저장 옵션
+        const autoSaveOption = advancedSection.createDiv();
+        autoSaveOption.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--background-secondary);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        `;
+
+        const autoSaveLabel = autoSaveOption.createEl('label');
+        autoSaveLabel.style.cssText = 'cursor: pointer; font-weight: 500;';
+        autoSaveLabel.innerHTML = '💾 노트 자동 저장<br><span style="font-size: 12px; color: var(--text-muted);">노트 편집 시 자동으로 저장</span>';
+
+        const autoSaveToggle = autoSaveOption.createEl('input', { type: 'checkbox' });
+        autoSaveToggle.checked = this.plugin.settings.noteAutoSave !== false;
+        autoSaveToggle.style.cssText = `
+            width: ${isMobile ? '50px' : '44px'};
+            height: ${isMobile ? '28px' : '24px'};
+            cursor: pointer;
+            accent-color: var(--interactive-accent);
+        `;
+
+        autoSaveLabel.onclick = () => autoSaveToggle.click();
+
+        // 노트 최대 높이 설정
+        const maxHeightOption = advancedSection.createDiv();
+        maxHeightOption.style.cssText = `
+            padding: 12px;
+            background: var(--background-secondary);
+            border-radius: 6px;
+        `;
+
+        const maxHeightLabel = maxHeightOption.createEl('label');
+        maxHeightLabel.style.cssText = 'font-weight: 500; display: block; margin-bottom: 8px;';
+        maxHeightLabel.innerHTML = '📏 노트 최대 높이<br><span style="font-size: 12px; color: var(--text-muted);">펼쳤을 때 노트 섹션의 최대 높이 (픽셀)</span>';
+
+        const maxHeightInput = maxHeightOption.createEl('input', { type: 'number' });
+        maxHeightInput.value = this.plugin.settings.noteMaxHeight || '1000';
+        maxHeightInput.min = '200';
+        maxHeightInput.max = '3000';
+        maxHeightInput.step = '100';
+        maxHeightInput.style.cssText = `
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 4px;
+            background: var(--background-primary);
+            margin-top: 8px;
+        `;
+
+        // 버튼
+        const buttonContainer = contentEl.createDiv();
+        buttonContainer.style.cssText = `
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        `;
+
+        const cancelBtn = buttonContainer.createEl('button', { text: '취소' });
+        cancelBtn.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '14px' : '12px'};
+            background: var(--background-secondary);
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        `;
+        cancelBtn.onclick = () => this.close();
+
+        const saveBtn = buttonContainer.createEl('button', { text: '💾 저장' });
+        saveBtn.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '14px' : '12px'};
+            background: var(--interactive-accent);
+            color: var(--text-on-accent);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        `;
+        saveBtn.onclick = async () => {
+            // 설정 저장
+            this.plugin.settings.noteDefaultExpanded = expandRadio.checked;
+            this.plugin.settings.noteAutoSave = autoSaveToggle.checked;
+            this.plugin.settings.noteMaxHeight = parseInt(maxHeightInput.value) || 1000;
+            
+            await this.plugin.saveSettings();
+            new Notice('✅ 노트 설정이 저장되었습니다');
+            this.close();
+        };
+
+        // 호버 효과
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.background = 'var(--background-modifier-hover)';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.background = 'var(--background-secondary)';
+        });
+
+        saveBtn.addEventListener('mouseenter', () => {
+            saveBtn.style.opacity = '0.9';
+        });
+        saveBtn.addEventListener('mouseleave', () => {
+            saveBtn.style.opacity = '1';
+        });
+    }
+
+    onClose() {
         const { contentEl } = this;
         contentEl.empty();
     }
@@ -13660,7 +14153,7 @@ class OptionBookmarkQuizBuilderModal extends Modal {
         contentEl.addClass('option-quiz-builder-modal');
 
         // 모바일 감지
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
 
         this.titleEl.setText('🎯 선택지 퀴즈 구성');
 
@@ -13670,17 +14163,17 @@ class OptionBookmarkQuizBuilderModal extends Modal {
         descEl.createEl('p', { 
             text: `총 ${this.allOptions.length}개의 북마크된 선택지가 있습니다.`,
             cls: 'builder-desc-text'
-        }).style.cssText = `margin-bottom: 8px; font-size: ${isMobile ? '15px' : '14px'};`;
+        }).style.cssText = `margin-bottom: 8px; font-size: ${isMobile ? '16px' : '14px'};`;
         descEl.createEl('p', { 
             text: '원하는 선택지를 선택하고 순서를 조정하세요. (최소 4개 필요)',
             cls: 'builder-desc-hint'
-        }).style.cssText = `color: var(--text-muted); font-size: ${isMobile ? '13px' : '14px'};`;
+        }).style.cssText = `color: var(--text-muted); font-size: ${isMobile ? '16px' : '14px'};`;
 
         // 컨트롤 버튼들
         const controlBar = contentEl.createDiv({ cls: 'builder-control-bar' });
         controlBar.style.cssText = `display: flex; gap: ${isMobile ? '6px' : '8px'}; margin-bottom: ${isMobile ? '12px' : '16px'}; flex-wrap: wrap;`;
 
-        const btnStyle = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; border: none; border-radius: 6px; cursor: pointer; font-size: ${isMobile ? '14px' : '13px'}; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: rgba(0,0,0,0.1); min-height: ${isMobile ? '44px' : 'auto'};`;
+        const btnStyle = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; border: none; border-radius: 6px; cursor: pointer; font-size: ${isMobile ? '16px' : '13px'}; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: rgba(0,0,0,0.1); min-height: ${isMobile ? '44px' : 'auto'};`;
 
         const selectAllBtn = controlBar.createEl('button', { text: '✓ 전체' });
         selectAllBtn.style.cssText = btnStyle + 'background: var(--interactive-accent); color: var(--text-on-accent); flex: 1;';
@@ -13726,7 +14219,7 @@ class OptionBookmarkQuizBuilderModal extends Modal {
         // 선택지 리스트 컨테이너
         const listContainer = contentEl.createDiv({ cls: 'options-list-container' });
         const maxHeight = isMobile ? '50vh' : '400px';
-        listContainer.style.cssText = `max-height: ${maxHeight}; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--background-modifier-border); border-radius: 8px; padding: ${isMobile ? '6px' : '8px'}; margin-bottom: ${isMobile ? '12px' : '16px'}; -webkit-overflow-scrolling: touch;`;
+        listContainer.style.cssText = `max-height: ${maxHeight}; overflow-y: auto; -webkit-overflow-scrolling: touch; overflow-x: hidden; border: 1px solid var(--background-modifier-border); border-radius: 8px; padding: ${isMobile ? '6px' : '8px'}; margin-bottom: ${isMobile ? '12px' : '16px'}; -webkit-overflow-scrolling: touch;`;
         this.listContainer = listContainer;
 
         // 액션 버튼들
@@ -14321,7 +14814,7 @@ class QuizPlayModal extends Modal {
                 touchEndX = e.changedTouches[0].clientX;
                 touchEndY = e.changedTouches[0].clientY;
                 
-                const swipeThreshold = 50; // 최소 스와이프 거리
+                const swipeThreshold = 60; // Galaxy Ultra25: 큰 화면용 조정 // 최소 스와이프 거리
                 const diffX = touchEndX - touchStartX;
                 const diffY = Math.abs(e.changedTouches[0].clientY - touchStartY);
                 
@@ -14723,7 +15216,7 @@ class QuizPlayModal extends Modal {
         contentEl.empty();
 
         // 모바일 여부 확인 (showQuestion 시작 시 한 번만 정의)
-        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
 
         if (!this.questions || this.questions.length === 0) {
             contentEl.createEl('h2', { text: '❌ 오류: 문제가 없습니다' });
@@ -14754,7 +15247,7 @@ class QuizPlayModal extends Modal {
                 return;
             }
             
-            const swipeThreshold = 50; // 최소 스와이프 거리 (픽셀)
+            const swipeThreshold = 60; // Galaxy Ultra25: 큰 화면용 조정 // 최소 스와이프 거리 (픽셀)
             const diffX = touchEndX - touchStartX;
             
             if (Math.abs(diffX) > swipeThreshold) {
@@ -14847,7 +15340,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button ribbon-button'
         });
         ribbonBtn.title = '메뉴';
-        ribbonBtn.style.fontSize = isMobile ? '14px' : '20px';
+        ribbonBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         ribbonBtn.onclick = (e) => {
             const menu = new Menu();
             
@@ -14965,6 +15458,22 @@ class QuizPlayModal extends Modal {
                                 this.stopTimer();
                                 this.isPaused = true;
                                 new AudioListManagementModal(this.app, this.plugin, this).open();
+                            });
+                            break;
+                            
+                        case 'note-settings':
+                            item.onClick(() => {
+                                this.stopTimer();
+                                this.isPaused = true;
+                                new NoteSettingsModal(this.app, this.plugin).open();
+                            });
+                            break;
+                            
+                        case 'view-note':
+                            item.onClick(() => {
+                                this.stopTimer();
+                                this.isPaused = true;
+                                this.openNoteModal(question);
                             });
                             break;
                             
@@ -15328,6 +15837,13 @@ class QuizPlayModal extends Modal {
                             });
                             break;
                             
+                        case 'recording':
+                            item.onClick(() => {
+                                // 녹음 기능 토글
+                                this.toggleRecording(question);
+                            });
+                            break;
+                            
                         case 'delete':
                             item.onClick(async () => {
                                 const confirmModal = new Modal(this.app);
@@ -15449,6 +15965,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button record-button'
         });
         recordBtn.title = '기록 관리';
+        recordBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         recordBtn.onclick = () => {
             this.stopTimer();
             new QuizDetailRecordModal(this.app, this.plugin, { 
@@ -15467,7 +15984,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button hint-edit-button'
         });
         hintEditBtn.title = '힌트 편집';
-        hintEditBtn.style.cssText = 'font-size: 18px;';
+        hintEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         hintEditBtn.onclick = () => {
             this.stopTimer();
             this.isPaused = true;
@@ -15624,7 +16141,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button note-edit-button'
         });
         noteEditBtn.title = '노트 편집';
-        noteEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '18px'};`;
+        noteEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         noteEditBtn.onclick = () => {
             this.stopTimer();
             this.isPaused = true;
@@ -15806,54 +16323,27 @@ class QuizPlayModal extends Modal {
             cls: 'control-button folder-button'
         });
         folderBtn.title = '폴더 관리';
+        folderBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         folderBtn.addEventListener('click', () => {
             this.stopTimer();
             this.close();
             new FolderManagementModal(this.app, this.plugin).open();
         });
         
-        // 삭제 버튼 추가
-        const deleteBtn = controlBar.createEl('button', {
-            text: '🗑️',
-            cls: 'control-button delete-button'
+        // 삭제 버튼은 리본메뉴로 이동됨 (중복 제거)
+        
+        // 노트보기 버튼 추가
+        const noteViewBtn = controlBar.createEl('button', {
+            text: '📖',
+            cls: 'control-button note-view-button'
         });
-        deleteBtn.title = '문제 삭제';
-        
-        const handleDelete = async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const confirmDelete = confirm(`"${question.hanzi}" 문제를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`);
-            if (confirmDelete) {
-                this.stopTimer();
-                try {
-                    await this.plugin.deleteQuestion(question);
-                    new Notice('✅ 문제가 삭제되었습니다');
-                    
-                    // 문제 목록에서 제거
-                    this.questions.splice(this.currentIndex, 1);
-                    
-                    // 모든 문제가 삭제되면 대시보드로
-                    if (this.questions.length === 0) {
-                        this.close();
-                        new DashboardModal(this.app, this.plugin).open();
-                        return;
-                    }
-                    
-                    // 인덱스 조정
-                    if (this.currentIndex >= this.questions.length) {
-                        this.currentIndex = this.questions.length - 1;
-                    }
-                    
-                    this.showQuestion();
-                } catch (error) {
-                    new Notice('❌ 삭제 실패: ' + error.message);
-                }
-            }
-        };
-        
-        deleteBtn.addEventListener('click', handleDelete);
-        deleteBtn.addEventListener('touchend', handleDelete);
+        noteViewBtn.title = '노트보기';
+        noteViewBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
+        noteViewBtn.addEventListener('click', () => {
+            this.stopTimer();
+            this.isPaused = true;
+            this.openNoteModal(question);
+        });
         
         // 편집 버튼 추가
         const editBtn = controlBar.createEl('button', {
@@ -15861,6 +16351,7 @@ class QuizPlayModal extends Modal {
             cls: 'control-button edit-button'
         });
         editBtn.title = '문제 편집';
+        editBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
         editBtn.addEventListener('click', () => {
             this.stopTimer();
             this.isPaused = true;
@@ -15951,28 +16442,6 @@ class QuizPlayModal extends Modal {
             
             optionModal.open();
         });
-        
-        // 문제 번호와 점수 표시
-        const progress = header.createDiv({ cls: 'quiz-progress' });
-        progress.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: ${isMobile ? '4px 8px' : '8px 12px'};
-            background: var(--background-secondary);
-            border-radius: 6px;
-            margin: ${isMobile ? '4px 0' : '8px 0'};
-            font-size: ${isMobile ? '12px' : '14px'};
-        `;
-        
-        const progressLabel = progress.createDiv({ cls: 'progress-label' });
-        const difficultyIcon = this.plugin.getDifficultyIcon(question.difficulty || 'C');
-        const difficultyGrade = question.difficulty || 'C';
-        progressLabel.setText(`${difficultyIcon} ${question.number || (this.currentIndex + 1)}번`);
-        progressLabel.style.cssText = 'font-weight: 600; color: var(--text-normal);';
-        
-        const progressInfo = progress.createDiv({ cls: 'progress-info' });
-        progressInfo.innerHTML = `<span style="color: var(--text-muted);">${this.currentIndex + 1}/${this.questions.length}</span> <span style="color: var(--interactive-accent); font-weight: 600; margin-left: 8px;">${this.score}점</span>`;
 
         // 타이머 (두껍고 화려하게, 초 표시 포함)
         if (this.plugin.settings.enableTimer) {
@@ -15990,7 +16459,7 @@ class QuizPlayModal extends Modal {
         const scrollableContent = contentEl.createDiv({ cls: 'quiz-scrollable-content' });
         scrollableContent.style.cssText = `
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             overflow-x: hidden;
             padding: 0 10px;
             margin-bottom: 10px;
@@ -16327,173 +16796,25 @@ class QuizPlayModal extends Modal {
             }
         }
 
-        // 녹음 컨트롤 (문제 위에 배치)
-        const audioControlContainer = scrollableContent.createDiv({ cls: 'audio-control-container' });
-        audioControlContainer.style.cssText = `
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: var(--background-secondary);
-            border-radius: 8px;
-            margin-bottom: 15px;
-        `;
-
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let audioBlob = null;
-
-        const updateAudioControls = () => {
-            audioControlContainer.empty();
-
-            const hasAudio = question.audio && question.audio.trim();
-
-            if (hasAudio) {
-                // 재생 버튼
-                const playBtn = audioControlContainer.createEl('button', { text: '▶ 재생' });
-                playBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                playBtn.onclick = () => {
-                    try {
-                        const audio = new Audio(question.audio);
-                        audio.play();
-                        new Notice('🔊 음성 재생 중...');
-                    } catch (error) {
-                        new Notice('❌ 음성 재생 실패: ' + error.message);
-                    }
-                };
-
-                // 삭제 버튼
-                const deleteAudioBtn = audioControlContainer.createEl('button', { text: '🗑️ 삭제' });
-                deleteAudioBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                deleteAudioBtn.onclick = async () => {
-                    if (confirm('음성 녹음을 삭제하시겠습니까?')) {
-                        question.audio = '';
-                        await this.plugin.saveQuestion(question);
-                        new Notice('✅ 음성이 삭제되었습니다');
-                        updateAudioControls();
-                    }
-                };
-
-                // 재녹음 버튼
-                const reRecordBtn = audioControlContainer.createEl('button', { text: '🎤 재녹음' });
-                reRecordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-normal); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                reRecordBtn.onclick = async () => {
-                    startRecording();
-                };
-            } else {
-                // 녹음 시작 버튼
-                const recordBtn = audioControlContainer.createEl('button', { text: '🎤 녹음하기' });
-                recordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                recordBtn.onclick = async () => {
-                    startRecording();
-                };
-            }
-        };
-
-        const startRecording = async () => {
-            try {
-                // 마이크 권한 확인
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    new Notice('❌ 이 브라우저는 녹음을 지원하지 않습니다.');
-                    return;
-                }
-                
-                // 권한 요청 안내
-                new Notice('🎤 마이크 권한을 허용해주세요...');
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        question.audio = reader.result; // base64 데이터
-                        await this.plugin.saveQuestion(question);
-                        new Notice('✅ 녹음이 저장되었습니다');
-                        updateAudioControls();
-                    };
-                    reader.readAsDataURL(audioBlob);
-                    
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                mediaRecorder.start();
-                new Notice('🎤 녹음 중... (중지 버튼을 누르세요)');
-
-                // 녹음 중 UI 업데이트
-                audioControlContainer.empty();
-                const recordingText = audioControlContainer.createEl('span', { text: '🔴 녹음 중...' });
-                recordingText.style.cssText = `color: red; font-weight: bold; font-size: 14px;`;
-
-                const stopBtn = audioControlContainer.createEl('button', { text: '⏹ 중지' });
-                stopBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-left: 10px; min-height: 44px;`;
-                stopBtn.onclick = () => {
-                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                        mediaRecorder.stop();
-                    }
-                };
-            } catch (error) {
-                console.error('Recording error:', error);
-                
-                let errorMessage = '❌ 녹음 실패: ';
-                
-                if (error.name === 'NotAllowedError') {
-                    errorMessage = '❌ 마이크 권한이 거부되었습니다.\n\n';
-                    
-                    if (this.app.isMobile) {
-                        // 모바일
-                        errorMessage += '📱 안드로이드:\n';
-                        errorMessage += '설정 → 앱 → Obsidian → 권한 → 마이크 허용\n\n';
-                        errorMessage += '📱 iOS:\n';
-                        errorMessage += '설정 → Obsidian → 마이크 허용';
-                    } else {
-                        // 데스크톱 브라우저
-                        errorMessage += '🖥️ 브라우저 설정에서 마이크 권한을 허용해주세요:\n';
-                        errorMessage += '주소창 왼쪽의 자물쇠 아이콘 클릭 → 마이크 허용';
-                    }
-                } else if (error.name === 'NotFoundError') {
-                    errorMessage = '❌ 마이크를 찾을 수 없습니다.\n마이크가 연결되어 있는지 확인하세요.';
-                } else if (error.name === 'NotReadableError') {
-                    errorMessage = '❌ 마이크를 사용할 수 없습니다.\n다른 앱에서 마이크를 사용 중인지 확인하세요.';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                new Notice(errorMessage, 10000);
-                
-                // 녹음 버튼 복원
-                updateAudioControls();
-            }
-        };
-
-        updateAudioControls();
-
         // 문제 (클릭하면 힌트 토글)
         const questionText = scrollableContent.createDiv({ cls: 'question-text' });
         questionText.style.cssText = `
             text-align: center;
-            padding: ${isMobile ? '20px 12px' : '40px 20px'};
+            padding: ${isMobile ? '10px 12px' : '16px 20px'};
             background: var(--background-primary);
             border-radius: 12px;
             margin-bottom: ${isMobile ? '16px' : '24px'};
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         `;
         
-        // 한자 표시 - Anki 스타일로 크고 명확하게
+        // 한자 표시 - 축소하여 선택지 공간 확보
         if (question.hanzi) {
             const hanziEl = questionText.createEl('div', { 
                 text: question.hanzi,
                 cls: 'hanzi-display'
             });
-            const hanziFontSize = isMobile ? '48px' : '72px';
-            const hanziMargin = isMobile ? '10px' : '20px';
+            const hanziFontSize = isMobile ? '36px' : '56px';
+            const hanziMargin = isMobile ? '6px' : '12px';
             hanziEl.style.cssText = `
                 font-size: ${hanziFontSize};
                 font-weight: 700;
@@ -16505,7 +16826,7 @@ class QuizPlayModal extends Modal {
         }
         
         const questionHeading = questionText.createEl('h3', { text: question.question });
-        const questionFontSize = isMobile ? '16px' : '20px';
+        const questionFontSize = isMobile ? '14px' : '17px';
         questionHeading.style.cssText = `
             font-size: ${questionFontSize};
             font-weight: 500;
@@ -16943,445 +17264,11 @@ class QuizPlayModal extends Modal {
             });
         }
 
-        // 노트 컨테이너 (선택지 바로 위에 배치)
-        let noteEl = null;
-        if ((question.note && question.note.trim()) || (question.noteImage && question.noteImage.trim())) {
-            noteEl = scrollableContent.createDiv({ cls: 'note-container' });
-            noteEl.style.cssText = `
-                position: relative;
-                z-index: 999;
-                background: linear-gradient(135deg, rgba(100, 149, 237, 0.15), rgba(138, 43, 226, 0.15));
-                padding: ${isMobile ? '10px' : '16px'};
-                margin: ${isMobile ? '10px 0' : '15px 0'};
-                border-radius: 10px;
-                border: 2px solid rgba(138, 43, 226, 0.4);
-                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
-                max-width: 100%;
-            `;
+        // 노트는 리본메뉴와 상단 아이콘으로 이동됨 (UI 간소화)
 
-            // 노트 헤더 (제목 + 토글 버튼)
-            const noteHeader = noteEl.createDiv();
-            noteHeader.style.cssText = `
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-                cursor: pointer;
-                user-select: none;
-            `;
+        // 노트는 리본메뉴와 상단 아이콘으로 이동됨 (UI 간소화)
 
-            const noteTitle = noteHeader.createEl('span', { text: '📝 학습 노트' });
-            noteTitle.style.cssText = `
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--text-accent);
-                background: linear-gradient(135deg, #6495ED, #8A2BE2);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-            `;
-
-            const noteToggleBtn = noteHeader.createEl('button', { text: '▼' });
-            noteToggleBtn.type = 'button';
-            noteToggleBtn.style.cssText = `
-                padding: 6px 12px;
-                background: rgba(138, 43, 226, 0.3);
-                color: var(--text-normal);
-                border: 1px solid rgba(138, 43, 226, 0.5);
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                touch-action: manipulation;
-                user-select: none;
-                -webkit-tap-highlight-color: transparent;
-            `;
-
-            // 노트 내용 컨테이너
-            const noteContent = noteEl.createDiv({ cls: 'note-content-wrapper' });
-            noteContent.style.cssText = `
-                display: block;
-                overflow: hidden;
-                transition: max-height 0.3s ease, opacity 0.3s ease;
-                max-height: 1000px;
-                opacity: 1;
-            `;
-
-            // 노트 텍스트
-            if (question.note && question.note.trim()) {
-                const noteTextContainer = noteContent.createDiv({ cls: 'note-text-container' });
-                noteTextContainer.style.cssText = `
-                    padding: 12px;
-                    background: rgba(255, 255, 255, 0.08);
-                    border-radius: 8px;
-                    margin-bottom: 10px;
-                    border-left: 4px solid rgba(138, 43, 226, 0.6);
-                `;
-
-                const noteLines = question.note.split('\n');
-                
-                // 이미지 URL 수집
-                const allNoteTextImages = [];
-                for (const line of noteLines) {
-                    const trimmedLine = line.trim();
-                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
-                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            if (imageFile) {
-                                allNoteTextImages.push(this.app.vault.adapter.getResourcePath(imagePath));
-                            }
-                        }
-                    }
-                }
-
-                // 노트 텍스트 및 이미지 렌더링
-                let noteTextImageIndex = 0;
-                for (const line of noteLines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine) continue;
-                    
-                    // 이미지 체크
-                    if (trimmedLine.includes('![[') && trimmedLine.includes(']]')) {
-                        const wikiMatch = trimmedLine.match(/!\[\[(.+?)\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            
-                            if (imageFile) {
-                                const imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                                const currentIndex = noteTextImageIndex;
-                                const img = noteTextContainer.createEl('img', {
-                                    attr: {
-                                        src: imageUrl,
-                                        style: 'max-width: 400px; width: 100%; height: auto; border-radius: 6px; cursor: zoom-in; margin: 10px 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);'
-                                    }
-                                });
-                                img.addEventListener('click', () => {
-                                    this.showImageZoom(imageUrl, '노트 이미지', allNoteTextImages, currentIndex);
-                                });
-                                noteTextImageIndex++;
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    // 일반 텍스트
-                    const noteLine = noteTextContainer.createEl('p', { 
-                        text: trimmedLine,
-                        cls: 'note-text-line'
-                    });
-                    noteLine.style.cssText = `
-                        font-size: 14.5px;
-                        line-height: 1.7;
-                        color: var(--text-normal);
-                        margin: 6px 0;
-                        white-space: pre-line;
-                    `;
-                }
-            }
-
-            // 노트 이미지 (다중 이미지 + 페이지 넘김)
-            if (question.noteImage && question.noteImage.trim()) {
-                const noteImgContainer = noteContent.createDiv({ cls: 'note-image-container' });
-                noteImgContainer.style.cssText = 'margin-top: 12px; display: flex; flex-direction: column; gap: 10px;';
-                
-                const noteImageLines = question.noteImage.split('\n').filter(line => line.trim());
-                const totalImages = noteImageLines.length;
-                let currentImageIndex = 0;
-
-                const imageDisplayArea = noteImgContainer.createDiv();
-                imageDisplayArea.style.cssText = 'min-height: 150px; display: flex; align-items: center; justify-content: center;';
-
-                if (totalImages > 1) {
-                    const navControls = noteImgContainer.createDiv();
-                    navControls.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 10px;';
-
-                    const prevBtn = navControls.createEl('button', { text: '◀' });
-                    prevBtn.type = 'button';
-                    prevBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    const pageInfo = navControls.createEl('span', { text: `${currentImageIndex + 1} / ${totalImages}` });
-                    pageInfo.style.cssText = 'min-width: 60px; text-align: center; font-weight: 700; font-size: 14px; color: var(--text-accent);';
-
-                    const nextBtn = navControls.createEl('button', { text: '▶' });
-                    nextBtn.type = 'button';
-                    nextBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(138, 43, 226, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    const zoomBtn = navControls.createEl('button', { text: '🔍' });
-                    zoomBtn.type = 'button';
-                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-
-                    [prevBtn, nextBtn, zoomBtn].forEach(btn => {
-                        btn.addEventListener('touchstart', () => { btn.style.opacity = '0.7'; });
-                        btn.addEventListener('touchend', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
-                        btn.addEventListener('touchcancel', () => { btn.style.opacity = btn.disabled ? '0.5' : '1'; });
-                    });
-
-                    const showImage = (index) => {
-                        if (index < 0 || index >= totalImages) return;
-                        
-                        currentImageIndex = index;
-                        imageDisplayArea.empty();
-
-                        const imageLine = noteImageLines[index].trim();
-                        let imageUrl = imageLine;
-
-                        if (imageUrl.includes('%')) {
-                            try {
-                                imageUrl = decodeURIComponent(imageUrl);
-                            } catch (e) {
-                                console.warn('URL 디코딩 실패:', imageUrl);
-                            }
-                        }
-
-                        let imageWidth = null;
-                        const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
-                        if (sizeMatch) {
-                            imageWidth = sizeMatch[1] + 'px';
-                        }
-
-                        if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
-                            const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                            if (wikiMatch && wikiMatch[1]) {
-                                let imagePath = wikiMatch[1];
-                                const folderName = question.folder || 'default';
-                                const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                                const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                                
-                                if (imagePath.startsWith(folderName + '/')) {
-                                    imagePath = `${quizFolder}/${imagePath}`;
-                                } else if (!imagePath.startsWith(quizFolder)) {
-                                    if (!imagePath.includes('/')) {
-                                        imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                    }
-                                }
-                                
-                                const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                                if (imageFile) {
-                                    imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                                }
-                            }
-                        }
-
-                        const allImageUrls = noteImageLines.map(line => {
-                            let url = line.trim();
-                            if (url.includes('[[') && url.includes(']]')) {
-                                const wikiMatch = url.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                                if (wikiMatch && wikiMatch[1]) {
-                                    let imagePath = wikiMatch[1];
-                                    const folderName = question.folder || 'default';
-                                    const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                                    const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                                    
-                                    if (imagePath.startsWith(folderName + '/')) {
-                                        imagePath = `${quizFolder}/${imagePath}`;
-                                    } else if (!imagePath.startsWith(quizFolder)) {
-                                        if (!imagePath.includes('/')) {
-                                            imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                        }
-                                    }
-                                    
-                                    const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                                    if (imageFile) {
-                                        return this.app.vault.adapter.getResourcePath(imagePath);
-                                    }
-                                }
-                            }
-                            return url;
-                        });
-
-                        const img = imageDisplayArea.createEl('img', {
-                            attr: {
-                                src: imageUrl,
-                                style: `max-width: 100%; width: ${imageWidth || 'auto'}; max-height: 200px; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
-                            }
-                        });
-                        
-                        img.addEventListener('click', () => {
-                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
-                        });
-                        
-                        img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
-                        img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
-                        
-                        img.onerror = () => {
-                            imageDisplayArea.empty();
-                            imageDisplayArea.createEl('p', {
-                                text: '⚠️ 이미지 로드 실패',
-                                attr: { style: 'color: var(--text-muted); padding: 20px; text-align: center;' }
-                            });
-                        };
-
-                        zoomBtn.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, currentImageIndex);
-                        };
-
-                        pageInfo.textContent = `${currentImageIndex + 1} / ${totalImages}`;
-                        prevBtn.disabled = currentImageIndex === 0;
-                        nextBtn.disabled = currentImageIndex === totalImages - 1;
-                        
-                        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
-                        prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
-                        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
-                        nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
-                    };
-
-                    prevBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showImage(currentImageIndex - 1);
-                    };
-                    nextBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showImage(currentImageIndex + 1);
-                    };
-
-                    showImage(0);
-                } else {
-                    // 1개 이미지일 때
-                    const imageLine = noteImageLines[0].trim();
-                    let imageUrl = imageLine;
-
-                    if (imageUrl.includes('%')) {
-                        try {
-                            imageUrl = decodeURIComponent(imageUrl);
-                        } catch (e) {
-                            console.warn('URL 디코딩 실패:', imageUrl);
-                        }
-                    }
-
-                    let imageWidth = null;
-                    const sizeMatch = imageLine.match(/\|(\d+)\]\]/);
-                    if (sizeMatch) {
-                        imageWidth = sizeMatch[1] + 'px';
-                    }
-
-                    if (imageUrl.includes('[[') && imageUrl.includes(']]')) {
-                        const wikiMatch = imageUrl.match(/\[\[(.+?)(\|\d+)?\]\]/);
-                        if (wikiMatch && wikiMatch[1]) {
-                            let imagePath = wikiMatch[1];
-                            const folderName = question.folder || 'default';
-                            const attachmentFolderName = this.plugin.settings.attachmentFolderName || '첨부파일';
-                            const quizFolder = this.plugin.settings.quizFolder || 'HanziQuiz/Questions';
-                            
-                            if (imagePath.startsWith(folderName + '/')) {
-                                imagePath = `${quizFolder}/${imagePath}`;
-                            } else if (!imagePath.startsWith(quizFolder)) {
-                                if (!imagePath.includes('/')) {
-                                    imagePath = `${quizFolder}/${folderName}/${attachmentFolderName}/${imagePath}`;
-                                }
-                            }
-                            
-                            const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                            if (imageFile) {
-                                imageUrl = this.app.vault.adapter.getResourcePath(imagePath);
-                            }
-                        }
-                    }
-
-                    const allImageUrls = [imageUrl];
-                    const img = imageDisplayArea.createEl('img', {
-                        attr: {
-                            src: imageUrl,
-                            style: `max-width: 100%; width: ${imageWidth || '400px'}; height: auto; border-radius: 8px; cursor: zoom-in; transition: transform 0.2s; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);`
-                        }
-                    });
-                    
-                    img.addEventListener('click', () => {
-                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
-                    });
-                    
-                    img.addEventListener('mouseenter', () => { img.style.transform = 'scale(1.05)'; });
-                    img.addEventListener('mouseleave', () => { img.style.transform = 'scale(1)'; });
-                    
-                    img.onerror = () => {
-                        imageDisplayArea.empty();
-                        imageDisplayArea.createEl('p', {
-                            text: '⚠️ 이미지 로드 실패',
-                            attr: { style: 'color: var(--text-muted); padding: 10px;' }
-                        });
-                    };
-
-                    const zoomBtnContainer = imageDisplayArea.createDiv();
-                    zoomBtnContainer.style.cssText = 'display: flex; justify-content: center; margin-top: 10px;';
-                    
-                    const zoomBtn = zoomBtnContainer.createEl('button', { text: '🔍 확대' });
-                    zoomBtn.type = 'button';
-                    zoomBtn.style.cssText = 'padding: 8px 16px; cursor: pointer; background: rgba(100, 149, 237, 0.7); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;';
-                    
-                    zoomBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.showImageZoom(imageUrl, '노트 이미지', allImageUrls, 0);
-                    };
-
-                    zoomBtn.addEventListener('touchstart', () => { zoomBtn.style.opacity = '0.7'; });
-                    zoomBtn.addEventListener('touchend', () => { zoomBtn.style.opacity = '1'; });
-                    zoomBtn.addEventListener('touchcancel', () => { zoomBtn.style.opacity = '1'; });
-                }
-            }
-
-            // 토글 기능
-            let isNoteExpanded = true;
-            const toggleNote = () => {
-                isNoteExpanded = !isNoteExpanded;
-                
-                if (isNoteExpanded) {
-                    noteContent.style.maxHeight = '1000px';
-                    noteContent.style.opacity = '1';
-                    noteToggleBtn.setText('▼');
-                } else {
-                    noteContent.style.maxHeight = '0';
-                    noteContent.style.opacity = '0';
-                    noteToggleBtn.setText('▶');
-                }
-            };
-
-            noteHeader.addEventListener('click', toggleNote);
-            noteToggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleNote();
-            });
-
-            // 터치 피드백
-            noteToggleBtn.addEventListener('touchstart', () => { noteToggleBtn.style.opacity = '0.7'; });
-            noteToggleBtn.addEventListener('touchend', () => { noteToggleBtn.style.opacity = '1'; });
-            noteToggleBtn.addEventListener('touchcancel', () => { noteToggleBtn.style.opacity = '1'; });
-        }
-
-        // 선택지
+        // ===== 3. 선택지 =====
         const optionsContainer = scrollableContent.createDiv({ cls: 'options-container' });
         optionsContainer.style.cssText = `
             display: flex;
@@ -17410,7 +17297,7 @@ class QuizPlayModal extends Modal {
             // 인라인 스타일로 크기 강제 적용 - Anki 스타일
             optionBtn.style.cssText = `
                 padding: ${isMobile ? '12px 16px 12px 42px' : '18px 20px 18px 50px'};
-                font-size: ${isMobile ? '15px' : '17px'};
+                font-size: ${isMobile ? '16px' : '17px'};
                 font-weight: 400;
                 text-align: left;
                 border-radius: 8px;
@@ -17804,7 +17691,7 @@ class QuizPlayModal extends Modal {
             });
         });
 
-        // 북마크 체크박스 추가
+        // ===== 4. 북마크 체크박스 (노트는 위에서 이미 생성됨) =====
         const bookmarkContainer = scrollableContent.createDiv({ cls: 'bookmark-container' });
         bookmarkContainer.style.cssText = `
             display: flex;
@@ -17917,13 +17804,388 @@ class QuizPlayModal extends Modal {
             bookmarkContainer.style.boxShadow = 'none';
         });
 
-        // 컨트롤 버튼들 (이전/일시정지/다음) - 북마크 아래에 배치
+        // 위치 표시 UI 추가
+        const positionContainer = scrollableContent.createDiv({ cls: 'position-container' });
+        positionContainer.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: ${isMobile ? '12px' : '10px'};
+            padding: ${isMobile ? '16px 20px' : '12px 20px'};
+            background: var(--background-secondary);
+            border-radius: 8px;
+            margin: ${isMobile ? '0 12px 16px 12px' : '0 20px 16px 20px'};
+            border: 1px solid var(--background-modifier-border);
+            transition: all 0.2s;
+        `;
+
+        const positionLabel = positionContainer.createEl('label');
+        positionLabel.style.cssText = `
+            font-weight: 600;
+            font-size: ${isMobile ? '16px' : '15px'};
+            user-select: none;
+            flex: 1;
+            touch-action: manipulation;
+        `;
+        positionLabel.textContent = '📍 위치';
+
+        const positionBadge = positionContainer.createEl('span');
+        positionBadge.style.cssText = `
+            background: var(--interactive-accent);
+            color: var(--text-on-accent);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+        `;
+        positionBadge.textContent = `${this.currentIndex + 1} / ${this.questions.length}`;
+
+        // 호버 효과
+        positionContainer.addEventListener('mouseenter', () => {
+            positionContainer.style.borderColor = 'var(--interactive-accent)';
+            positionContainer.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        });
+        positionContainer.addEventListener('mouseleave', () => {
+            positionContainer.style.borderColor = 'var(--background-modifier-border)';
+            positionContainer.style.boxShadow = 'none';
+        });
+
+        // ===== Anki 스타일 진행 상태 영역 (펼치기/접기) =====
+        const ankiProgressContainer = scrollableContent.createDiv({ cls: 'anki-progress-section' });
+        ankiProgressContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            padding: ${isMobile ? '12px' : '16px'};
+            margin: ${isMobile ? '0 12px 16px 12px' : '0 20px 16px 20px'};
+            background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary) 100%);
+            border-radius: 12px;
+            border: 2px solid var(--background-modifier-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        `;
+
+        // 펼침/접힘 상태
+        let isStatsExpanded = false;
+
+        // 헤더 (항상 표시 - 클릭 가능)
+        const statsHeader = ankiProgressContainer.createDiv();
+        statsHeader.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        `;
+
+        const difficultyIcon = this.plugin.getDifficultyIcon(question.difficulty || 'C');
+        const headerLeft = statsHeader.createDiv();
+        headerLeft.innerHTML = `
+            <span style="font-size: ${isMobile ? '16px' : '18px'}; font-weight: 700; color: var(--text-normal);">
+                ${difficultyIcon} 문제 ${question.number || (this.currentIndex + 1)}
+            </span>
+        `;
+
+        const headerRight = statsHeader.createDiv();
+        headerRight.style.cssText = 'display: flex; align-items: center; gap: 12px;';
+        
+        const scoreDisplay = headerRight.createDiv();
+        scoreDisplay.innerHTML = `
+            <span style="font-size: ${isMobile ? '18px' : '20px'}; font-weight: 800; color: var(--interactive-accent);">
+                ${this.score}점
+            </span>
+        `;
+
+        const toggleIcon = headerRight.createDiv();
+        toggleIcon.innerHTML = '▼';
+        toggleIcon.style.cssText = `
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        `;
+
+        // 상세 통계 영역 (기본 접힘)
+        const statsContent = ankiProgressContainer.createDiv();
+        statsContent.style.cssText = `
+            display: none;
+            flex-direction: column;
+            gap: ${isMobile ? '8px' : '12px'};
+            margin-top: 12px;
+        `;
+
+        // 1. 진행바 (Anki 스타일)
+        const progressBarContainer = statsContent.createDiv();
+        progressBarContainer.style.cssText = `
+            width: 100%;
+            height: ${isMobile ? '24px' : '28px'};
+            background: var(--background-primary);
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--background-modifier-border);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        `;
+        
+        const progressPercentage = ((this.currentIndex + 1) / this.questions.length) * 100;
+        const progressBar = progressBarContainer.createDiv();
+        progressBar.style.cssText = `
+            width: ${progressPercentage}%;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #45a049 50%, #66BB6A 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        `;
+        
+        const progressText = progressBarContainer.createDiv();
+        progressText.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: ${progressPercentage > 50 ? 'white' : 'var(--text-normal)'};
+            font-weight: 700;
+            font-size: ${isMobile ? '13px' : '14px'};
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            pointer-events: none;
+        `;
+        progressText.textContent = `${this.currentIndex + 1} / ${this.questions.length}`;
+
+        // 2. 통계 (정답/오답)
+        const statsRow = statsContent.createDiv();
+        statsRow.style.cssText = `
+            display: flex;
+            justify-content: space-around;
+            gap: ${isMobile ? '8px' : '12px'};
+            margin: 4px 0;
+        `;
+        
+        const correctStat = statsRow.createDiv();
+        correctStat.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '8px' : '10px'};
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.05) 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            text-align: center;
+        `;
+        correctStat.innerHTML = `
+            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">정답</div>
+            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #4CAF50;">✓ ${this.correctCount}</div>
+        `;
+        
+        const incorrectStat = statsRow.createDiv();
+        incorrectStat.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '8px' : '10px'};
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.05) 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(244, 67, 54, 0.3);
+            text-align: center;
+        `;
+        incorrectStat.innerHTML = `
+            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">오답</div>
+            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #F44336;">✗ ${this.incorrectCount}</div>
+        `;
+        
+        const accuracyStat = statsRow.createDiv();
+        accuracyStat.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '8px' : '10px'};
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.05) 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(33, 150, 243, 0.3);
+            text-align: center;
+        `;
+        const accuracy = this.correctCount + this.incorrectCount > 0 
+            ? Math.round((this.correctCount / (this.correctCount + this.incorrectCount)) * 100)
+            : 0;
+        accuracyStat.innerHTML = `
+            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">정답률</div>
+            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #2196F3;">📊 ${accuracy}%</div>
+        `;
+
+        // 3. 녹음 컨트롤 (접을 수 있는 영역 안에)
+        const audioControlContainer = statsContent.createDiv({ cls: 'audio-control-container' });
+        audioControlContainer.style.cssText = `
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+            border-radius: 8px;
+            margin-top: 0px;
+        `;
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioBlob = null;
+
+        const updateAudioControls = () => {
+            audioControlContainer.empty();
+
+            const hasAudio = question.audio && question.audio.trim();
+
+            if (hasAudio) {
+                // 재생 버튼
+                const playBtn = audioControlContainer.createEl('button', { text: '▶ 재생' });
+                playBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
+                playBtn.onclick = () => {
+                    try {
+                        const audio = new Audio(question.audio);
+                        audio.play();
+                        new Notice('🔊 음성 재생 중...');
+                    } catch (error) {
+                        new Notice('❌ 음성 재생 실패: ' + error.message);
+                    }
+                };
+
+                // 삭제 버튼
+                const deleteAudioBtn = audioControlContainer.createEl('button', { text: '🗑️ 삭제' });
+                deleteAudioBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
+                deleteAudioBtn.onclick = async () => {
+                    if (confirm('음성 녹음을 삭제하시겠습니까?')) {
+                        question.audio = '';
+                        await this.plugin.saveQuestion(question);
+                        new Notice('✅ 음성이 삭제되었습니다');
+                        updateAudioControls();
+                    }
+                };
+
+                // 재녹음 버튼
+                const reRecordBtn = audioControlContainer.createEl('button', { text: '🎤 재녹음' });
+                reRecordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-normal); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
+                reRecordBtn.onclick = async () => {
+                    startRecording();
+                };
+            } else {
+                // 녹음 시작 버튼
+                const recordBtn = audioControlContainer.createEl('button', { text: '🎤 녹음하기' });
+                recordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
+                recordBtn.onclick = async () => {
+                    startRecording();
+                };
+            }
+        };
+
+        const startRecording = async () => {
+            try {
+                // 마이크 권한 확인
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    new Notice('❌ 이 브라우저는 녹음을 지원하지 않습니다.');
+                    return;
+                }
+                
+                // 권한 요청 안내
+                new Notice('🎤 마이크 권한을 허용해주세요...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        question.audio = reader.result; // base64 데이터
+                        await this.plugin.saveQuestion(question);
+                        new Notice('✅ 녹음이 저장되었습니다');
+                        updateAudioControls();
+                    };
+                    reader.readAsDataURL(audioBlob);
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                new Notice('🎤 녹음 중... (중지 버튼을 누르세요)');
+
+                // 녹음 중 UI 업데이트
+                audioControlContainer.empty();
+                const recordingText = audioControlContainer.createEl('span', { text: '🔴 녹음 중...' });
+                recordingText.style.cssText = `color: red; font-weight: bold; font-size: 14px;`;
+
+                const stopBtn = audioControlContainer.createEl('button', { text: '⏹ 중지' });
+                stopBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-left: 10px; min-height: 44px;`;
+                stopBtn.onclick = () => {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                };
+            } catch (error) {
+                console.error('Recording error:', error);
+                
+                let errorMessage = '❌ 녹음 실패: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = '❌ 마이크 권한이 거부되었습니다.\n\n';
+                    
+                    if (this.app.isMobile) {
+                        // 모바일
+                        errorMessage += '📱 안드로이드:\n';
+                        errorMessage += '설정 → 앱 → Obsidian → 권한 → 마이크 허용\n\n';
+                        errorMessage += '📱 iOS:\n';
+                        errorMessage += '설정 → Obsidian → 마이크 허용';
+                    } else {
+                        // 데스크톱 브라우저
+                        errorMessage += '💻 데스크톱:\n';
+                        errorMessage += '브라우저 주소창 옆 자물쇠 아이콘 클릭\n';
+                        errorMessage += '→ 마이크 허용으로 변경';
+                    }
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += '마이크를 찾을 수 없습니다.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                new Notice(errorMessage, 10000);
+            }
+        };
+
+        // 초기 녹음 UI 표시
+        updateAudioControls();
+
+        // 펼치기/접기 토글 기능
+        ankiProgressContainer.addEventListener('click', (e) => {
+            // 버튼 클릭은 무시
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+            
+            isStatsExpanded = !isStatsExpanded;
+            
+            if (isStatsExpanded) {
+                statsContent.style.display = 'flex';
+                toggleIcon.style.transform = 'rotate(180deg)';
+                ankiProgressContainer.style.borderColor = 'var(--interactive-accent)';
+            } else {
+                statsContent.style.display = 'none';
+                toggleIcon.style.transform = 'rotate(0deg)';
+                ankiProgressContainer.style.borderColor = 'var(--background-modifier-border)';
+            }
+        });
+
+        // 호버 효과
+        ankiProgressContainer.addEventListener('mouseenter', () => {
+            if (!isStatsExpanded) {
+                ankiProgressContainer.style.borderColor = 'var(--text-muted)';
+            }
+        });
+        ankiProgressContainer.addEventListener('mouseleave', () => {
+            if (!isStatsExpanded) {
+                ankiProgressContainer.style.borderColor = 'var(--background-modifier-border)';
+            }
+        });
+
+        // ===== 1. 네비게이션 버튼들 (이전/일시정지/다음) - 맨 위 배치 =====
         const navControlsContainer = scrollableContent.createDiv({ cls: 'nav-controls-container' });
         navControlsContainer.style.cssText = `
             display: flex;
             justify-content: center;
             gap: ${isMobile ? '10px' : '12px'};
-            padding: ${isMobile ? '12px 12px' : '16px 20px'};
+            padding: ${isMobile ? '12px' : '16px'};
             margin: ${isMobile ? '0 12px 16px 12px' : '0 20px 16px 20px'};
             background: var(--background-secondary);
             border-radius: 8px;
@@ -18985,7 +19247,7 @@ class QuizPlayModal extends Modal {
             border: 2px solid var(--interactive-accent);
             border-radius: 12px;
             max-height: 300px;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
         `;
         
         const logHeaderContainer = logSection.createDiv();
@@ -19373,7 +19635,7 @@ class QuizPlayModal extends Modal {
             .quiz-results {
                 padding: 20px;
                 max-height: 100%;
-                overflow-y: auto;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
             }
             
             .score-card {
@@ -20282,7 +20544,7 @@ class QuizPlayModal extends Modal {
             border: 2px solid var(--interactive-accent);
             border-radius: 12px;
             max-height: 300px;
-            overflow-y: auto;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
         `;
         
         const logHeaderContainer = logSection.createDiv();
@@ -20520,7 +20782,7 @@ class QuizPlayModal extends Modal {
                 width: 100%;
                 margin: 0 auto;
                 max-height: 90vh;
-                overflow-y: auto;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
                 overflow-x: hidden;
                 box-sizing: border-box;
             }
@@ -20788,7 +21050,7 @@ class QuizPlayModal extends Modal {
                 line-height: 1.6;
                 color: var(--text-normal);
                 max-height: 300px;
-                overflow-y: auto;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
                 overflow-x: hidden;
                 /* 스크롤바 스타일 */
                 scrollbar-width: thin;
@@ -23208,7 +23470,7 @@ class QuizDetailRecordModal extends Modal {
                 padding: 0;
                 max-width: 900px;
                 max-height: 90vh;
-                overflow-y: auto;
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
             }
 
             .detail-header {
@@ -25865,7 +26127,7 @@ class QuizNoteEditModal extends Modal {
             });
 
             const handleSwipe = () => {
-                const swipeThreshold = 50;
+                const swipeThreshold = 60; // Galaxy Ultra25: 큰 화면용 조정
                 if (touchStartX - touchEndX > swipeThreshold) {
                     // 왼쪽 스와이프 - 다음 이미지
                     currentIndex = (currentIndex + 1) % imageLinks.length;
@@ -26072,7 +26334,7 @@ class QuizNoteEditModal extends Modal {
             });
 
             const handleSwipe = () => {
-                const swipeThreshold = 50;
+                const swipeThreshold = 60; // Galaxy Ultra25: 큰 화면용 조정
                 if (touchStartX - touchEndX > swipeThreshold) {
                     // 왼쪽 스와이프 - 다음 이미지
                     currentIndex = (currentIndex + 1) % fileArray.length;
@@ -26266,4 +26528,180 @@ class ChecklistTemplateModal extends Modal {
 }
 
 // Obsidian 플러그인 메인 export
+
+
+// S펜 필기 입력 모달
+class HandwritingModal extends Modal {
+    constructor(app, onSubmit) {
+        super(app);
+        this.onSubmit = onSubmit;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('handwriting-modal');
+
+        // 모바일 감지
+        const isMobile = this.app.isMobile || window.innerWidth <= 1024;
+
+        // 제목
+        const title = contentEl.createEl('h2', { text: '✏️ S펜으로 입력하기' });
+        title.style.cssText = 'margin-bottom: 15px; font-size: ' + (isMobile ? '1.3em' : '1.5em');
+
+        // 안내 메시지
+        const guide = contentEl.createDiv();
+        guide.style.cssText = 'margin-bottom: 15px; padding: 12px; background: var(--background-secondary); border-radius: 8px;';
+        guide.innerHTML = `
+            <div style="font-size: 0.95em; color: var(--text-muted);">
+                📝 S펜으로 한자를 그려주세요<br>
+                💡 삼성 키보드 필기 모드를 사용하세요
+            </div>
+        `;
+
+        // 캔버스 영역 (향후 확장용)
+        const canvasContainer = contentEl.createDiv();
+        canvasContainer.style.cssText = `
+            width: 100%;
+            height: ${isMobile ? '300px' : '400px'};
+            background: white;
+            border: 2px solid var(--background-modifier-border);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            position: relative;
+            touch-action: none;
+        `;
+
+        // 안내 텍스트
+        const placeholder = canvasContainer.createDiv();
+        placeholder.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ccc;
+            pointer-events: none;
+        `;
+        placeholder.innerHTML = `
+            <div style="font-size: 3em;">✍️</div>
+            <div style="font-size: 1.2em; margin-top: 10px;">S펜으로 그려주세요</div>
+            <div style="font-size: 0.9em; margin-top: 5px; color: #999;">
+                또는 아래 입력창에 키보드 필기 모드 사용
+            </div>
+        `;
+
+        // 텍스트 입력창 (키보드 필기 입력용)
+        const inputLabel = contentEl.createEl('div', { 
+            text: '🖊️ 또는 여기에 키보드 필기 모드로 입력:' 
+        });
+        inputLabel.style.cssText = 'margin-bottom: 10px; font-weight: bold;';
+
+        const textInput = contentEl.createEl('input', {
+            type: 'text',
+            placeholder: 'S펜 버튼 더블클릭 → 필기 모드'
+        });
+        textInput.style.cssText = `
+            width: 100%;
+            padding: ${isMobile ? '14px' : '12px'};
+            font-size: ${isMobile ? '18px' : '16px'};
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            min-height: ${isMobile ? '48px' : '40px'};
+        `;
+
+        // S펜 입력 가이드
+        const spenGuide = contentEl.createDiv();
+        spenGuide.style.cssText = `
+            padding: 12px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        `;
+        spenGuide.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 8px;">💡 S펜 필기 입력 방법:</div>
+            <div style="font-size: 0.9em; line-height: 1.6;">
+                1️⃣ 입력창 터치<br>
+                2️⃣ 키보드 좌측 상단 ✏️ 아이콘 터치<br>
+                3️⃣ S펜으로 한자 그리기<br>
+                4️⃣ 인식된 후보 선택
+            </div>
+        `;
+
+        // 버튼 컨테이너
+        const btnContainer = contentEl.createDiv();
+        btnContainer.style.cssText = 'display: flex; gap: 10px;';
+
+        // 확인 버튼
+        const submitBtn = btnContainer.createEl('button', { text: '✅ 확인' });
+        submitBtn.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '14px' : '12px'};
+            background: var(--interactive-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: ${isMobile ? '48px' : '44px'};
+            touch-action: manipulation;
+        `;
+
+        const handleSubmit = () => {
+            const text = textInput.value.trim();
+            if (text) {
+                this.onSubmit(text);
+                this.close();
+            } else {
+                new Notice('❌ 텍스트를 입력해주세요');
+            }
+        };
+
+        submitBtn.onclick = handleSubmit;
+        submitBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleSubmit();
+        });
+
+        // 취소 버튼
+        const cancelBtn = btnContainer.createEl('button', { text: '❌ 취소' });
+        cancelBtn.style.cssText = `
+            flex: 1;
+            padding: ${isMobile ? '14px' : '12px'};
+            background: var(--background-modifier-border);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            min-height: ${isMobile ? '48px' : '44px'};
+            touch-action: manipulation;
+        `;
+        
+        cancelBtn.onclick = () => this.close();
+        cancelBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.close();
+        });
+
+        // Enter 키로 제출
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+
+        // 자동 포커스
+        setTimeout(() => textInput.focus(), 100);
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+
 module.exports = HanziQuizPlugin;

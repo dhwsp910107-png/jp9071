@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "ef73a870128b82f4",
+        "id": "e61b415e448258d1",
         "type": "tabs",
         "children": [
           {
-            "id": "5977fbe14e2f2ed2",
+            "id": "4eb3d66318ccb879",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "93c7fa5f95f7460d",
+            "id": "75c6ea8aea7b1cb1",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -195,13 +195,13 @@
       }
     ],
     "direction": "horizontal",
-    "width": 802.5
+    "width": 823.5
   },
   "left-ribbon": {
     "hiddenItems": {
-      "obsidian-git:Open Git source control": false,
       "quiz-sp:한자 퀴즈 대시보드": false,
       "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false,
+      "obsidian-git:Open Git source control": false,
       "switcher:빠른 전환기 열기": true,
       "graph:그래프 뷰 열기": true,
       "canvas:새 캔버스 만들기": true,
@@ -211,8 +211,18 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "a99f2da069fdd6f6",
+  "active": "4eb3d66318ccb879",
   "lastOpenFiles": [
+    "README_THEME.md",
+    "⚡ 테마 빠른 시작.md",
+    "setup_anki_theme.py",
+    "🎨 테마 설정 가이드.md",
+    "⚡ 빠른 설정 가이드.md",
+    "spen_handwriting_integration.py",
+    "🖊️ S펜 활용 가이드.md",
+    "mobile_optimization_config.json",
+    "📱 모바일 최적화 가이드.md",
+    "mobile_optimization_galaxy_ultra25.py",
     "📚 Quiz 플러그인 사용 가이드.md",
     "HanziQuiz/⭐ 북마크/400번대/문제목록.md",
     "HanziQuiz/⭐ 북마크/400번대",
@@ -245,20 +255,10 @@
     "HanziQuiz/Questions/400번대/3_400번대.md",
     "HanziQuiz/Questions/400번대/2_400번대.md",
     "HanziQuiz/400번대/첨부파일",
-    "HanziQuiz/400번대",
     "HanziQuiz/Questions/400번대/문제목록.md",
     "HanziQuiz/Questions/400번대/1_400번대.md",
-    "HanziQuiz/Questions/400번대",
     "HanziQuiz/⭐ 북마크/100번대/문제목록.md",
-    "HanziQuiz/⭐ 북마크/100번대",
-    "HanziQuiz/001번대-b/첨부파일",
     "HanziQuiz/Questions/001번대-b/문제목록.md",
-    "HanziQuiz/Questions/001번대-b/1_001번대b.md",
-    "HanziQuiz/001번대-b.md",
-    "HanziQuiz/Questions/001번대-b/10_001번대.md",
-    "HanziQuiz/Questions/001번대-b/2_001번대.md",
-    "HanziQuiz/Questions/001번대-b/3_001번대.md",
-    "HanziQuiz/Questions/001번대-b/4_001번대.md",
     "무제 1.canvas",
     "무제.canvas"
   ]
