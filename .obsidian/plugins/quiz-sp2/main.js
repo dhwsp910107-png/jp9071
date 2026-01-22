@@ -149,6 +149,20 @@ const DEFAULT_SETTINGS = {
             icon: 'chart-bar',
             action: 'quiz-stats',
             enabled: true
+        },
+        {
+            id: 'refresh',
+            title: '🔄 최신화',
+            icon: 'refresh-cw',
+            action: 'refresh',
+            enabled: true
+        },
+        {
+            id: 'settings-menu',
+            title: '⚙️ 설정',
+            icon: 'settings',
+            action: 'settings-menu',
+            enabled: true
         }
     ]
 };
@@ -2120,17 +2134,44 @@ ${question.audio || ''}
             // Vault 경로 가져오기
             const vaultPath = this.app.vault.adapter.basePath;
             
+            // Git 상태 확인
+            const statusResult = await execPromise('git status --porcelain', { cwd: vaultPath });
+            if (!statusResult.stdout || statusResult.stdout.trim() === '') {
+                console.log('⚠️ Git: 변경사항 없음, 커밋 생략');
+                return; // 변경사항 없으면 조용히 종료
+            }
+            
             // Git add (targetFilePath가 있으면 특정 파일, 없으면 전체)
             const addCommand = targetFilePath ? `git add "${targetFilePath}"` : 'git add .';
             await execPromise(addCommand, { cwd: vaultPath });
             console.log(`✅ Git add 완료: ${targetFilePath || '전체 변경사항'}`);
             
-            // Git commit
-            await execPromise(`git commit -m "${message}"`, { cwd: vaultPath });
-            console.log(`✅ Git commit 완료`);
+            // Git commit (변경사항이 있을 때만)
+            try {
+                await execPromise(`git commit -m "${message}"`, { cwd: vaultPath });
+                console.log(`✅ Git commit 완료`);
+            } catch (commitError) {
+                // 커밋할 것이 없거나 Git 설정 문제
+                if (commitError.message.includes('nothing to commit') || 
+                    commitError.message.includes('working tree clean')) {
+                    console.log('⚠️ Git: 커밋할 변경사항 없음');
+                    return;
+                } else if (commitError.message.includes('user.name') || 
+                           commitError.message.includes('user.email')) {
+                    console.warn('⚠️ Git 사용자 설정 필요: git config user.name/user.email');
+                    new Notice('⚠️ Git 설정 필요: 터미널에서 git config user.name/user.email 설정하세요', 6000);
+                    return;
+                }
+                throw commitError; // 다른 오류는 상위로 전파
+            }
             
-            // Git push (백그라운드)
-            execPromise(`git push`, { cwd: vaultPath })
+            // Git pull & push (백그라운드)
+            execPromise(`git pull --rebase`, { cwd: vaultPath })
+                .then(() => {
+                    console.log(`✅ Git pull 완료`);
+                    // Pull 성공 후 push
+                    return execPromise(`git push`, { cwd: vaultPath });
+                })
                 .then(() => {
                     console.log(`✅ Git push 완료`);
                     const noticeMsg = question && question.hanzi ? `📤 Git 업로드 완료: ${question.hanzi}` : '📤 Git 업로드 완료';
@@ -2140,7 +2181,12 @@ ${question.audio || ''}
                     console.warn(`⚠️ Git push 실패:`, pushError.message);
                     // push 실패는 조용히 처리 (원격 저장소 미설정 등)
                     if (!pushError.message.includes('No configured push destination')) {
-                        new Notice(`⚠️ Git push 실패: ${pushError.message}`, 5000);
+                        // Pull & Push 실패 시 충돌 가능성 안내
+                        if (pushError.message.includes('rejected') || pushError.message.includes('fetch first')) {
+                            new Notice(`⚠️ Git 동기화 필요: 수동으로 'git pull' 실행 후 다시 시도하세요`, 6000);
+                        } else {
+                            new Notice(`⚠️ Git 동기화 실패: ${pushError.message.substring(0, 100)}`, 5000);
+                        }
                     }
                 });
             
@@ -16091,6 +16137,62 @@ class QuizPlayModal extends Modal {
                                 };
                                 
                                 statsModal.open();
+                            });
+                            break;
+                            
+                        case 'refresh':
+                            item.onClick(async () => {
+                                this.stopTimer();
+                                this.isPaused = true;
+                                
+                                new Notice('🔄 문제 최신화 중...');
+                                
+                                try {
+                                    // 현재 문제 저장
+                                    const currentFilePath = this.questions[this.currentIndex]?.filePath;
+                                    const currentIndex = this.currentIndex;
+                                    
+                                    // 문제 목록 다시 로드
+                                    await this.plugin.loadAllQuestions();
+                                    
+                                    // 필터 설정에 따라 문제 목록 재구성
+                                    if (this.mode === 'wrong') {
+                                        this.questions = await this.plugin.getWrongAnswers();
+                                    } else if (this.mode === 'bookmark') {
+                                        this.questions = await this.plugin.getBookmarkedQuestions();
+                                    } else if (this.mode === 'folder' && this.filterFolder) {
+                                        this.questions = this.plugin.allQuestions.filter(q => q.folder === this.filterFolder);
+                                    } else if (this.filterDifficulty) {
+                                        this.questions = this.plugin.allQuestions.filter(q => q.difficulty === this.filterDifficulty);
+                                    } else {
+                                        this.questions = [...this.plugin.allQuestions];
+                                    }
+                                    
+                                    // 문제 섬기 설정 적용
+                                    if (this.plugin.settings.shuffleQuestions) {
+                                        this.questions = this.shuffleArray(this.questions);
+                                    }
+                                    
+                                    // 현재 문제 위치 찾기
+                                    if (currentFilePath) {
+                                        const newIndex = this.questions.findIndex(q => q.filePath === currentFilePath);
+                                        if (newIndex !== -1) {
+                                            this.currentIndex = newIndex;
+                                        } else {
+                                            this.currentIndex = Math.min(currentIndex, this.questions.length - 1);
+                                        }
+                                    }
+                                    
+                                    // 화면 새로고침
+                                    await this.showQuestion();
+                                    
+                                    new Notice('✅ 최신화 완료!', 2000);
+                                } catch (error) {
+                                    console.error('최신화 오류:', error);
+                                    new Notice('⚠️ 최신화 실패', 3000);
+                                }
+                                
+                                this.isPaused = false;
                             });
                             break;
                             

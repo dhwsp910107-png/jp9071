@@ -195,7 +195,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 823.5
+    "width": 1289.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -211,7 +211,7 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "4eb3d66318ccb879",
+  "active": "7121ac70cb3cee22",
   "lastOpenFiles": [
     "README_THEME.md",
     "⚡ 테마 빠른 시작.md",
