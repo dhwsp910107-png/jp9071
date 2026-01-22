@@ -283,12 +283,12 @@
   ],
   "enableMobileOptimization": false,
   "stats": {
-    "totalAttempts": 365,
+    "totalAttempts": 366,
     "totalCorrect": 28,
-    "totalWrong": 337,
+    "totalWrong": 338,
     "totalQuestions": 0,
     "bookmarkedCount": 1,
-    "lastStudyDate": "2026-01-22T16:50:42.303Z",
+    "lastStudyDate": "2026-01-22T18:14:45.213Z",
     "studyHistory": [
       {
         "date": "2026. 1. 20.",
@@ -311,8 +311,8 @@
       {
         "date": "2026. 1. 23.",
         "correct": 2,
-        "wrong": 15,
-        "timestamp": 1769100642303
+        "wrong": 16,
+        "timestamp": 1769105685213
       }
     ]
   },

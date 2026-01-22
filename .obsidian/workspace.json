@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "ed00329212816dce",
+            "id": "c80b75970a06869e",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -181,7 +181,7 @@
             }
           },
           {
-            "id": "17272f211429ba97",
+            "id": "b4beeedfd0c579e4",
             "type": "leaf",
             "state": {
               "type": "quiz-sp2-dashboard-view",
@@ -211,7 +211,7 @@
       "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false
     }
   },
-  "active": "17272f211429ba97",
+  "active": "b4beeedfd0c579e4",
   "lastOpenFiles": [
     "README_THEME.md",
     "⚡ 테마 빠른 시작.md",
