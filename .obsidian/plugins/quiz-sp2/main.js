@@ -2165,28 +2165,60 @@ ${question.audio || ''}
                 throw commitError; // 다른 오류는 상위로 전파
             }
             
-            // Git pull & push (백그라운드)
-            execPromise(`git pull --rebase`, { cwd: vaultPath })
+            // Git pull & push (백그라운드) - 알림 중복 방지
+            let hasNotified = false; // 알림 중복 방지 플래그
+            
+            // 먼저 fetch로 원격 변경사항 확인
+            execPromise(`git fetch origin`, { cwd: vaultPath })
                 .then(() => {
+                    console.log(`✅ Git fetch 완료`);
+                    // Fetch 후 pull (충돌 시 자동 병합)
+                    return execPromise(`git pull --no-rebase origin main`, { cwd: vaultPath });
+                })
+                .catch((fetchError) => {
+                    // Fetch 실패해도 pull 시도
+                    console.warn('⚠️ Git fetch 실패, pull 시도:', fetchError.message);
+                    return execPromise(`git pull --no-rebase`, { cwd: vaultPath });
+                })
+                .then((pullResult) => {
                     console.log(`✅ Git pull 완료`);
                     // Pull 성공 후 push
-                    return execPromise(`git push`, { cwd: vaultPath });
+                    return execPromise(`git push origin main`, { cwd: vaultPath });
                 })
                 .then(() => {
                     console.log(`✅ Git push 완료`);
-                    const noticeMsg = question && question.hanzi ? `📤 Git 업로드 완료: ${question.hanzi}` : '📤 Git 업로드 완료';
-                    new Notice(noticeMsg);
+                    // Push 성공 시에만 알림
+                    if (!hasNotified) {
+                        hasNotified = true;
+                        const noticeMsg = question && question.hanzi ? `📤 Git 업로드: ${question.hanzi}` : '📤 Git 업로드 완료';
+                        new Notice(noticeMsg, 2000);
+                    }
                 })
-                .catch((pushError) => {
-                    console.warn(`⚠️ Git push 실패:`, pushError.message);
-                    // push 실패는 조용히 처리 (원격 저장소 미설정 등)
-                    if (!pushError.message.includes('No configured push destination')) {
-                        // Pull & Push 실패 시 충돌 가능성 안내
-                        if (pushError.message.includes('rejected') || pushError.message.includes('fetch first')) {
-                            new Notice(`⚠️ Git 동기화 필요: 수동으로 'git pull' 실행 후 다시 시도하세요`, 6000);
-                        } else {
-                            new Notice(`⚠️ Git 동기화 실패: ${pushError.message.substring(0, 100)}`, 5000);
-                        }
+                .catch((error) => {
+                    // 오류 발생 시 한 번만 알림
+                    if (hasNotified) return;
+                    hasNotified = true;
+                    
+                    console.warn(`⚠️ Git 동기화 실패:`, error.message);
+                    
+                    // 오류 유형에 따라 처리
+                    if (error.message.includes('No configured push destination')) {
+                        // 원격 저장소 미설정 - 조용히 무시
+                        console.log('ℹ️ Git 원격 저장소 미설정');
+                    } else if (error.message.includes('rejected') || error.message.includes('fetch first')) {
+                        // 충돌 - 콘솔에만 기록 (알림 안 띄움)
+                        console.warn('⚠️ Git 충돌: 수동 동기화 필요 (터미널에서 git pull 실행)');
+                    } else if (error.message.includes('CONFLICT')) {
+                        // 병합 충돌
+                        console.error('❌ Git 병합 충돌 발생: 수동으로 해결 필요');
+                    } else if (error.message.includes('Could not resolve host') || 
+                               error.message.includes('network') ||
+                               error.message.includes('Connection')) {
+                        // 네트워크 오류 - 조용히 무시
+                        console.warn('ℹ️ Git 네트워크 오류 (인터넷 연결 확인)');
+                    } else {
+                        // 기타 오류 - 콘솔에만 기록
+                        console.error('❌ Git 오류:', error.message.substring(0, 200));
                     }
                 });
             
@@ -16196,6 +16228,176 @@ class QuizPlayModal extends Modal {
                             });
                             break;
                             
+                        case 'settings-menu':
+                            item.onClick(() => {
+                                this.stopTimer();
+                                this.isPaused = true;
+                                
+                                const settingsModal = new Modal(this.app);
+                                settingsModal.titleEl.setText('⚙️ 퀴즈 설정');
+                                
+                                const { contentEl: modalContent } = settingsModal;
+                                modalContent.style.padding = '20px';
+                                modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+                                modalContent.style.maxWidth = '600px';
+                                
+                                // 설정 그리드
+                                const settingsGrid = modalContent.createDiv();
+                                settingsGrid.style.cssText = `
+                                    display: grid;
+                                    grid-template-columns: repeat(${isMobile ? '2' : '3'}, 1fr);
+                                    gap: 12px;
+                                    margin-bottom: 20px;
+                                `;
+                                
+                                const createSettingCard = (icon, title, action) => {
+                                    const card = settingsGrid.createDiv();
+                                    card.style.cssText = `
+                                        padding: 16px;
+                                        background: var(--background-secondary);
+                                        border: 2px solid var(--background-modifier-border);
+                                        border-radius: 8px;
+                                        text-align: center;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        min-height: 100px;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                    `;
+                                    
+                                    card.createEl('div', { text: icon }).style.cssText = 'font-size: 32px; margin-bottom: 8px;';
+                                    card.createEl('div', { text: title }).style.cssText = 'font-size: 13px; font-weight: 600;';
+                                    
+                                    card.addEventListener('mouseenter', () => {
+                                        card.style.borderColor = 'var(--interactive-accent)';
+                                        card.style.background = 'var(--background-modifier-hover)';
+                                        card.style.transform = 'scale(1.02)';
+                                    });
+                                    card.addEventListener('mouseleave', () => {
+                                        card.style.borderColor = 'var(--background-modifier-border)';
+                                        card.style.background = 'var(--background-secondary)';
+                                        card.style.transform = 'scale(1)';
+                                    });
+                                    
+                                    card.onclick = () => {
+                                        settingsModal.close();
+                                        action();
+                                    };
+                                };
+                                
+                                // 난이도 설정
+                                createSettingCard('🎯', '난이도 설정', () => {
+                                    new DifficultyModal(this.app, this.plugin, (difficulty) => {
+                                        this.filterDifficulty = difficulty;
+                                        this.showQuestion();
+                                    }).open();
+                                });
+                                
+                                // 타이머 설정
+                                createSettingCard('⏱️', '타이머 설정', () => {
+                                    new TimerSettingsModal(this.app, this.plugin).open();
+                                });
+                                
+                                // 북마크 관리
+                                createSettingCard('⭐', '북마크 관리', () => {
+                                    new BookmarkManagementModal(this.app, this.plugin).open();
+                                });
+                                
+                                // 녹음 관리
+                                createSettingCard('🎤', '녹음 관리', () => {
+                                    new RecordingManagementModal(this.app, this.plugin, question).open();
+                                });
+                                
+                                // 음성파일 관리
+                                createSettingCard('🎵', '음성파일', () => {
+                                    new AudioListManagementModal(this.app, this.plugin, this).open();
+                                });
+                                
+                                // 노트 설정
+                                createSettingCard('📝', '노트설정', () => {
+                                    new NoteSettingsModal(this.app, this.plugin).open();
+                                });
+                                
+                                // 기록 관리
+                                createSettingCard('📊', '기록 관리', () => {
+                                    new RecordManagementModal(this.app, this.plugin).open();
+                                });
+                                
+                                // 선택지 북마크 관리
+                                createSettingCard('⭐💬', '선택지 북마크', () => {
+                                    new OptionBookmarkManagementModal(this.app, this.plugin).open();
+                                });
+                                
+                                // 최신화
+                                createSettingCard('🔄', '최신화', async () => {
+                                    settingsModal.close();
+                                    this.isPaused = false;
+                                    // 최신화 로직 실행
+                                    new Notice('🔄 문제 최신화 중...');
+                                    try {
+                                        const currentFilePath = this.questions[this.currentIndex]?.filePath;
+                                        const currentIndex = this.currentIndex;
+                                        await this.plugin.loadAllQuestions();
+                                        
+                                        if (this.mode === 'wrong') {
+                                            this.questions = await this.plugin.getWrongAnswers();
+                                        } else if (this.mode === 'bookmark') {
+                                            this.questions = await this.plugin.getBookmarkedQuestions();
+                                        } else if (this.mode === 'folder' && this.filterFolder) {
+                                            this.questions = this.plugin.allQuestions.filter(q => q.folder === this.filterFolder);
+                                        } else if (this.filterDifficulty) {
+                                            this.questions = this.plugin.allQuestions.filter(q => q.difficulty === this.filterDifficulty);
+                                        } else {
+                                            this.questions = [...this.plugin.allQuestions];
+                                        }
+                                        
+                                        if (this.plugin.settings.shuffleQuestions) {
+                                            this.questions = this.shuffleArray(this.questions);
+                                        }
+                                        
+                                        if (currentFilePath) {
+                                            const newIndex = this.questions.findIndex(q => q.filePath === currentFilePath);
+                                            if (newIndex !== -1) {
+                                                this.currentIndex = newIndex;
+                                            } else {
+                                                this.currentIndex = Math.min(currentIndex, Math.max(0, this.questions.length - 1));
+                                            }
+                                        }
+                                        
+                                        await this.showQuestion();
+                                        new Notice('✅ 최신화 완료!', 2000);
+                                    } catch (error) {
+                                        console.error('최신화 오류:', error);
+                                        new Notice('⚠️ 최신화 실패', 3000);
+                                    }
+                                });
+                                
+                                // 닫기 버튼
+                                const closeBtn = modalContent.createEl('button', { text: '닫기' });
+                                closeBtn.style.cssText = `
+                                    width: 100%;
+                                    padding: 12px;
+                                    background: var(--interactive-normal);
+                                    border: 1px solid var(--background-modifier-border);
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                    font-weight: 600;
+                                `;
+                                closeBtn.onclick = () => {
+                                    settingsModal.close();
+                                    this.isPaused = false;
+                                };
+                                
+                                settingsModal.onClose = () => {
+                                    this.isPaused = false;
+                                };
+                                
+                                settingsModal.open();
+                            });
+                            break;
+                            
                         case 'delete':
                             item.onClick(async () => {
                                 const confirmModal = new Modal(this.app);
@@ -16494,6 +16696,20 @@ class QuizPlayModal extends Modal {
         });
         noteEditBtn.title = '노트 편집';
         noteEditBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
+        
+        // TTS 읽기 버튼 추가
+        const ttsBtn = controlBar.createEl('button', {
+            text: '🔊',
+            cls: 'control-button tts-button'
+        });
+        ttsBtn.title = 'TTS 읽기';
+        ttsBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
+        ttsBtn.onclick = () => {
+            const textToRead = question.hanzi + '. ' + question.question;
+            this.plugin.speakText(textToRead);
+            new Notice('🔊 TTS 읽기 시작');
+        };
+        
         noteEditBtn.onclick = () => {
             this.stopTimer();
             this.isPaused = true;
@@ -27277,6 +27493,274 @@ class HandwritingModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+    }
+}
+
+// ⭐💬 선택지 북마크 관리 모달
+class OptionBookmarkManagementModal extends Modal {
+    constructor(app, plugin) {
+        super(app);
+        this.plugin = plugin;
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.style.padding = '20px';
+        
+        this.titleEl.setText('⭐💬 선택지 북마크 관리');
+        
+        // 설명
+        contentEl.createEl('p', {
+            text: '선택지별로 북마크된 내용을 폴더별로 확인할 수 있습니다.',
+        }).style.cssText = 'margin-bottom: 20px; color: var(--text-muted); font-size: 14px;';
+        
+        // 선택지 북마크 수집
+        const optionBookmarks = await this.collectOptionBookmarks();
+        
+        if (optionBookmarks.length === 0) {
+            contentEl.createEl('div', {
+                text: '📝 북마크된 선택지가 없습니다.',
+            }).style.cssText = 'text-align: center; padding: 40px; color: var(--text-muted);';
+            
+            const closeBtn = contentEl.createEl('button', { text: '닫기' });
+            closeBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 20px; background: var(--interactive-normal); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer;';
+            closeBtn.onclick = () => this.close();
+            return;
+        }
+        
+        // 폴더별로 그룹화
+        const folderGroups = {};
+        optionBookmarks.forEach(item => {
+            if (!folderGroups[item.folder]) {
+                folderGroups[item.folder] = [];
+            }
+            folderGroups[item.folder].push(item);
+        });
+        
+        // 폴더별 리스트 표시
+        for (const [folderName, items] of Object.entries(folderGroups)) {
+            const folderSection = contentEl.createDiv();
+            folderSection.style.cssText = 'margin-bottom: 24px; padding: 16px; background: var(--background-secondary); border-radius: 8px;';
+            
+            const folderHeader = folderSection.createEl('h3', {
+                text: `⭐ ${folderName} (${items.length}개)`,
+            });
+            folderHeader.style.cssText = 'margin-bottom: 12px; color: var(--text-accent); font-size: 16px;';
+            
+            items.forEach((item, idx) => {
+                const itemDiv = folderSection.createDiv();
+                itemDiv.style.cssText = `
+                    padding: 12px;
+                    margin-bottom: 8px;
+                    background: var(--background-primary);
+                    border-left: 4px solid var(--interactive-accent);
+                    border-radius: 4px;
+                `;
+                
+                itemDiv.createEl('div', {
+                    text: `문제: ${item.question}`,
+                }).style.cssText = 'font-weight: 600; margin-bottom: 6px; color: var(--text-normal);';
+                
+                itemDiv.createEl('div', {
+                    text: `선택지 ${item.optionIndex + 1}: ${item.optionText}`,
+                }).style.cssText = 'font-size: 13px; color: var(--text-muted); margin-bottom: 4px;';
+                
+                if (item.optionHint) {
+                    itemDiv.createEl('div', {
+                        text: `💬 힌트: ${item.optionHint}`,
+                    }).style.cssText = 'font-size: 12px; color: var(--text-faint); font-style: italic;';
+                }
+            });
+        }
+        
+        // 닫기 버튼
+        const closeBtn = contentEl.createEl('button', { text: '닫기' });
+        closeBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 20px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+        closeBtn.onclick = () => this.close();
+    }
+    
+    async collectOptionBookmarks() {
+        const bookmarks = [];
+        
+        for (const question of this.plugin.allQuestions) {
+            if (question.optionBookmarkFolders && question.optionBookmarkFolders.length > 0) {
+                question.optionBookmarkFolders.forEach((folder, idx) => {
+                    if (folder && folder.trim()) {
+                        bookmarks.push({
+                            question: question.question,
+                            hanzi: question.hanzi,
+                            optionIndex: idx,
+                            optionText: question.options[idx],
+                            optionHint: question.optionHints ? question.optionHints[idx] : '',
+                            folder: folder,
+                            questionNumber: question.number,
+                        });
+                    }
+                });
+            }
+        }
+        
+        return bookmarks;
+    }
+}
+
+// 🎤 녹음 관리 모달
+class RecordingManagementModal extends Modal {
+    constructor(app, plugin, question) {
+        super(app);
+        this.plugin = plugin;
+        this.question = question;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+    }
+
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.style.padding = '20px';
+        
+        this.titleEl.setText('🎤 녹음 관리');
+        
+        const isMobile = this.app.isMobile || window.innerWidth <= 768;
+        
+        // 현재 문제 정보
+        const questionInfo = contentEl.createDiv();
+        questionInfo.style.cssText = 'padding: 12px; background: var(--background-secondary); border-radius: 8px; margin-bottom: 20px;';
+        questionInfo.createEl('div', {
+            text: `한자: ${this.question.hanzi || '없음'}`,
+        }).style.cssText = 'font-size: 14px; margin-bottom: 4px;';
+        questionInfo.createEl('div', {
+            text: `문제: ${this.question.question}`,
+        }).style.cssText = 'font-size: 13px; color: var(--text-muted);';
+        
+        // 녹음 상태 표시
+        const statusDiv = contentEl.createDiv();
+        statusDiv.style.cssText = 'text-align: center; padding: 20px; margin-bottom: 20px;';
+        
+        const statusText = statusDiv.createEl('div', {
+            text: '🎤 녹음 대기 중',
+        });
+        statusText.style.cssText = 'font-size: 18px; font-weight: 600; margin-bottom: 16px;';
+        
+        // 녹음 컨트롤
+        const controlDiv = contentEl.createDiv();
+        controlDiv.style.cssText = 'display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;';
+        
+        const recordBtn = controlDiv.createEl('button', {
+            text: '⏺️ 녹음 시작',
+        });
+        recordBtn.style.cssText = `
+            padding: 12px 24px;
+            background: var(--background-modifier-error);
+            color: var(--text-on-accent);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            min-height: 48px;
+        `;
+        
+        const stopBtn = controlDiv.createEl('button', {
+            text: '⏹️ 정지',
+        });
+        stopBtn.style.cssText = `
+            padding: 12px 24px;
+            background: var(--background-secondary);
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            min-height: 48px;
+            opacity: 0.5;
+            pointer-events: none;
+        `;
+        
+        recordBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.audioChunks = [];
+                
+                this.mediaRecorder.ondataavailable = (event) => {
+                    this.audioChunks.push(event.data);
+                };
+                
+                this.mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // 오디오 플레이어 표시
+                    const audioPlayer = contentEl.createEl('audio', {
+                        attr: {
+                            controls: true,
+                            src: audioUrl,
+                        },
+                    });
+                    audioPlayer.style.cssText = 'width: 100%; margin-bottom: 20px;';
+                    
+                    // 저장 버튼 표시
+                    const saveBtn = contentEl.createEl('button', {
+                        text: '💾 저장',
+                    });
+                    saveBtn.style.cssText = `
+                        width: 100%;
+                        padding: 12px;
+                        background: var(--interactive-accent);
+                        color: var(--text-on-accent);
+                        border: none;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        margin-bottom: 12px;
+                    `;
+                    saveBtn.onclick = async () => {
+                        const fileName = `recording_${this.question.number}_${Date.now()}.webm`;
+                        const arrayBuffer = await audioBlob.arrayBuffer();
+                        await this.app.vault.createBinary(fileName, arrayBuffer);
+                        new Notice('✅ 녹음 파일 저장됨');
+                        this.close();
+                    };
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                
+                statusText.setText('🔴 녹음 중...');
+                recordBtn.style.opacity = '0.5';
+                recordBtn.style.pointerEvents = 'none';
+                stopBtn.style.opacity = '1';
+                stopBtn.style.pointerEvents = 'auto';
+                
+                new Notice('🎤 녹음 시작');
+            } catch (error) {
+                console.error('녹음 오류:', error);
+                new Notice('⚠️ 녹음 실패: 마이크 권한을 확인하세요');
+            }
+        };
+        
+        stopBtn.onclick = () => {
+            if (this.mediaRecorder && this.isRecording) {
+                this.mediaRecorder.stop();
+                this.isRecording = false;
+                
+                statusText.setText('✅ 녹음 완료');
+                recordBtn.style.opacity = '1';
+                recordBtn.style.pointerEvents = 'auto';
+                stopBtn.style.opacity = '0.5';
+                stopBtn.style.pointerEvents = 'none';
+                
+                new Notice('⏹️ 녹음 정지');
+            }
+        };
+        
+        // 닫기 버튼
+        const closeBtn = contentEl.createEl('button', { text: '닫기' });
+        closeBtn.style.cssText = 'width: 100%; padding: 12px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer;';
+        closeBtn.onclick = () => this.close();
     }
 }
 

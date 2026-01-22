@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "7121ac70cb3cee22",
+            "id": "223709c7dc327847",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -85,7 +85,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 318.5124969482422
+    "width": 318.5124969482422,
+    "collapsed": true
   },
   "right": {
     "id": "2ba02a60ff07df06",
@@ -171,16 +172,6 @@
             }
           },
           {
-            "id": "a99f2da069fdd6f6",
-            "type": "leaf",
-            "state": {
-              "type": "quiz-sp2-dashboard-view",
-              "state": {},
-              "icon": "layout-dashboard",
-              "title": "📊 한자 퀴즈 대시보드"
-            }
-          },
-          {
             "id": "42f7679ef7040faa",
             "type": "leaf",
             "state": {
@@ -189,18 +180,26 @@
               "icon": "git-pull-request",
               "title": "Source Control"
             }
+          },
+          {
+            "id": "17272f211429ba97",
+            "type": "leaf",
+            "state": {
+              "type": "quiz-sp2-dashboard-view",
+              "state": {},
+              "icon": "layout-dashboard",
+              "title": "📊 한자 퀴즈 대시보드"
+            }
           }
         ],
-        "currentTab": 5
+        "currentTab": 6
       }
     ],
     "direction": "horizontal",
-    "width": 1289.5
+    "width": 559.5
   },
   "left-ribbon": {
     "hiddenItems": {
-      "quiz-sp:한자 퀴즈 대시보드": false,
-      "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false,
       "obsidian-git:Open Git source control": false,
       "switcher:빠른 전환기 열기": true,
       "graph:그래프 뷰 열기": true,
@@ -208,10 +207,12 @@
       "daily-notes:오늘의 일일 노트 열기": true,
       "templates:템플릿 삽입": true,
       "command-palette:명령어 팔레트 열기": true,
-      "bases:새 베이스 생성하기": false
+      "bases:새 베이스 생성하기": false,
+      "quiz-sp:한자 퀴즈 대시보드": false,
+      "quiz-sp:한자 퀴즈 통합 대시보드 (우측 고정)": false
     }
   },
-  "active": "7121ac70cb3cee22",
+  "active": "17272f211429ba97",
   "lastOpenFiles": [
     "README_THEME.md",
     "⚡ 테마 빠른 시작.md",
