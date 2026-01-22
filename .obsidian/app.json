@@ -31,5 +31,6 @@
   "autoPairMarkdown": false,
   "uriCallbacks": false,
   "livePreview": true,
-  "autoConvertHtml": true
+  "autoConvertHtml": true,
+  "tabSize": 3
 }
