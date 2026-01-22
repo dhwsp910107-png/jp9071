@@ -71,7 +71,7 @@
             }
           },
           {
-            "id": "f9434400575bf561",
+            "id": "ed00329212816dce",
             "type": "leaf",
             "state": {
               "type": "mk-path-view",
@@ -85,8 +85,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 318.5124969482422,
-    "collapsed": true
+    "width": 318.5124969482422
   },
   "right": {
     "id": "2ba02a60ff07df06",
