@@ -1466,40 +1466,49 @@ ${keywordSections}
         console.log('📁 [loadAllQuestions] Questions 폴더:', this.settings.questionsFolder);
         console.log('📁 [loadAllQuestions] 정규화된 폴더:', normalizedQuestionsFolder);
         
+        // 제외할 파일 패턴 (정규화된 형태로)
+        const excludePatterns = [
+            '문제목록',
+            '문제 대시보드',
+            '📊 문제 대시보드',
+            '통합한자대시보드',
+            '통합대시보드',
+            '📋 한자 문제목록'
+        ].map(p => p.toLowerCase());
+        
         const files = allFiles.filter(file => {
             const normalizedPath = normalizePath(file.path);
+            const normalizedName = file.name.toLowerCase();
             
-            // Questions 폴더 내의 파일인지 확인 (하위 폴더 포함)
-            const inQuestionsFolder = normalizedPath.startsWith(normalizedQuestionsFolder + '/') || 
-                                      normalizedPath === normalizedQuestionsFolder ||
-                                      normalizedPath.includes('/' + normalizedQuestionsFolder + '/');
+            // Questions 폴더 내의 파일인지 확인 (더 유연한 매칭)
+            const inQuestionsFolder = 
+                normalizedPath.startsWith(normalizedQuestionsFolder + '/') || 
+                normalizedPath.startsWith(normalizedQuestionsFolder) ||
+                normalizedPath.includes('/' + normalizedQuestionsFolder + '/') ||
+                normalizedPath.includes('questions/'); // 안드로이드용 추가
             
-            // 제외할 파일 패턴
-            const excludePatterns = [
-                '문제목록',
-                '문제 대시보드',
-                '📊 문제 대시보드',
-                '통합한자대시보드',
-                '통합대시보드'
-            ];
-            
+            // 제외 패턴 체크 (정규화된 형태로)
             const shouldExclude = excludePatterns.some(pattern => 
-                file.path.includes(pattern) || file.name.includes(pattern)
+                normalizedPath.includes(pattern) || normalizedName.includes(pattern)
             );
             
-            if (inQuestionsFolder && !shouldExclude) {
-                console.log('✅ 포함:', normalizedPath);
+            const isIncluded = inQuestionsFolder && !shouldExclude;
+            
+            if (isIncluded) {
+                console.log('✅ 포함:', file.path);
             }
             
-            return inQuestionsFolder && !shouldExclude;
+            return isIncluded;
         });
 
         console.log(`📊 [loadAllQuestions] 필터링된 파일 수: ${files.length}개`);
         
         if (files.length === 0) {
             console.warn(`⚠️ "${this.settings.questionsFolder}" 폴더에서 문제 파일을 찾지 못했습니다.`);
-            console.warn('⚠️ 설정에서 questionsFolder 경로를 확인하세요.');
-            new Notice('⚠️ 문제 파일을 찾을 수 없습니다. 설정을 확인하세요.');
+            console.warn('⚠️ 전체 파일 중 처음 5개:', allFiles.slice(0, 5).map(f => f.path));
+            new Notice(`⚠️ 문제 파일 0개 인식됨! 개발자 콘솔 확인 필요`);
+        } else {
+            new Notice(`✅ 문제 ${files.length}개 로드됨`);
         }
 
         const questions = [];
