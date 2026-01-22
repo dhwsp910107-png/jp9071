@@ -171,6 +171,9 @@ class HanziQuizPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
         
+        // Git mutex 초기화 (동시 실행 방지)
+        this.gitMutex = { locked: false, queue: [] };
+        
         if (!this.settings.stats) {
             this.settings.stats = {
                 totalAttempts: 0,
@@ -2098,6 +2101,17 @@ ${question.audio || ''}
     }
 
     async autoGitCommitAndPush(filePath, question, isNew) {
+        // Git mutex 체크 - 이미 실행 중이면 대기열에 추가
+        if (this.gitMutex.locked) {
+            console.log('⏳ Git 작업 대기 중... (다른 Git 작업 진행 중)');
+            return new Promise((resolve) => {
+                this.gitMutex.queue.push(() => this.autoGitCommitAndPush(filePath, question, isNew).then(resolve));
+            });
+        }
+        
+        // Mutex 잠금
+        this.gitMutex.locked = true;
+        
         try {
             // 비동기로 실행하여 UI 블로킹 방지
             const action = isNew ? '생성' : '수정';
@@ -2225,6 +2239,15 @@ ${question.audio || ''}
         } catch (error) {
             console.error('Git 자동 커밋 오류:', error);
             // Git 오류는 조용히 처리 (사용자 경험 방해하지 않음)
+        } finally {
+            // Mutex 해제
+            this.gitMutex.locked = false;
+            
+            // 대기 중인 작업이 있으면 다음 작업 실행
+            if (this.gitMutex.queue.length > 0) {
+                const nextTask = this.gitMutex.queue.shift();
+                setTimeout(() => nextTask(), 100); // 100ms 대기 후 다음 작업 실행
+            }
         }
     }
 
