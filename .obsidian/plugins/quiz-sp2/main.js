@@ -1448,6 +1448,8 @@ ${keywordSections}
     async loadAllQuestions() {
         const allFiles = this.app.vault.getMarkdownFiles();
         
+        console.log('🔍 [loadAllQuestions] 전체 마크다운 파일 수:', allFiles.length);
+        
         // 경로 정규화 함수 (Windows/Unix/Mobile 호환)
         const normalizePath = (path) => {
             if (!path) return '';
@@ -1457,17 +1459,20 @@ ${keywordSections}
             normalized = normalized.replace(/\/+/g, '/');
             // 시작/끝 슬래시 정리
             normalized = normalized.replace(/^\/+/, '').replace(/\/+$/, '');
-            return normalized;
+            return normalized.toLowerCase(); // 대소문자 구분 없이
         };
         
         const normalizedQuestionsFolder = normalizePath(this.settings.questionsFolder);
+        console.log('📁 [loadAllQuestions] Questions 폴더:', this.settings.questionsFolder);
+        console.log('📁 [loadAllQuestions] 정규화된 폴더:', normalizedQuestionsFolder);
         
         const files = allFiles.filter(file => {
             const normalizedPath = normalizePath(file.path);
             
             // Questions 폴더 내의 파일인지 확인 (하위 폴더 포함)
             const inQuestionsFolder = normalizedPath.startsWith(normalizedQuestionsFolder + '/') || 
-                                      normalizedPath.startsWith(normalizedQuestionsFolder);
+                                      normalizedPath === normalizedQuestionsFolder ||
+                                      normalizedPath.includes('/' + normalizedQuestionsFolder + '/');
             
             // 제외할 파일 패턴
             const excludePatterns = [
@@ -1482,11 +1487,19 @@ ${keywordSections}
                 file.path.includes(pattern) || file.name.includes(pattern)
             );
             
+            if (inQuestionsFolder && !shouldExclude) {
+                console.log('✅ 포함:', normalizedPath);
+            }
+            
             return inQuestionsFolder && !shouldExclude;
         });
 
+        console.log(`📊 [loadAllQuestions] 필터링된 파일 수: ${files.length}개`);
+        
         if (files.length === 0) {
             console.warn(`⚠️ "${this.settings.questionsFolder}" 폴더에서 문제 파일을 찾지 못했습니다.`);
+            console.warn('⚠️ 설정에서 questionsFolder 경로를 확인하세요.');
+            new Notice('⚠️ 문제 파일을 찾을 수 없습니다. 설정을 확인하세요.');
         }
 
         const questions = [];
