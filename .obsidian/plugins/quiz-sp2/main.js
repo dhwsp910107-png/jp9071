@@ -142,6 +142,13 @@ const DEFAULT_SETTINGS = {
             icon: 'microphone',
             action: 'recording',
             enabled: true
+        },
+        {
+            id: 'quiz-stats',
+            title: '📊 퀴즈 통계',
+            icon: 'chart-bar',
+            action: 'quiz-stats',
+            enabled: true
         }
     ]
 };
@@ -1662,6 +1669,28 @@ ${keywordSections}
                                     return trimmed;
                                 });
                             }
+                        } else if (line.includes('선택지 힌트:')) {
+                            // 예: "선택지 힌트: ['힌트1', '', '힌트2', '']"
+                            const match = line.match(/\[(.+?)\]/);
+                            if (match) {
+                                const hintStr = match[1];
+                                // 따옴표로 감싸진 문자열 파싱
+                                question.optionHints = hintStr.split(',').map(s => {
+                                    const trimmed = s.trim();
+                                    // 따옴표 제거
+                                    if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+                                        return trimmed.slice(1, -1);
+                                    }
+                                    return trimmed;
+                                });
+                            }
+                        } else if (line.includes('선택지 숨김:')) {
+                            // 예: "선택지 숨김: [true, false, false, true]"
+                            const match = line.match(/\[(.+?)\]/);
+                            if (match) {
+                                const hiddenStr = match[1];
+                                question.optionHidden = hiddenStr.split(',').map(s => s.trim() === 'true');
+                            }
                         }
                     }
                 }
@@ -1687,6 +1716,26 @@ ${keywordSections}
                     // 길이가 맞지 않으면 조정
                     while (question.optionBookmarkFolders.length < question.options.length) {
                         question.optionBookmarkFolders.push('');
+                    }
+                }
+                
+                // 선택지 힌트 배열 초기화
+                if (!question.optionHints) {
+                    question.optionHints = Array(question.options.length).fill('');
+                } else {
+                    // 길이가 맞지 않으면 조정
+                    while (question.optionHints.length < question.options.length) {
+                        question.optionHints.push('');
+                    }
+                }
+                
+                // 선택지 숨김 배열 초기화
+                if (!question.optionHidden) {
+                    question.optionHidden = Array(question.options.length).fill(false);
+                } else {
+                    // 길이가 맞지 않으면 조정
+                    while (question.optionHidden.length < question.options.length) {
+                        question.optionHidden.push(false);
                     }
                 }
                 
@@ -2025,6 +2074,8 @@ ${question.audio || ''}
 - 북마크 폴더: ${question.bookmarkFolder || ''}
 - 마지막 시도: ${question.lastAttempt || '없음'}
 - 선택지 북마크: ${question.optionBookmarkFolders ? '[' + question.optionBookmarkFolders.map(f => "'" + f + "'").join(', ') + ']' : '[]'}
+- 선택지 힌트: ${question.optionHints ? '[' + question.optionHints.map(h => "'" + (h || '') + "'").join(', ') + ']' : '[]'}
+- 선택지 숨김: ${question.optionHidden ? '[' + question.optionHidden.map(h => h ? 'true' : 'false').join(', ') + ']' : '[]'}
 
 ---
 생성일: ${question.created || new Date().toLocaleDateString('ko-KR')}
@@ -15473,7 +15524,78 @@ class QuizPlayModal extends Modal {
                             item.onClick(() => {
                                 this.stopTimer();
                                 this.isPaused = true;
-                                this.openNoteModal(question);
+                                
+                                // 노트 모달 표시
+                                const noteModal = new Modal(this.app);
+                                noteModal.titleEl.setText('📖 학습 노트');
+                                
+                                const { contentEl: modalContent } = noteModal;
+                                modalContent.style.padding = '20px';
+                                modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+                                modalContent.style.maxWidth = '600px';
+                                
+                                // 노트 내용 표시
+                                if (question.note && question.note.trim()) {
+                                    const noteText = modalContent.createEl('div', {
+                                        cls: 'note-content'
+                                    });
+                                    noteText.style.cssText = `
+                                        padding: 12px;
+                                        margin-bottom: 16px;
+                                        border-radius: 6px;
+                                        border: 1px solid var(--background-modifier-border);
+                                        background: var(--background-primary);
+                                        color: var(--text-normal);
+                                        font-size: 14px;
+                                        font-family: var(--font-text);
+                                        line-height: 1.6;
+                                        white-space: pre-wrap;
+                                    `;
+                                    noteText.textContent = question.note;
+                                } else {
+                                    const emptyText = modalContent.createEl('p', {
+                                        text: '📝 저장된 학습 노트가 없습니다.'
+                                    });
+                                    emptyText.style.cssText = `
+                                        font-size: 14px;
+                                        color: var(--text-muted);
+                                        text-align: center;
+                                        padding: 20px;
+                                    `;
+                                }
+                                
+                                // 닫기 버튼
+                                const btnContainer = modalContent.createDiv({
+                                    cls: 'note-view-buttons'
+                                });
+                                btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+                                
+                                const closeBtn = btnContainer.createEl('button', {
+                                    text: '닫기',
+                                    cls: 'note-close-button'
+                                });
+                                closeBtn.style.cssText = `
+                                    padding: 8px 16px;
+                                    border-radius: 6px;
+                                    background: var(--interactive-normal);
+                                    color: var(--text-normal);
+                                    cursor: pointer;
+                                    border: 1px solid var(--background-modifier-border);
+                                `;
+                                closeBtn.onclick = () => {
+                                    noteModal.close();
+                                    if (this.isPaused) {
+                                        this.isPaused = false;
+                                    }
+                                };
+                                
+                                noteModal.onClose = () => {
+                                    if (this.isPaused) {
+                                        this.isPaused = false;
+                                    }
+                                };
+                                
+                                noteModal.open();
                             });
                             break;
                             
@@ -15841,6 +15963,134 @@ class QuizPlayModal extends Modal {
                             item.onClick(() => {
                                 // 녹음 기능 토글
                                 this.toggleRecording(question);
+                            });
+                            break;
+                            
+                        case 'quiz-stats':
+                            item.onClick(() => {
+                                this.stopTimer();
+                                this.isPaused = true;
+                                
+                                // 통계 모달 열기
+                                const statsModal = new Modal(this.app);
+                                statsModal.titleEl.setText('📊 퀴즈 통계');
+                                
+                                const { contentEl } = statsModal;
+                                contentEl.style.padding = '20px';
+                                contentEl.style.minWidth = isMobile ? '90vw' : '500px';
+                                
+                                // 위치 정보
+                                const positionDiv = contentEl.createDiv();
+                                positionDiv.style.cssText = `
+                                    padding: 12px;
+                                    background: var(--background-secondary);
+                                    border-radius: 8px;
+                                    margin-bottom: 16px;
+                                    text-align: center;
+                                `;
+                                
+                                const difficultyIcon = this.plugin.getDifficultyIcon(question.difficulty || 'C');
+                                positionDiv.innerHTML = `
+                                    <div style="font-size: 16px; font-weight: 600; color: var(--text-normal); margin-bottom: 8px;">
+                                        ${difficultyIcon} 문제 ${question.number || (this.currentIndex + 1)}
+                                    </div>
+                                    <div style="font-size: 24px; font-weight: 800; color: var(--interactive-accent);">
+                                        📍 ${this.currentIndex + 1} / ${this.questions.length}
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                        남은 문제: ${this.questions.length - (this.currentIndex + 1)}개
+                                    </div>
+                                `;
+                                
+                                // 점수 및 정답률
+                                const scoreDiv = contentEl.createDiv();
+                                scoreDiv.style.cssText = `
+                                    display: grid;
+                                    grid-template-columns: repeat(3, 1fr);
+                                    gap: 12px;
+                                    margin-bottom: 16px;
+                                `;
+                                
+                                const scoreBox = scoreDiv.createDiv();
+                                scoreBox.style.cssText = `
+                                    padding: 12px;
+                                    background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.05) 100%);
+                                    border-radius: 8px;
+                                    border: 2px solid rgba(33, 150, 243, 0.3);
+                                    text-align: center;
+                                `;
+                                scoreBox.innerHTML = `
+                                    <div style="font-size: 12px; color: var(--text-muted);">점수</div>
+                                    <div style="font-size: 24px; font-weight: 800; color: #2196F3;">${this.score}점</div>
+                                `;
+                                
+                                const correctBox = scoreDiv.createDiv();
+                                correctBox.style.cssText = `
+                                    padding: 12px;
+                                    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.05) 100%);
+                                    border-radius: 8px;
+                                    border: 2px solid rgba(76, 175, 80, 0.3);
+                                    text-align: center;
+                                `;
+                                correctBox.innerHTML = `
+                                    <div style="font-size: 12px; color: var(--text-muted);">정답</div>
+                                    <div style="font-size: 24px; font-weight: 800; color: #4CAF50;">✓ ${this.correctCount}</div>
+                                `;
+                                
+                                const incorrectBox = scoreDiv.createDiv();
+                                incorrectBox.style.cssText = `
+                                    padding: 12px;
+                                    background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.05) 100%);
+                                    border-radius: 8px;
+                                    border: 2px solid rgba(244, 67, 54, 0.3);
+                                    text-align: center;
+                                `;
+                                incorrectBox.innerHTML = `
+                                    <div style="font-size: 12px; color: var(--text-muted);">오답</div>
+                                    <div style="font-size: 24px; font-weight: 800; color: #F44336;">✗ ${this.incorrectCount}</div>
+                                `;
+                                
+                                // 정답률
+                                if (this.correctCount + this.incorrectCount > 0) {
+                                    const accuracy = Math.round((this.correctCount / (this.correctCount + this.incorrectCount)) * 100);
+                                    const accuracyDiv = contentEl.createDiv();
+                                    accuracyDiv.style.cssText = `
+                                        padding: 12px;
+                                        background: var(--background-secondary);
+                                        border-radius: 8px;
+                                        margin-bottom: 16px;
+                                        text-align: center;
+                                    `;
+                                    accuracyDiv.innerHTML = `
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">정답률</div>
+                                        <div style="font-size: 28px; font-weight: 800; color: var(--interactive-accent);">${accuracy}%</div>
+                                    `;
+                                }
+                                
+                                // 닫기 버튼
+                                const closeBtn = contentEl.createEl('button', {
+                                    text: '닫기'
+                                });
+                                closeBtn.style.cssText = `
+                                    width: 100%;
+                                    padding: 12px;
+                                    background: var(--interactive-accent);
+                                    color: var(--text-on-accent);
+                                    border: none;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                    font-weight: 600;
+                                `;
+                                closeBtn.onclick = () => {
+                                    statsModal.close();
+                                    this.isPaused = false;
+                                };
+                                
+                                statsModal.onClose = () => {
+                                    this.isPaused = false;
+                                };
+                                
+                                statsModal.open();
                             });
                             break;
                             
@@ -16342,7 +16592,316 @@ class QuizPlayModal extends Modal {
         noteViewBtn.addEventListener('click', () => {
             this.stopTimer();
             this.isPaused = true;
-            this.openNoteModal(question);
+            
+            // 노트 모달 표시
+            const noteModal = new Modal(this.app);
+            noteModal.titleEl.setText('📖 학습 노트');
+            
+            const { contentEl: modalContent } = noteModal;
+            modalContent.style.padding = '20px';
+            modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+            modalContent.style.maxWidth = '600px';
+            
+            // 노트 내용 표시
+            if (question.note && question.note.trim()) {
+                const noteText = modalContent.createEl('div', {
+                    cls: 'note-content'
+                });
+                noteText.style.cssText = `
+                    padding: 12px;
+                    margin-bottom: 16px;
+                    border-radius: 6px;
+                    border: 1px solid var(--background-modifier-border);
+                    background: var(--background-primary);
+                    color: var(--text-normal);
+                    font-size: 14px;
+                    font-family: var(--font-text);
+                    line-height: 1.6;
+                    white-space: pre-wrap;
+                `;
+                noteText.textContent = question.note;
+            } else {
+                const emptyText = modalContent.createEl('p', {
+                    text: '📝 저장된 학습 노트가 없습니다.'
+                });
+                emptyText.style.cssText = `
+                    font-size: 14px;
+                    color: var(--text-muted);
+                    text-align: center;
+                    padding: 20px;
+                `;
+            }
+            
+            // 닫기 버튼
+            const btnContainer = modalContent.createDiv({
+                cls: 'note-view-buttons'
+            });
+            btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+            
+            const closeBtn = btnContainer.createEl('button', {
+                text: '닫기',
+                cls: 'note-close-button'
+            });
+            closeBtn.style.cssText = `
+                padding: 8px 16px;
+                border-radius: 6px;
+                background: var(--interactive-normal);
+                color: var(--text-normal);
+                cursor: pointer;
+                border: 1px solid var(--background-modifier-border);
+            `;
+            closeBtn.onclick = () => {
+                noteModal.close();
+                if (this.isPaused) {
+                    this.isPaused = false;
+                }
+            };
+            
+            noteModal.onClose = () => {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                }
+            };
+            
+            noteModal.open();
+        });
+        
+        // 선택지 숨기기/보기 토글 버튼 추가
+        const toggleOptionsBtn = controlBar.createEl('button', {
+            text: '👁️',
+            cls: 'control-button toggle-options-button'
+        });
+        toggleOptionsBtn.title = '선택지 숨기기/보기';
+        toggleOptionsBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
+        
+        // 선택지 숨김 상태 저장 (클로저)
+        let optionsHiddenState = false;
+        
+        // 토글 함수를 나중에 실행하기 위해 저장
+        this.toggleOptionsVisibility = () => {
+            optionsHiddenState = !optionsHiddenState;
+            
+            // DOM에서 선택지 컨테이너 찾기
+            const optionsContainer = scrollableContent.querySelector('.options-container');
+            
+            if (optionsContainer) {
+                if (optionsHiddenState) {
+                    // 숨기기
+                    optionsContainer.style.filter = 'blur(10px)';
+                    optionsContainer.style.pointerEvents = 'none';
+                    optionsContainer.style.userSelect = 'none';
+                    toggleOptionsBtn.setText('🙈');
+                    toggleOptionsBtn.title = '선택지 보기';
+                    new Notice('🙈 선택지 숨김');
+                } else {
+                    // 보기
+                    optionsContainer.style.filter = 'none';
+                    optionsContainer.style.pointerEvents = 'auto';
+                    optionsContainer.style.userSelect = 'auto';
+                    toggleOptionsBtn.setText('👁️');
+                    toggleOptionsBtn.title = '선택지 숨기기';
+                    new Notice('👁️ 선택지 표시');
+                }
+            }
+        };
+        
+        toggleOptionsBtn.addEventListener('click', () => {
+            this.toggleOptionsVisibility();
+        });
+        
+        // 선택지 정렬 버튼 추가
+        const sortBtn = controlBar.createEl('button', {
+            text: '↕️',
+            cls: 'control-button sort-button'
+        });
+        sortBtn.title = '선택지 순서 조정';
+        sortBtn.style.cssText = `font-size: ${isMobile ? '14px' : '16px'}; padding: ${isMobile ? '3px 6px' : '4px 8px'}; min-height: auto;`;
+        sortBtn.addEventListener('click', () => {
+            this.stopTimer();
+            this.isPaused = true;
+            
+            const sortModal = new Modal(this.app);
+            sortModal.titleEl.setText('↕️ 선택지 순서 조정');
+            
+            const { contentEl: modalContent } = sortModal;
+            modalContent.style.padding = '20px';
+            modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+            modalContent.style.maxWidth = '600px';
+            
+            modalContent.createEl('p', {
+                text: '선택지 순서를 변경하세요. 화살표 버튼을 클릭하여 이동할 수 있습니다.'
+            }).style.cssText = 'margin-bottom: 16px; color: var(--text-muted);';
+            
+            const optionsList = modalContent.createDiv({ cls: 'options-sort-list' });
+            optionsList.style.cssText = 'display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;';
+            
+            const renderOptions = () => {
+                optionsList.empty();
+                question.options.forEach((option, index) => {
+                    const optionItem = optionsList.createDiv({ cls: 'option-sort-item' });
+                    optionItem.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 12px;
+                        background: var(--background-secondary);
+                        border-radius: 6px;
+                        border: 1px solid var(--background-modifier-border);
+                    `;
+                    
+                    // 순서 번호
+                    const num = optionItem.createSpan({ text: `${index + 1}.` });
+                    num.style.cssText = 'font-weight: 600; min-width: 30px; color: var(--text-muted);';
+                    
+                    // 선택지 텍스트
+                    const text = optionItem.createSpan({ text: option });
+                    text.style.cssText = 'flex: 1; color: var(--text-normal);';
+                    
+                    // 정답 표시
+                    if (index === question.answer) {
+                        const answerBadge = optionItem.createSpan({ text: '✓' });
+                        answerBadge.style.cssText = 'color: var(--color-green); font-weight: 600;';
+                    }
+                    
+                    // 버튼 그룹
+                    const btnGroup = optionItem.createDiv();
+                    btnGroup.style.cssText = 'display: flex; gap: 4px;';
+                    
+                    // 위로 버튼
+                    if (index > 0) {
+                        const upBtn = btnGroup.createEl('button', { text: '▲' });
+                        upBtn.style.cssText = `
+                            padding: 4px 8px;
+                            background: var(--interactive-normal);
+                            border: 1px solid var(--background-modifier-border);
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        `;
+                        upBtn.onclick = () => {
+                            const temp = question.options[index];
+                            question.options[index] = question.options[index - 1];
+                            question.options[index - 1] = temp;
+                            
+                            if (question.optionBookmarkFolders) {
+                                const tempFolder = question.optionBookmarkFolders[index];
+                                question.optionBookmarkFolders[index] = question.optionBookmarkFolders[index - 1];
+                                question.optionBookmarkFolders[index - 1] = tempFolder;
+                            }
+                            if (question.optionImages) {
+                                const tempImage = question.optionImages[index];
+                                question.optionImages[index] = question.optionImages[index - 1];
+                                question.optionImages[index - 1] = tempImage;
+                            }
+                            if (question.optionImageHints) {
+                                const tempHint = question.optionImageHints[index];
+                                question.optionImageHints[index] = question.optionImageHints[index - 1];
+                                question.optionImageHints[index - 1] = tempHint;
+                            }
+                            if (question.optionHints) {
+                                const tempHint = question.optionHints[index];
+                                question.optionHints[index] = question.optionHints[index - 1];
+                                question.optionHints[index - 1] = tempHint;
+                            }
+                            if (question.answer === index) {
+                                question.answer = index - 1;
+                            } else if (question.answer === index - 1) {
+                                question.answer = index;
+                            }
+                            renderOptions();
+                        };
+                    }
+                    
+                    // 아래로 버튼
+                    if (index < question.options.length - 1) {
+                        const downBtn = btnGroup.createEl('button', { text: '▼' });
+                        downBtn.style.cssText = `
+                            padding: 4px 8px;
+                            background: var(--interactive-normal);
+                            border: 1px solid var(--background-modifier-border);
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        `;
+                        downBtn.onclick = () => {
+                            const temp = question.options[index];
+                            question.options[index] = question.options[index + 1];
+                            question.options[index + 1] = temp;
+                            
+                            if (question.optionBookmarkFolders) {
+                                const tempFolder = question.optionBookmarkFolders[index];
+                                question.optionBookmarkFolders[index] = question.optionBookmarkFolders[index + 1];
+                                question.optionBookmarkFolders[index + 1] = tempFolder;
+                            }
+                            if (question.optionImages) {
+                                const tempImage = question.optionImages[index];
+                                question.optionImages[index] = question.optionImages[index + 1];
+                                question.optionImages[index + 1] = tempImage;
+                            }
+                            if (question.optionImageHints) {
+                                const tempHint = question.optionImageHints[index];
+                                question.optionImageHints[index] = question.optionImageHints[index + 1];
+                                question.optionImageHints[index + 1] = tempHint;
+                            }
+                            if (question.optionHints) {
+                                const tempHint = question.optionHints[index];
+                                question.optionHints[index] = question.optionHints[index + 1];
+                                question.optionHints[index + 1] = tempHint;
+                            }
+                            if (question.answer === index) {
+                                question.answer = index + 1;
+                            } else if (question.answer === index + 1) {
+                                question.answer = index;
+                            }
+                            renderOptions();
+                        };
+                    }
+                });
+            };
+            
+            renderOptions();
+            
+            // 버튼 그룹
+            const btnContainer = modalContent.createDiv();
+            btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+            
+            const saveBtn = btnContainer.createEl('button', {
+                text: '💾 저장',
+            });
+            saveBtn.style.cssText = `
+                padding: 10px 20px;
+                border-radius: 6px;
+                background: var(--interactive-accent);
+                color: var(--text-on-accent);
+                cursor: pointer;
+                border: none;
+                font-weight: 600;
+                min-height: 44px;
+            `;
+            saveBtn.onclick = async () => {
+                await this.plugin.saveQuestion(question, false);
+                new Notice('✅ 선택지 순서가 저장되었습니다');
+                sortModal.close();
+                this.isPaused = false;
+                this.showQuestion();
+            };
+            
+            const cancelBtn = btnContainer.createEl('button', {
+                text: '❌ 취소'
+            });
+            cancelBtn.style.cssText = 'padding: 10px 20px; min-height: 44px;';
+            cancelBtn.onclick = () => {
+                sortModal.close();
+                this.isPaused = false;
+            };
+            
+            sortModal.onClose = () => {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                }
+            };
+            
+            sortModal.open();
         });
         
         // 편집 버튼 추가
@@ -17266,8 +17825,6 @@ class QuizPlayModal extends Modal {
 
         // 노트는 리본메뉴와 상단 아이콘으로 이동됨 (UI 간소화)
 
-        // 노트는 리본메뉴와 상단 아이콘으로 이동됨 (UI 간소화)
-
         // ===== 3. 선택지 =====
         const optionsContainer = scrollableContent.createDiv({ cls: 'options-container' });
         optionsContainer.style.cssText = `
@@ -17321,33 +17878,135 @@ class QuizPlayModal extends Modal {
             if (!question.optionBookmarkFolders) {
                 question.optionBookmarkFolders = Array(question.options.length).fill('');
             }
+            if (!question.optionHidden) {
+                question.optionHidden = Array(question.options.length).fill(false);
+            }
             const optionBookmarkFolder = question.optionBookmarkFolders[originalIndex] || '';
             const isOptionBookmarked = optionBookmarkFolder.length > 0;
+            const isHidden = question.optionHidden[originalIndex] || false;
+            
+            // 숨김 상태 적용
+            if (isHidden) {
+                optionBtn.style.filter = 'blur(5px)';
+                optionBtn.style.pointerEvents = 'auto';  // 클릭은 가능하도록
+            }
+            
+            // 선택지 숨김 토글 버튼 (북마크 버튼 왼쪽)
+            const hideBtn = optionBtn.createEl('button', {
+                text: isHidden ? '🙈' : '👁️',
+                cls: 'option-hide-button'
+            });
+            hideBtn.type = 'button';
+            hideBtn.title = isHidden ? '선택지 보이기' : '선택지 숨기기';
+            hideBtn.style.cssText = `
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                padding: 6px;
+                background: ${isHidden ? 'var(--background-modifier-error)' : 'var(--background-modifier-hover)'};
+                color: var(--text-normal);
+                border: 2px solid var(--background-modifier-border);
+                border-radius: 6px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                z-index: 30;
+                opacity: 0.9;
+                min-width: 40px;
+                min-height: 40px;
+                pointer-events: auto;
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            hideBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                hideBtn.style.opacity = '0.6';
+            });
+            hideBtn.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                hideBtn.style.opacity = '0.9';
+            });
+            hideBtn.addEventListener('touchcancel', (e) => {
+                e.stopPropagation();
+                hideBtn.style.opacity = '0.9';
+            });
+            
+            hideBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                question.optionHidden[originalIndex] = !question.optionHidden[originalIndex];
+                await this.plugin.saveQuestion(question, false);
+                new Notice(question.optionHidden[originalIndex] ? `🙈 선택지 ${originalIndex + 1} 숨김` : `👁️ 선택지 ${originalIndex + 1} 보임`);
+                await this.showQuestion();
+            });
+            
+            hideBtn.addEventListener('mouseenter', () => {
+                hideBtn.style.opacity = '1';
+                hideBtn.style.transform = 'scale(1.05)';
+            });
+            hideBtn.addEventListener('mouseleave', () => {
+                hideBtn.style.opacity = '0.9';
+                hideBtn.style.transform = 'scale(1)';
+            });
             
             const bookmarkBtn = optionBtn.createEl('button', {
                 text: isOptionBookmarked ? '⭐' : '☆',
                 cls: 'option-bookmark-button'
             });
+            bookmarkBtn.type = 'button';
             bookmarkBtn.title = isOptionBookmarked ? `북마크됨: ${optionBookmarkFolder}` : '북마크';
             bookmarkBtn.style.cssText = `
                 position: absolute;
-                top: 50%;
-                left: 12px;
-                transform: translateY(-50%);
-                padding: 4px;
-                background: transparent;
+                top: 8px;
+                left: 52px;
+                padding: 6px;
+                background: ${isOptionBookmarked ? 'var(--background-modifier-warning)' : 'transparent'};
                 color: ${isOptionBookmarked ? 'var(--color-yellow)' : 'var(--text-faint)'};
-                border: none;
-                border-radius: 4px;
+                border: ${isOptionBookmarked ? '2px solid var(--color-yellow)' : '2px solid var(--background-modifier-border)'};
+                border-radius: 6px;
                 font-size: 16px;
                 cursor: pointer;
                 transition: all 0.2s;
-                z-index: 20;
-                opacity: ${isOptionBookmarked ? '1' : '0.5'};
+                z-index: 25;
+                opacity: ${isOptionBookmarked ? '1' : '0.7'};
+                min-width: 40px;
+                min-height: 40px;
+                pointer-events: auto;
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
             `;
             
+            bookmarkBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                bookmarkBtn.style.opacity = '0.6';
+            });
+            bookmarkBtn.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                bookmarkBtn.style.opacity = isOptionBookmarked ? '1' : '0.7';
+            });
+            bookmarkBtn.addEventListener('touchcancel', (e) => {
+                e.stopPropagation();
+                bookmarkBtn.style.opacity = isOptionBookmarked ? '1' : '0.7';
+            });
+            
             bookmarkBtn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // 선택지 클릭 방지
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation(); // 선택지 클릭 방지
                 
                 const currentlyBookmarked = question.optionBookmarkFolders[originalIndex];
                 
@@ -17432,23 +18091,193 @@ class QuizPlayModal extends Modal {
             
             bookmarkBtn.addEventListener('mouseenter', () => {
                 bookmarkBtn.style.opacity = '1';
+                bookmarkBtn.style.transform = 'scale(1.1)';
             });
             bookmarkBtn.addEventListener('mouseleave', () => {
-                bookmarkBtn.style.opacity = isOptionBookmarked ? '1' : '0.5';
+                bookmarkBtn.style.opacity = isOptionBookmarked ? '1' : '0.7';
+                bookmarkBtn.style.transform = 'scale(1)';
             });
             
-            // 선택지 번호 표시 (왼쪽)
+            // 선택지 번호 표시 (왼쪽 - 북마크 옆)
             const optionNumber = optionBtn.createSpan({
                 text: `${index + 1}`,
                 cls: 'option-number'
             });
             optionNumber.style.cssText = `
                 position: absolute;
-                left: 32px;
-                font-weight: 600;
-                color: var(--text-faint);
-                font-size: 14px;
+                left: 100px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-weight: 700;
+                color: var(--text-accent);
+                font-size: 16px;
             `;
+            
+            // 선택지 힌트 버튼 추가 (오른쪽)
+            if (!question.optionHints) {
+                question.optionHints = Array(question.options.length).fill('');
+            }
+            const optionHint = question.optionHints[originalIndex] || '';
+            const hasOptionHint = optionHint.trim().length > 0;
+            
+            const optionHintBtn = optionBtn.createEl('button', {
+                text: hasOptionHint ? '💬' : '💭',
+                cls: 'option-hint-button'
+            });
+            optionHintBtn.type = 'button';  // 명시적으로 button 타입 지정
+            optionHintBtn.title = hasOptionHint ? '선택지 힌트 보기/수정' : '선택지 힌트 추가';
+            optionHintBtn.style.cssText = `
+                position: absolute;
+                top: 50%;
+                right: 8px;
+                transform: translateY(-50%);
+                padding: 10px 14px;
+                min-width: 48px;
+                min-height: 48px;
+                background: ${hasOptionHint ? 'var(--background-modifier-success)' : 'var(--background-modifier-hover)'};
+                color: ${hasOptionHint ? 'var(--text-on-accent)' : 'var(--text-muted)'};
+                border: 2px solid var(--background-modifier-border);
+                border-radius: 6px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.2s;
+                z-index: 25;
+                opacity: 0.9;
+                pointer-events: auto;
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            optionHintBtn.addEventListener('mouseenter', () => {
+                optionHintBtn.style.opacity = '1';
+                optionHintBtn.style.transform = 'translateY(-50%) scale(1.05)';
+            });
+            optionHintBtn.addEventListener('mouseleave', () => {
+                optionHintBtn.style.opacity = '0.9';
+                optionHintBtn.style.transform = 'translateY(-50%) scale(1)';
+            });
+            
+            // 터치 피드백 (모바일)
+            optionHintBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                optionHintBtn.style.opacity = '0.6';
+                optionHintBtn.style.transform = 'translateY(-50%) scale(0.95)';
+            });
+            optionHintBtn.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                optionHintBtn.style.opacity = '0.9';
+                optionHintBtn.style.transform = 'translateY(-50%) scale(1)';
+            });
+            optionHintBtn.addEventListener('touchcancel', (e) => {
+                e.stopPropagation();
+                optionHintBtn.style.opacity = '0.9';
+                optionHintBtn.style.transform = 'translateY(-50%) scale(1)';
+            });
+            
+            optionHintBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();  // 추가: 다른 리스너로 전파 차단
+                
+                const hintModal = new Modal(this.app);
+                hintModal.titleEl.setText(`💬 선택지 ${originalIndex + 1} 힌트`);
+                
+                const { contentEl: modalContent } = hintModal;
+                modalContent.style.padding = '20px';
+                modalContent.style.minWidth = isMobile ? '90vw' : '500px';
+                modalContent.style.maxWidth = '600px';
+                
+                // 선택지 정보 표시
+                const infoDiv = modalContent.createDiv();
+                infoDiv.style.cssText = 'padding: 12px; background: var(--background-secondary); border-radius: 6px; margin-bottom: 16px;';
+                infoDiv.createEl('div', { 
+                    text: `선택지 ${originalIndex + 1}: ${option}`,
+                }).style.cssText = 'font-weight: 600; color: var(--text-normal);';
+                
+                // 힌트 입력 영역
+                modalContent.createEl('h4', { 
+                    text: '힌트 내용',
+                }).style.cssText = 'margin-bottom: 8px; color: var(--text-normal);';
+                
+                const hintTextArea = modalContent.createEl('textarea', {
+                    placeholder: '이 선택지에 대한 힌트를 입력하세요...\n예: 주의사항, 구분법, 암기법 등',
+                });
+                hintTextArea.value = question.optionHints[originalIndex] || '';
+                hintTextArea.style.cssText = `
+                    width: 100%;
+                    min-height: 120px;
+                    padding: 12px;
+                    margin-bottom: 16px;
+                    border-radius: 6px;
+                    border: 1px solid var(--background-modifier-border);
+                    background: var(--background-primary);
+                    color: var(--text-normal);
+                    font-size: 14px;
+                    resize: vertical;
+                    font-family: var(--font-text);
+                    line-height: 1.6;
+                `;
+                
+                // 버튼 그룹
+                const btnContainer = modalContent.createDiv();
+                btnContainer.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+                
+                const saveBtn = btnContainer.createEl('button', {
+                    text: '💾 저장',
+                });
+                saveBtn.style.cssText = `
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    background: var(--interactive-accent);
+                    color: var(--text-on-accent);
+                    cursor: pointer;
+                    border: none;
+                    font-weight: 600;
+                    min-height: 44px;
+                `;
+                saveBtn.onclick = async () => {
+                    question.optionHints[originalIndex] = hintTextArea.value.trim();
+                    await this.plugin.saveQuestion(question, false);
+                    new Notice(`✅ 선택지 ${originalIndex + 1} 힌트 저장됨`);
+                    hintModal.close();
+                    await this.showQuestion();
+                };
+                
+                const deleteBtn = btnContainer.createEl('button', {
+                    text: '🗑️ 삭제',
+                });
+                deleteBtn.style.cssText = `
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    background: var(--background-modifier-error);
+                    color: var(--text-on-accent);
+                    cursor: pointer;
+                    border: none;
+                    font-weight: 600;
+                    min-height: 44px;
+                `;
+                deleteBtn.onclick = async () => {
+                    question.optionHints[originalIndex] = '';
+                    await this.plugin.saveQuestion(question, false);
+                    new Notice(`🗑️ 선택지 ${originalIndex + 1} 힌트 삭제됨`);
+                    hintModal.close();
+                    await this.showQuestion();
+                };
+                
+                const cancelBtn = btnContainer.createEl('button', {
+                    text: '❌ 취소'
+                });
+                cancelBtn.style.cssText = 'padding: 10px 20px; min-height: 44px;';
+                cancelBtn.onclick = () => hintModal.close();
+                
+                hintModal.open();
+            });
             
             // 선택지 텍스트 먼저 표시
             const optionText = optionBtn.createSpan({ 
@@ -17461,7 +18290,8 @@ class QuizPlayModal extends Modal {
                 white-space: normal;
                 flex: 1;
                 display: block;
-                margin-left: 60px;
+                margin-left: 130px;
+                margin-right: 60px;
             `;
             
             // 선택지 이미지가 있으면 "이미지 보기" 버튼 표시
@@ -17480,7 +18310,7 @@ class QuizPlayModal extends Modal {
                 imageBtnContainer.style.cssText = `
                     position: absolute;
                     top: 50%;
-                    right: 12px;
+                    right: 60px;
                     transform: translateY(-50%);
                     display: flex;
                     gap: 6px;
@@ -17804,380 +18634,25 @@ class QuizPlayModal extends Modal {
             bookmarkContainer.style.boxShadow = 'none';
         });
 
-        // 위치 표시 UI 추가
-        const positionContainer = scrollableContent.createDiv({ cls: 'position-container' });
-        positionContainer.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: ${isMobile ? '12px' : '10px'};
-            padding: ${isMobile ? '16px 20px' : '12px 20px'};
-            background: var(--background-secondary);
-            border-radius: 8px;
-            margin: ${isMobile ? '0 12px 16px 12px' : '0 20px 16px 20px'};
-            border: 1px solid var(--background-modifier-border);
-            transition: all 0.2s;
-        `;
-
-        const positionLabel = positionContainer.createEl('label');
-        positionLabel.style.cssText = `
-            font-weight: 600;
-            font-size: ${isMobile ? '16px' : '15px'};
-            user-select: none;
-            flex: 1;
-            touch-action: manipulation;
-        `;
-        positionLabel.textContent = '📍 위치';
-
-        const positionBadge = positionContainer.createEl('span');
-        positionBadge.style.cssText = `
-            background: var(--interactive-accent);
-            color: var(--text-on-accent);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: bold;
-        `;
-        positionBadge.textContent = `${this.currentIndex + 1} / ${this.questions.length}`;
-
-        // 호버 효과
-        positionContainer.addEventListener('mouseenter', () => {
-            positionContainer.style.borderColor = 'var(--interactive-accent)';
-            positionContainer.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-        });
-        positionContainer.addEventListener('mouseleave', () => {
-            positionContainer.style.borderColor = 'var(--background-modifier-border)';
-            positionContainer.style.boxShadow = 'none';
-        });
-
-        // ===== Anki 스타일 진행 상태 영역 (펼치기/접기) =====
-        const ankiProgressContainer = scrollableContent.createDiv({ cls: 'anki-progress-section' });
-        ankiProgressContainer.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            padding: ${isMobile ? '12px' : '16px'};
-            margin: ${isMobile ? '0 12px 16px 12px' : '0 20px 16px 20px'};
-            background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary) 100%);
-            border-radius: 12px;
-            border: 2px solid var(--background-modifier-border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        `;
-
-        // 펼침/접힘 상태
-        let isStatsExpanded = false;
-
-        // 헤더 (항상 표시 - 클릭 가능)
-        const statsHeader = ankiProgressContainer.createDiv();
-        statsHeader.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        `;
-
-        const difficultyIcon = this.plugin.getDifficultyIcon(question.difficulty || 'C');
-        const headerLeft = statsHeader.createDiv();
-        headerLeft.innerHTML = `
-            <span style="font-size: ${isMobile ? '16px' : '18px'}; font-weight: 700; color: var(--text-normal);">
-                ${difficultyIcon} 문제 ${question.number || (this.currentIndex + 1)}
-            </span>
-        `;
-
-        const headerRight = statsHeader.createDiv();
-        headerRight.style.cssText = 'display: flex; align-items: center; gap: 12px;';
-        
-        const scoreDisplay = headerRight.createDiv();
-        scoreDisplay.innerHTML = `
-            <span style="font-size: ${isMobile ? '18px' : '20px'}; font-weight: 800; color: var(--interactive-accent);">
-                ${this.score}점
-            </span>
-        `;
-
-        const toggleIcon = headerRight.createDiv();
-        toggleIcon.innerHTML = '▼';
-        toggleIcon.style.cssText = `
-            font-size: 14px;
+        // ===== 간단한 진행 정보 (아주 작게) =====
+        const simpleProgressContainer = scrollableContent.createDiv({ cls: 'simple-progress-container' });
+        simpleProgressContainer.style.cssText = `
+            text-align: center;
+            padding: 4px 8px;
+            margin: ${isMobile ? '0 12px 8px 12px' : '0 20px 8px 20px'};
+            font-size: 10px;
             color: var(--text-muted);
-            transition: transform 0.3s ease;
-        `;
-
-        // 상세 통계 영역 (기본 접힘)
-        const statsContent = ankiProgressContainer.createDiv();
-        statsContent.style.cssText = `
-            display: none;
-            flex-direction: column;
-            gap: ${isMobile ? '8px' : '12px'};
-            margin-top: 12px;
-        `;
-
-        // 1. 진행바 (Anki 스타일)
-        const progressBarContainer = statsContent.createDiv();
-        progressBarContainer.style.cssText = `
-            width: 100%;
-            height: ${isMobile ? '24px' : '28px'};
-            background: var(--background-primary);
-            border-radius: 14px;
-            overflow: hidden;
-            position: relative;
-            border: 2px solid var(--background-modifier-border);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            user-select: none;
         `;
         
-        const progressPercentage = ((this.currentIndex + 1) / this.questions.length) * 100;
-        const progressBar = progressBarContainer.createDiv();
-        progressBar.style.cssText = `
-            width: ${progressPercentage}%;
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50 0%, #45a049 50%, #66BB6A 100%);
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-        `;
-        
-        const progressText = progressBarContainer.createDiv();
-        progressText.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: ${progressPercentage > 50 ? 'white' : 'var(--text-normal)'};
-            font-weight: 700;
-            font-size: ${isMobile ? '13px' : '14px'};
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            pointer-events: none;
-        `;
-        progressText.textContent = `${this.currentIndex + 1} / ${this.questions.length}`;
+        const remainingQuestions = this.questions.length - (this.currentIndex + 1);
+        simpleProgressContainer.textContent = `총 ${this.questions.length}문제 / 남은 문제 ${remainingQuestions}개`;
 
-        // 2. 통계 (정답/오답)
-        const statsRow = statsContent.createDiv();
-        statsRow.style.cssText = `
-            display: flex;
-            justify-content: space-around;
-            gap: ${isMobile ? '8px' : '12px'};
-            margin: 4px 0;
-        `;
-        
-        const correctStat = statsRow.createDiv();
-        correctStat.style.cssText = `
-            flex: 1;
-            padding: ${isMobile ? '8px' : '10px'};
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.05) 100%);
-            border-radius: 8px;
-            border: 2px solid rgba(76, 175, 80, 0.3);
-            text-align: center;
-        `;
-        correctStat.innerHTML = `
-            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">정답</div>
-            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #4CAF50;">✓ ${this.correctCount}</div>
-        `;
-        
-        const incorrectStat = statsRow.createDiv();
-        incorrectStat.style.cssText = `
-            flex: 1;
-            padding: ${isMobile ? '8px' : '10px'};
-            background: linear-gradient(135deg, rgba(244, 67, 54, 0.15) 0%, rgba(244, 67, 54, 0.05) 100%);
-            border-radius: 8px;
-            border: 2px solid rgba(244, 67, 54, 0.3);
-            text-align: center;
-        `;
-        incorrectStat.innerHTML = `
-            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">오답</div>
-            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #F44336;">✗ ${this.incorrectCount}</div>
-        `;
-        
-        const accuracyStat = statsRow.createDiv();
-        accuracyStat.style.cssText = `
-            flex: 1;
-            padding: ${isMobile ? '8px' : '10px'};
-            background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.05) 100%);
-            border-radius: 8px;
-            border: 2px solid rgba(33, 150, 243, 0.3);
-            text-align: center;
-        `;
-        const accuracy = this.correctCount + this.incorrectCount > 0 
-            ? Math.round((this.correctCount / (this.correctCount + this.incorrectCount)) * 100)
-            : 0;
-        accuracyStat.innerHTML = `
-            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: var(--text-muted); margin-bottom: 2px;">정답률</div>
-            <div style="font-size: ${isMobile ? '20px' : '24px'}; font-weight: 800; color: #2196F3;">📊 ${accuracy}%</div>
-        `;
-
-        // 3. 녹음 컨트롤 (접을 수 있는 영역 안에)
-        const audioControlContainer = statsContent.createDiv({ cls: 'audio-control-container' });
-        audioControlContainer.style.cssText = `
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            border-radius: 8px;
-            margin-top: 0px;
-        `;
-
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let audioBlob = null;
-
-        const updateAudioControls = () => {
-            audioControlContainer.empty();
-
-            const hasAudio = question.audio && question.audio.trim();
-
-            if (hasAudio) {
-                // 재생 버튼
-                const playBtn = audioControlContainer.createEl('button', { text: '▶ 재생' });
-                playBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                playBtn.onclick = () => {
-                    try {
-                        const audio = new Audio(question.audio);
-                        audio.play();
-                        new Notice('🔊 음성 재생 중...');
-                    } catch (error) {
-                        new Notice('❌ 음성 재생 실패: ' + error.message);
-                    }
-                };
-
-                // 삭제 버튼
-                const deleteAudioBtn = audioControlContainer.createEl('button', { text: '🗑️ 삭제' });
-                deleteAudioBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                deleteAudioBtn.onclick = async () => {
-                    if (confirm('음성 녹음을 삭제하시겠습니까?')) {
-                        question.audio = '';
-                        await this.plugin.saveQuestion(question);
-                        new Notice('✅ 음성이 삭제되었습니다');
-                        updateAudioControls();
-                    }
-                };
-
-                // 재녹음 버튼
-                const reRecordBtn = audioControlContainer.createEl('button', { text: '🎤 재녹음' });
-                reRecordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-normal); border: 1px solid var(--background-modifier-border); border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                reRecordBtn.onclick = async () => {
-                    startRecording();
-                };
-            } else {
-                // 녹음 시작 버튼
-                const recordBtn = audioControlContainer.createEl('button', { text: '🎤 녹음하기' });
-                recordBtn.style.cssText = `padding: 10px 16px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; min-height: 44px;`;
-                recordBtn.onclick = async () => {
-                    startRecording();
-                };
-            }
-        };
-
-        const startRecording = async () => {
-            try {
-                // 마이크 권한 확인
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    new Notice('❌ 이 브라우저는 녹음을 지원하지 않습니다.');
-                    return;
-                }
-                
-                // 권한 요청 안내
-                new Notice('🎤 마이크 권한을 허용해주세요...');
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        question.audio = reader.result; // base64 데이터
-                        await this.plugin.saveQuestion(question);
-                        new Notice('✅ 녹음이 저장되었습니다');
-                        updateAudioControls();
-                    };
-                    reader.readAsDataURL(audioBlob);
-                    
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                mediaRecorder.start();
-                new Notice('🎤 녹음 중... (중지 버튼을 누르세요)');
-
-                // 녹음 중 UI 업데이트
-                audioControlContainer.empty();
-                const recordingText = audioControlContainer.createEl('span', { text: '🔴 녹음 중...' });
-                recordingText.style.cssText = `color: red; font-weight: bold; font-size: 14px;`;
-
-                const stopBtn = audioControlContainer.createEl('button', { text: '⏹ 중지' });
-                stopBtn.style.cssText = `padding: 10px 16px; background: var(--background-modifier-error); color: var(--text-on-accent); border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-left: 10px; min-height: 44px;`;
-                stopBtn.onclick = () => {
-                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                        mediaRecorder.stop();
-                    }
-                };
-            } catch (error) {
-                console.error('Recording error:', error);
-                
-                let errorMessage = '❌ 녹음 실패: ';
-                
-                if (error.name === 'NotAllowedError') {
-                    errorMessage = '❌ 마이크 권한이 거부되었습니다.\n\n';
-                    
-                    if (this.app.isMobile) {
-                        // 모바일
-                        errorMessage += '📱 안드로이드:\n';
-                        errorMessage += '설정 → 앱 → Obsidian → 권한 → 마이크 허용\n\n';
-                        errorMessage += '📱 iOS:\n';
-                        errorMessage += '설정 → Obsidian → 마이크 허용';
-                    } else {
-                        // 데스크톱 브라우저
-                        errorMessage += '💻 데스크톱:\n';
-                        errorMessage += '브라우저 주소창 옆 자물쇠 아이콘 클릭\n';
-                        errorMessage += '→ 마이크 허용으로 변경';
-                    }
-                } else if (error.name === 'NotFoundError') {
-                    errorMessage += '마이크를 찾을 수 없습니다.';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                new Notice(errorMessage, 10000);
-            }
-        };
-
-        // 초기 녹음 UI 표시
-        updateAudioControls();
-
-        // 펼치기/접기 토글 기능
-        ankiProgressContainer.addEventListener('click', (e) => {
-            // 버튼 클릭은 무시
-            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                return;
-            }
-            
-            isStatsExpanded = !isStatsExpanded;
-            
-            if (isStatsExpanded) {
-                statsContent.style.display = 'flex';
-                toggleIcon.style.transform = 'rotate(180deg)';
-                ankiProgressContainer.style.borderColor = 'var(--interactive-accent)';
-            } else {
-                statsContent.style.display = 'none';
-                toggleIcon.style.transform = 'rotate(0deg)';
-                ankiProgressContainer.style.borderColor = 'var(--background-modifier-border)';
-            }
-        });
-
-        // 호버 효과
-        ankiProgressContainer.addEventListener('mouseenter', () => {
-            if (!isStatsExpanded) {
-                ankiProgressContainer.style.borderColor = 'var(--text-muted)';
-            }
-        });
-        ankiProgressContainer.addEventListener('mouseleave', () => {
-            if (!isStatsExpanded) {
-                ankiProgressContainer.style.borderColor = 'var(--background-modifier-border)';
-            }
-        });
+        // ===== 구 위치/점수 표시 영역 제거됨 (리본 메뉴로 이동) =====
+        /*
+        positionContainer 및 ankiProgressContainer는 모두 제거되고 
+        리본 메뉴의 "통계 보기" 항목으로 이동됨
+        */
 
         // ===== 1. 네비게이션 버튼들 (이전/일시정지/다음) - 맨 위 배치 =====
         const navControlsContainer = scrollableContent.createDiv({ cls: 'nav-controls-container' });
