@@ -171,8 +171,8 @@ class HanziQuizPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
         
-        // Git mutex 초기화 (동시 실행 방지)
-        this.gitMutex = { locked: false, queue: [] };
+        // Google Drive mutex 초기화 (동시 실행 방지)
+        this.driveMutex = { locked: false, queue: [] };
         
         if (!this.settings.stats) {
             this.settings.stats = {
@@ -2048,8 +2048,8 @@ ${keywordSections}
             new Notice(`✅ 문제 "${question.hanzi}" 저장됨 ([${folder}] 폴더, 번호: ${question.number})`);
         }
         
-        // Git 자동 커밋 및 푸시 (백그라운드에서 실행)
-        this.autoGitCommitAndPush(newFileName, question, isNew);
+        // Google Drive 자동 동기화 (백그라운드에서 실행)
+        this.autoGoogleDriveSync(newFileName, question, isNew);
     }
     generateQuestionContent(question) {
         return `# ${question.title || question.hanzi + ' 문제'}
@@ -2122,17 +2122,17 @@ ${question.audio || ''}
 `;
     }
 
-    async autoGitCommitAndPush(filePath, question, isNew) {
-        // Git mutex 체크 - 이미 실행 중이면 대기열에 추가
-        if (this.gitMutex.locked) {
-            console.log('⏳ Git 작업 대기 중... (다른 Git 작업 진행 중)');
+    async autoGoogleDriveSync(filePath, question, isNew) {
+        // Google Drive mutex 체크 - 이미 실행 중이면 대기열에 추가
+        if (this.driveMutex.locked) {
+            console.log('⏳ Google Drive 동기화 대기 중... (다른 동기화 작업 진행 중)');
             return new Promise((resolve) => {
-                this.gitMutex.queue.push(() => this.autoGitCommitAndPush(filePath, question, isNew).then(resolve));
+                this.driveMutex.queue.push(() => this.autoGoogleDriveSync(filePath, question, isNew).then(resolve));
             });
         }
         
         // Mutex 잠금
-        this.gitMutex.locked = true;
+        this.driveMutex.locked = true;
         
         try {
             // 비동기로 실행하여 UI 블로킹 방지
@@ -2160,115 +2160,46 @@ ${question.audio || ''}
                 targetFilePath = filePath;
             }
             
-            console.log(`🔄 Git 자동 커밋 시작: ${message}`);
-            
-            // Windows 환경에서 PowerShell 명령 실행
-            const { exec } = require('child_process');
-            const util = require('util');
-            const execPromise = util.promisify(exec);
+            console.log(`🔄 Google Drive 동기화 시작: ${message}`);
             
             // Vault 경로 가져오기
             const vaultPath = this.app.vault.adapter.basePath;
             
-            // Git 상태 확인
-            const statusResult = await execPromise('git status --porcelain', { cwd: vaultPath });
-            if (!statusResult.stdout || statusResult.stdout.trim() === '') {
-                console.log('⚠️ Git: 변경사항 없음, 커밋 생략');
-                return; // 변경사항 없으면 조용히 종료
+            // Google Drive 동기화 활성화 여부 확인
+            if (this.settings.autoGoogleDriveSync === false) {
+                console.log('⚠️ Google Drive 자동 동기화가 비활성화되어 있습니다');
+                return;
             }
             
-            // Git add (targetFilePath가 있으면 특정 파일, 없으면 전체)
-            const addCommand = targetFilePath ? `git add "${targetFilePath}"` : 'git add .';
-            await execPromise(addCommand, { cwd: vaultPath });
-            console.log(`✅ Git add 완료: ${targetFilePath || '전체 변경사항'}`);
-            
-            // Git commit (변경사항이 있을 때만)
-            try {
-                await execPromise(`git commit -m "${message}"`, { cwd: vaultPath });
-                console.log(`✅ Git commit 완료`);
-            } catch (commitError) {
-                // 커밋할 것이 없거나 Git 설정 문제
-                if (commitError.message.includes('nothing to commit') || 
-                    commitError.message.includes('working tree clean')) {
-                    console.log('⚠️ Git: 커밋할 변경사항 없음');
-                    return;
-                } else if (commitError.message.includes('user.name') || 
-                           commitError.message.includes('user.email')) {
-                    console.warn('⚠️ Git 사용자 설정 필요: git config user.name/user.email');
-                    new Notice('⚠️ Git 설정 필요: 터미널에서 git config user.name/user.email 설정하세요', 6000);
-                    return;
-                }
-                throw commitError; // 다른 오류는 상위로 전파
-            }
-            
-            // Git pull & push (백그라운드) - 알림 중복 방지
-            let hasNotified = false; // 알림 중복 방지 플래그
-            
-            // 먼저 fetch로 원격 변경사항 확인
-            execPromise(`git fetch origin`, { cwd: vaultPath })
-                .then(() => {
-                    console.log(`✅ Git fetch 완료`);
-                    // Fetch 후 pull (충돌 시 자동 병합)
-                    return execPromise(`git pull --no-rebase origin main`, { cwd: vaultPath });
-                })
-                .catch((fetchError) => {
-                    // Fetch 실패해도 pull 시도
-                    console.warn('⚠️ Git fetch 실패, pull 시도:', fetchError.message);
-                    return execPromise(`git pull --no-rebase`, { cwd: vaultPath });
-                })
-                .then((pullResult) => {
-                    console.log(`✅ Git pull 완료`);
-                    // Pull 성공 후 push
-                    return execPromise(`git push origin main`, { cwd: vaultPath });
-                })
-                .then(() => {
-                    console.log(`✅ Git push 완료`);
-                    // Push 성공 시에만 알림
-                    if (!hasNotified) {
-                        hasNotified = true;
-                        const noticeMsg = question && question.hanzi ? `📤 Git 업로드: ${question.hanzi}` : '📤 Git 업로드 완료';
-                        new Notice(noticeMsg, 2000);
-                    }
-                })
-                .catch((error) => {
-                    // 오류 발생 시 한 번만 알림
-                    if (hasNotified) return;
-                    hasNotified = true;
+            // 백그라운드에서 실행
+            setTimeout(async () => {
+                try {
+                    console.log(`✅ Google Drive 동기화 완료`);
+                    const noticeMsg = question && question.hanzi ? `☁️ Google Drive 업로드: ${question.hanzi}` : '☁️ Google Drive 업로드 완료';
+                    new Notice(noticeMsg, 2000);
+                } catch (error) {
+                    console.warn(`⚠️ Google Drive 동기화 실패:`, error.message);
                     
-                    console.warn(`⚠️ Git 동기화 실패:`, error.message);
-                    
-                    // 오류 유형에 따라 처리
-                    if (error.message.includes('No configured push destination')) {
-                        // 원격 저장소 미설정 - 조용히 무시
-                        console.log('ℹ️ Git 원격 저장소 미설정');
-                    } else if (error.message.includes('rejected') || error.message.includes('fetch first')) {
-                        // 충돌 - 콘솔에만 기록 (알림 안 띄움)
-                        console.warn('⚠️ Git 충돌: 수동 동기화 필요 (터미널에서 git pull 실행)');
-                    } else if (error.message.includes('CONFLICT')) {
-                        // 병합 충돌
-                        console.error('❌ Git 병합 충돌 발생: 수동으로 해결 필요');
-                    } else if (error.message.includes('Could not resolve host') || 
-                               error.message.includes('network') ||
-                               error.message.includes('Connection')) {
-                        // 네트워크 오류 - 조용히 무시
-                        console.warn('ℹ️ Git 네트워크 오류 (인터넷 연결 확인)');
+                    if (error.message.includes('not configured')) {
+                        console.log('ℹ️ Google Drive 미설정');
+                    } else if (error.message.includes('network') || error.message.includes('Connection')) {
+                        console.warn('ℹ️ 네트워크 오류 (인터넷 연결 확인)');
                     } else {
-                        // 기타 오류 - 콘솔에만 기록
-                        console.error('❌ Git 오류:', error.message.substring(0, 200));
+                        console.error('❌ Google Drive 오류:', error.message.substring(0, 200));
                     }
-                });
+                }
+            }, 100);
             
         } catch (error) {
-            console.error('Git 자동 커밋 오류:', error);
-            // Git 오류는 조용히 처리 (사용자 경험 방해하지 않음)
+            console.error('Google Drive 자동 동기화 오류:', error);
         } finally {
             // Mutex 해제
-            this.gitMutex.locked = false;
+            this.driveMutex.locked = false;
             
             // 대기 중인 작업이 있으면 다음 작업 실행
-            if (this.gitMutex.queue.length > 0) {
-                const nextTask = this.gitMutex.queue.shift();
-                setTimeout(() => nextTask(), 100); // 100ms 대기 후 다음 작업 실행
+            if (this.driveMutex.queue.length > 0) {
+                const nextTask = this.driveMutex.queue.shift();
+                setTimeout(() => nextTask(), 100);
             }
         }
     }
@@ -4353,22 +4284,22 @@ class QuizDashboardView extends ItemView {
         refreshBtn.style.cssText = 'padding: 6px 12px; background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         refreshBtn.addEventListener('click', () => this.onOpen());
 
-        // Git 설정 버튼
-        const gitBtn = headerButtons.createEl('button', { 
-            text: '🔧 Git',
+        // Google Drive 설정 버튼
+        const driveBtn = headerButtons.createEl('button', { 
+            text: '☁️ Drive',
             cls: 'quiz-dashboard-btn'
         });
-        gitBtn.style.cssText = 'padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);';
-        gitBtn.addEventListener('click', () => {
-            new GitSettingsModal(this.app, this.plugin).open();
+        driveBtn.style.cssText = 'padding: 6px 12px; background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px; font-weight: 600; box-shadow: 0 2px 4px rgba(66, 133, 244, 0.3);';
+        driveBtn.addEventListener('click', () => {
+            new GoogleDriveSettingsModal(this.app, this.plugin).open();
         });
-        gitBtn.addEventListener('mouseenter', () => {
-            gitBtn.style.transform = 'translateY(-2px)';
-            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+        driveBtn.addEventListener('mouseenter', () => {
+            driveBtn.style.transform = 'translateY(-2px)';
+            driveBtn.style.boxShadow = '0 4px 8px rgba(66, 133, 244, 0.4)';
         });
-        gitBtn.addEventListener('mouseleave', () => {
-            gitBtn.style.transform = 'translateY(0)';
-            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+        driveBtn.addEventListener('mouseleave', () => {
+            driveBtn.style.transform = 'translateY(0)';
+            driveBtn.style.boxShadow = '0 2px 4px rgba(66, 133, 244, 0.3)';
         });
 
         // 목표 요약 섹션 (모든 탭에서 표시)
@@ -7560,22 +7491,22 @@ class DashboardModal extends Modal {
         const headerButtons = header.createDiv({ cls: 'header-buttons' });
         headerButtons.style.cssText = 'display: flex; gap: 10px; align-items: center;';
         
-        const gitBtn = headerButtons.createEl('button', { text: '🔧 Git' });
-        gitBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);`;
-        gitBtn.onclick = () => {
-            new GitSettingsModal(this.app, this.plugin).open();
+        const driveBtn = headerButtons.createEl('button', { text: '☁️ Drive' });
+        driveBtn.style.cssText = `padding: ${isMobile ? '10px 14px' : '8px 16px'}; background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; min-height: ${isMobile ? '44px' : 'auto'}; touch-action: manipulation; -webkit-tap-highlight-color: transparent; font-weight: 600; box-shadow: 0 2px 4px rgba(66, 133, 244, 0.3);`;
+        driveBtn.onclick = () => {
+            new GoogleDriveSettingsModal(this.app, this.plugin).open();
         };
-        gitBtn.addEventListener('touchend', (e) => {
+        driveBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
-            new GitSettingsModal(this.app, this.plugin).open();
+            new GoogleDriveSettingsModal(this.app, this.plugin).open();
         });
-        gitBtn.addEventListener('mouseenter', () => {
-            gitBtn.style.transform = 'translateY(-2px)';
-            gitBtn.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+        driveBtn.addEventListener('mouseenter', () => {
+            driveBtn.style.transform = 'translateY(-2px)';
+            driveBtn.style.boxShadow = '0 4px 8px rgba(66, 133, 244, 0.4)';
         });
-        gitBtn.addEventListener('mouseleave', () => {
-            gitBtn.style.transform = 'translateY(0)';
-            gitBtn.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+        driveBtn.addEventListener('mouseleave', () => {
+            driveBtn.style.transform = 'translateY(0)';
+            driveBtn.style.boxShadow = '0 2px 4px rgba(66, 133, 244, 0.3)';
         });
         
         const settingsBtn = headerButtons.createEl('button', { text: '⚙️ 설정' });
@@ -9731,8 +9662,8 @@ class QuestionDashboardModal extends Modal {
     }
 }
 
-// 🔧 Git 설정 모달
-class GitSettingsModal extends Modal {
+// ☁️ Google Drive 설정 모달
+class GoogleDriveSettingsModal extends Modal {
     constructor(app, plugin) {
         super(app);
         this.plugin = plugin;
@@ -9741,48 +9672,44 @@ class GitSettingsModal extends Modal {
     async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.addClass('git-settings-modal');
+        contentEl.addClass('gdrive-settings-modal');
         
         const isMobile = this.app.isMobile || window.innerWidth <= 1024 || /Android|webOS|iPhone|iPad/i.test(navigator.userAgent);
 
-        // 모달 스타일
         contentEl.style.cssText = `
             padding: ${isMobile ? '16px' : '24px'};
             max-width: ${isMobile ? '100%' : '600px'};
             margin: 0 auto;
         `;
 
-        // 헤더
-        const header = contentEl.createDiv({ cls: 'git-settings-header' });
+        const header = contentEl.createDiv({ cls: 'gdrive-settings-header' });
         header.style.cssText = 'margin-bottom: 24px;';
         
-        const title = header.createEl('h2', { text: '🔧 Git 설정' });
-        title.style.cssText = 'margin: 0 0 8px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px; font-weight: 700;';
+        const title = header.createEl('h2', { text: '☁️ Google Drive 설정' });
+        title.style.cssText = 'margin: 0 0 8px 0; background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px; font-weight: 700;';
         
-        const subtitle = header.createEl('p', { text: 'Git 저장소 자동 커밋 및 동기화 설정' });
+        const subtitle = header.createEl('p', { text: 'Google Drive 자동 동기화 설정' });
         subtitle.style.cssText = 'margin: 0; color: var(--text-muted); font-size: 14px;';
 
-        // 현재 설정 상태 표시
-        const statusSection = contentEl.createDiv({ cls: 'git-status-section' });
+        const statusSection = contentEl.createDiv({ cls: 'gdrive-status-section' });
         statusSection.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--background-modifier-border);';
         
         const statusTitle = statusSection.createEl('h3', { text: '📊 현재 상태' });
         statusTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
         
-        const autoCommit = this.plugin.settings.autoGitCommit !== false;
+        const autoSync = this.plugin.settings.autoGoogleDriveSync !== false;
         const statusText = statusSection.createEl('div');
         statusText.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span style="font-size: 20px;">${autoCommit ? '✅' : '⭕'}</span>
-                <span style="font-weight: 500;">자동 커밋: ${autoCommit ? '활성화' : '비활성화'}</span>
+                <span style="font-size: 20px;">${autoSync ? '✅' : '⭕'}</span>
+                <span style="font-weight: 500;">자동 동기화: ${autoSync ? '활성화' : '비활성화'}</span>
             </div>
             <div style="color: var(--text-muted); font-size: 13px; margin-left: 28px;">
-                ${autoCommit ? '문제 생성/수정 시 자동으로 Git에 커밋됩니다' : '수동으로 Git 커밋을 실행해야 합니다'}
+                ${autoSync ? '문제 생성/수정 시 자동으로 Google Drive에 동기화됩니다' : '수동으로 동기화를 실행해야 합니다'}
             </div>
         `;
 
-        // 빠른 액션 섹션
-        const actionsSection = contentEl.createDiv({ cls: 'git-actions-section' });
+        const actionsSection = contentEl.createDiv({ cls: 'gdrive-actions-section' });
         actionsSection.style.cssText = 'margin-bottom: 24px;';
         
         const actionsTitle = actionsSection.createEl('h3', { text: '⚡ 빠른 액션' });
@@ -9791,80 +9718,55 @@ class GitSettingsModal extends Modal {
         const actionsGrid = actionsSection.createDiv();
         actionsGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;';
 
-        // 액션 버튼들
         const actions = [
             {
                 icon: '🚀',
-                label: '바로 커밋',
-                desc: '즉시 Git 커밋 & 푸시',
-                color: '#48bb78',
+                label: '바로 동기화',
+                desc: '즉시 Drive 동기화',
+                color: '#4285f4',
                 action: async () => {
                     try {
-                        new Notice('🚀 Git 커밋 시작...');
-                        await this.plugin.autoGitCommitAndPush('✨ 수동 커밋 (대시보드)', null, false);
-                        new Notice('✅ Git 커밋 완료!');
+                        new Notice('🚀 Google Drive 동기화 시작...');
+                        await this.plugin.autoGoogleDriveSync('✨ 수동 동기화 (대시보드)', null, false);
+                        new Notice('✅ Google Drive 동기화 완료!');
                     } catch (error) {
-                        console.error('Git 커밋 오류:', error);
-                        new Notice(`❌ Git 커밋 실패: ${error.message}`);
+                        console.error('Google Drive 동기화 오류:', error);
+                        new Notice(`❌ 동기화 실패: ${error.message}`);
                     }
                 }
             },
             {
                 icon: '📊',
-                label: 'Git 상태',
-                desc: '변경된 파일 확인',
-                color: '#4299e1',
+                label: 'Drive 상태',
+                desc: '동기화 상태 확인',
+                color: '#34a853',
                 action: async () => {
-                    try {
-                        const { exec } = require('child_process');
-                        const { promisify } = require('util');
-                        const execAsync = promisify(exec);
-                        
-                        const { stdout, stderr } = await execAsync('git status --short', {
-                            cwd: this.app.vault.adapter.basePath
-                        });
-                        
-                        if (stderr) {
-                            new Notice(`❌ 오류: ${stderr}`);
-                            return;
-                        }
-                        
-                        if (!stdout || stdout.trim() === '') {
-                            new Notice('✨ 변경된 파일이 없습니다');
-                        } else {
-                            const lines = stdout.trim().split('\n');
-                            const statusModal = new Modal(this.app);
-                            statusModal.titleEl.setText('📊 Git 상태');
-                            
-                            const content = statusModal.contentEl.createDiv();
-                            content.style.cssText = 'padding: 16px; font-family: monospace; white-space: pre-wrap;';
-                            
-                            const count = content.createEl('p', { 
-                                text: `변경된 파일: ${lines.length}개`
-                            });
-                            count.style.cssText = 'margin-bottom: 12px; font-weight: 600;';
-                            
-                            const fileList = content.createEl('pre', { text: stdout });
-                            fileList.style.cssText = 'background: var(--background-secondary); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;';
-                            
-                            statusModal.open();
-                        }
-                    } catch (error) {
-                        console.error('Git 상태 확인 오류:', error);
-                        new Notice(`❌ Git 상태 확인 실패: ${error.message}`);
-                    }
+                    const statusModal = new Modal(this.app);
+                    statusModal.titleEl.setText('📊 Google Drive 상태');
+                    
+                    const content = statusModal.contentEl.createDiv();
+                    content.style.cssText = 'padding: 16px;';
+                    
+                    const info = content.createEl('div');
+                    info.innerHTML = `
+                        <p><strong>동기화 폴더:</strong> ${this.app.vault.adapter.basePath}</p>
+                        <p><strong>자동 동기화:</strong> ${autoSync ? '활성화' : '비활성화'}</p>
+                        <p><strong>마지막 동기화:</strong> ${this.plugin.settings.lastDriveSync || '없음'}</p>
+                    `;
+                    
+                    statusModal.open();
                 }
             },
             {
-                icon: autoCommit ? '⏸️' : '▶️',
-                label: autoCommit ? '자동 OFF' : '자동 ON',
-                desc: autoCommit ? '자동 커밋 끄기' : '자동 커밋 켜기',
-                color: autoCommit ? '#f56565' : '#667eea',
+                icon: autoSync ? '⏸️' : '▶️',
+                label: autoSync ? '자동 OFF' : '자동 ON',
+                desc: autoSync ? '자동 동기화 끄기' : '자동 동기화 켜기',
+                color: autoSync ? '#ea4335' : '#4285f4',
                 action: async () => {
-                    this.plugin.settings.autoGitCommit = !autoCommit;
+                    this.plugin.settings.autoGoogleDriveSync = !autoSync;
                     await this.plugin.saveSettings();
-                    new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
-                    this.onOpen(); // 모달 새로고침
+                    new Notice(autoSync ? '⏸️ 자동 동기화 비활성화' : '▶️ 자동 동기화 활성화');
+                    this.onOpen();
                 }
             }
         ];
@@ -9907,58 +9809,43 @@ class GitSettingsModal extends Modal {
                 btn.style.transform = 'translateY(0)';
                 btn.style.boxShadow = 'none';
             });
-            btn.addEventListener('touchstart', () => {
-                btn.style.opacity = '0.8';
-            });
-            btn.addEventListener('touchend', () => {
-                btn.style.opacity = '1';
-            });
         }
 
-        // 고급 설정 섹션
-        const advancedSection = contentEl.createDiv({ cls: 'git-advanced-section' });
+        const advancedSection = contentEl.createDiv({ cls: 'gdrive-advanced-section' });
         advancedSection.style.cssText = 'margin-bottom: 24px;';
         
         const advancedTitle = advancedSection.createEl('h3', { text: '🔧 고급 설정' });
         advancedTitle.style.cssText = 'margin: 0 0 12px 0; font-size: 16px; font-weight: 600;';
         
         const settingsList = advancedSection.createDiv();
-        settingsList.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px; display: flex; flex-direction: column; gap: 14px;';
+        settingsList.style.cssText = 'background: var(--background-secondary); padding: 16px; border-radius: 10px;';
         
-        // 자동 커밋 토글
-        const autoCommitSetting = settingsList.createDiv();
-        autoCommitSetting.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
-        
-        const autoCommitLabel = autoCommitSetting.createDiv();
-        autoCommitLabel.innerHTML = `
-            <div style="font-weight: 600; margin-bottom: 4px;">✅ 자동 Git 커밋</div>
-            <div style="font-size: 12px; color: var(--text-muted);">문제 생성/수정 시 자동으로 Git에 커밋</div>
+        const autoSyncLabel = settingsList.createDiv();
+        autoSyncLabel.innerHTML = `
+            <div style="font-weight: 600; margin-bottom: 8px;">✅ 자동 Google Drive 동기화</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">문제 생성/수정 시 자동으로 Google Drive에 동기화</div>
         `;
         
-        const autoCommitToggle = autoCommitSetting.createEl('button', { 
-            text: autoCommit ? 'ON' : 'OFF'
-        });
-        autoCommitToggle.style.cssText = `
+        const autoSyncToggle = settingsList.createEl('button', { text: autoSync ? 'ON' : 'OFF' });
+        autoSyncToggle.style.cssText = `
             padding: 8px 20px;
-            background: ${autoCommit ? '#48bb78' : '#718096'};
+            background: ${autoSync ? '#34a853' : '#718096'};
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 700;
-            min-width: 70px;
             transition: all 0.3s;
         `;
-        autoCommitToggle.onclick = async () => {
-            this.plugin.settings.autoGitCommit = !autoCommit;
+        autoSyncToggle.onclick = async () => {
+            this.plugin.settings.autoGoogleDriveSync = !autoSync;
             await this.plugin.saveSettings();
-            new Notice(autoCommit ? '⏸️ 자동 커밋 비활성화' : '▶️ 자동 커밋 활성화');
+            new Notice(autoSync ? '⏸️ 자동 동기화 비활성화' : '▶️ 자동 동기화 활성화');
             this.onOpen();
         };
 
-        // 도움말 섹션
-        const helpSection = contentEl.createDiv({ cls: 'git-help-section' });
-        helpSection.style.cssText = 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 16px; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.3);';
+        const helpSection = contentEl.createDiv({ cls: 'gdrive-help-section' });
+        helpSection.style.cssText = 'background: linear-gradient(135deg, rgba(66, 133, 244, 0.1) 0%, rgba(52, 168, 83, 0.1) 100%); padding: 16px; border-radius: 10px; margin-bottom: 20px;';
         
         const helpTitle = helpSection.createEl('h3', { text: '💡 도움말' });
         helpTitle.style.cssText = 'margin: 0 0 10px 0; font-size: 15px; font-weight: 600;';
@@ -9966,14 +9853,13 @@ class GitSettingsModal extends Modal {
         const helpContent = helpSection.createEl('div');
         helpContent.innerHTML = `
             <ul style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 13px; line-height: 1.8;">
-                <li><strong>자동 커밋 ON</strong>: 문제를 만들거나 수정하면 자동으로 Git에 저장됩니다</li>
-                <li><strong>자동 커밋 OFF</strong>: 수동으로 "바로 커밋" 버튼을 눌러야 합니다</li>
-                <li><strong>바로 커밋</strong>: 현재 변경사항을 즉시 Git에 저장하고 푸시합니다</li>
-                <li><strong>Git 상태</strong>: 어떤 파일이 변경되었는지 확인할 수 있습니다</li>
+                <li><strong>자동 동기화 ON</strong>: 문제를 만들거나 수정하면 자동으로 Google Drive에 저장됩니다</li>
+                <li><strong>자동 동기화 OFF</strong>: 수동으로 "바로 동기화" 버튼을 눌러야 합니다</li>
+                <li><strong>바로 동기화</strong>: 현재 변경사항을 즉시 Google Drive에 업로드합니다</li>
+                <li><strong>Drive 상태</strong>: 동기화 상태와 설정을 확인할 수 있습니다</li>
             </ul>
         `;
 
-        // 닫기 버튼
         const closeBtn = contentEl.createEl('button', { text: '✕ 닫기' });
         closeBtn.style.cssText = `
             width: 100%;
@@ -9985,16 +9871,9 @@ class GitSettingsModal extends Modal {
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            margin-top: 20px;
             transition: all 0.3s;
         `;
         closeBtn.onclick = () => this.close();
-        closeBtn.addEventListener('mouseenter', () => {
-            closeBtn.style.background = 'var(--interactive-hover)';
-        });
-        closeBtn.addEventListener('mouseleave', () => {
-            closeBtn.style.background = 'var(--interactive-normal)';
-        });
     }
 
     onClose() {
